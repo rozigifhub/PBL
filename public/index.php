@@ -42,5 +42,11 @@ $kategori = $query->fetchAll(PDO::FETCH_ASSOC);
 
     <?php endif; ?>
 
+    <p>
+        Belum punya akun?
+        <a href="register.php">Register</a>
+    </p>
+
+
 </body>
 </html>
