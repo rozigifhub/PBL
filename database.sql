@@ -1,4 +1,4 @@
-CREATE DATABASE merchandise;
+\connect merchandise;
 
 CREATE TABLE akun_login (
     id_akun SERIAL PRIMARY KEY,
