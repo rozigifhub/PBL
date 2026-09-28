@@ -1,3 +1,4 @@
 secret.md
 .env
-database/
+# file SQL (schema.sql, alter_tables.sql) TIDAK di-ignore:
+# berisi struktur tabel saja, tanpa password/data rahasia
