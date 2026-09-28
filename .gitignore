@@ -1,4 +1,3 @@
 secret.md
-test_db.php
-config/
-database.php
+.env
+database/

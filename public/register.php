@@ -4,9 +4,16 @@ session_start();
 
 require_once "../config/database.php";
 
+// Token CSRF untuk form
+if (empty($_SESSION["csrf_token"])) {
+    $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
+}
+
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    $csrfToken = $_POST["csrf_token"] ?? "";
 
     $username = trim($_POST["username"] ?? "");
     $email = trim($_POST["email"] ?? "");
@@ -15,6 +22,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nim = trim($_POST["nim"] ?? "");
     $nama = trim($_POST["nama"] ?? "");
     $no_hp = trim($_POST["no_hp"] ?? "");
+
+    $csrfValid = isset($_SESSION["csrf_token"])
+        && is_string($csrfToken)
+        && hash_equals($_SESSION["csrf_token"], $csrfToken);
 
     if (
         $username === "" ||
@@ -25,7 +36,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $no_hp === ""
     ) {
         $error = "Semua data wajib diisi.";
+    } elseif (!$csrfValid) {
+        $error = "Sesi tidak valid. Silakan muat ulang halaman.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Format email tidak valid.";
+    } elseif (strlen($password) < 8) {
+        $error = "Password minimal 8 karakter.";
     } else {
+
+        // Normalisasi email ke huruf kecil agar konsisten saat login
+        $email = strtolower($email);
 
         try {
 
@@ -99,6 +119,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             header("Location: login.php?register=success");
             exit;
 
+        } catch (PDOException $e) {
+
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            // Pesan asli hanya dicatat di log, jangan ditampilkan ke user
+            error_log("Register gagal: " . $e->getMessage());
+            $error = "Registrasi gagal. Coba beberapa saat lagi.";
+
         } catch (Exception $e) {
 
             if ($pdo->inTransaction()) {
@@ -127,6 +157,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php endif; ?>
 
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
 
         <h2>Akun</h2>
 

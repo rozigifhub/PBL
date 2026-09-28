@@ -4,6 +4,11 @@ session_start();
 
 require_once "../config/database.php";
 
+// Token CSRF untuk form
+if (empty($_SESSION["csrf_token"])) {
+    $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
+}
+
 $error = "";
 $success = "";
 
@@ -13,10 +18,19 @@ if (isset($_GET["register"]) && $_GET["register"] === "success") {
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+    $csrfToken = $_POST["csrf_token"] ?? "";
     $login = trim($_POST["login"] ?? "");
     $password = $_POST["password"] ?? "";
 
-    if ($login === "" || $password === "") {
+    $csrfValid = isset($_SESSION["csrf_token"])
+        && is_string($csrfToken)
+        && hash_equals($_SESSION["csrf_token"], $csrfToken);
+
+    if (!$csrfValid) {
+
+        $error = "Sesi tidak valid. Silakan muat ulang halaman.";
+
+    } elseif ($login === "" || $password === "") {
 
         $error = "Username/email dan password wajib diisi.";
 
@@ -31,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 role
             FROM akun_login
             WHERE username = :login
-               OR email = :login
+               OR email = LOWER(:login)
         ");
 
         $stmt->execute([
@@ -89,6 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php endif; ?>
 
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
 
         <label>Username atau Email</label><br>
         <input type="text" name="login" required>
