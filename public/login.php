@@ -84,45 +84,51 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 ?>
 
+<?php
+require_once __DIR__ . "/includes/components.php";
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login - Merchandise Kampus</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/auth.js" defer></script>
 </head>
-<body>
+<body class="page-login">
 
-    <h1>Login</h1>
+<?php require __DIR__ . "/includes/navbar.php"; ?>
 
-    <?php if ($success !== ""): ?>
-        <p><?= htmlspecialchars($success) ?></p>
-    <?php endif; ?>
+<main class="auth">
+    <section class="card">
+        <img class="card__logo" src="assets/img/logo-jti.png" alt="Logo JTI">
 
-    <?php if ($error !== ""): ?>
-        <p><?= htmlspecialchars($error) ?></p>
-    <?php endif; ?>
+        <form class="form" method="POST" data-auth>
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
 
-    <form method="POST">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
+            <?php if ($success !== ""): ?>
+                <div class="alert alert--success" role="status"><?= htmlspecialchars($success) ?></div>
+            <?php endif; ?>
+            <?php if ($error !== ""): ?>
+                <div class="alert alert--error" role="alert"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
 
-        <label>Username atau Email</label><br>
-        <input type="text" name="login" required>
+            <?php
+            // name="login" = nama field yang dibaca login.php (username ATAU email)
+            field("Username", "login", "ENTER USERNAME", ["icon" => "user", "value" => $login ?? "", "attrs" => 'autocomplete="username"']);
+            field("Password", "password", "ENTER PASSWORD", ["type" => "password", "icon" => "lock", "attrs" => 'autocomplete="current-password"']);
+            ?>
 
-        <br><br>
+            <button class="btn" type="submit">
+                <span>Submit</span><?= icon("arrow") ?><span class="spinner"></span>
+            </button>
+        </form>
 
-        <label>Password</label><br>
-        <input type="password" name="password" required>
-
-        <br><br>
-
-        <button type="submit">Login</button>
-
-    </form>
-
-    <p>
-        Belum punya akun?
-        <a href="register.php">Register</a>
-    </p>
+        <p class="switch">Tidak punya akun? <a href="register.php">Register</a></p>
+    </section>
+</main>
 
 </body>
 </html>

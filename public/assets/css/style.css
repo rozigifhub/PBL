@@ -1,0 +1,111 @@
+
+
+/* ---------- 1. TOKEN DESAIN: warna & ukuran, ubah di sini ---------- */
+:root {
+  --c-navy:   #14264D;  /* navbar */
+  --c-orange: #FF9F1C;  /* link & fokus input */
+  --c-btn:    #FFB755;  /* tombol submit */
+  --c-cream:  #F7EBD4;  /* warna dasar halaman */
+  --c-maroon: #963834;  /* pesan error */
+  --c-text:   #111;
+  --c-muted:  #8F8F8F;
+  --c-border: #B1B1B1;
+  --c-icon:   #9B9B9B;
+  --font: 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+
+  --nav-h: 7.4rem;       /* tinggi navbar */
+  --card-w: 51rem;       /* lebar kartu putih */
+  --field-w: 33.3rem;    /* lebar kolom input */
+  --field-h: 7.2rem;     /* tinggi kotak input */
+  --gap-field: 4.2rem;   /* jarak antar kolom */
+}
+
+/* ---------- 2. DASAR ---------- */
+html { font-size: clamp(10px, .8333vw, 16px); }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); background: var(--c-cream); color: var(--c-text); }
+a { color: inherit; }
+img { display: block; }
+
+/* ---------- 3. NAVBAR ---------- */
+.navbar { position: sticky; top: 0; z-index: 10; height: var(--nav-h); display: flex; align-items: center;
+          justify-content: space-between; background: var(--c-navy); }
+.navbar__brand img { height: var(--nav-h); width: auto; max-width: none; }
+.navbar__menu { display: flex; align-items: center; gap: 4rem; margin-right: 15rem; }
+.navbar__link { color: #fff; font-size: 1.5rem; text-underline-offset: .4rem; transition: color .2s; }
+.navbar__link:hover { color: var(--c-btn); }
+.navbar__icon img { height: 4.5rem; transition: transform .2s; }
+.navbar__icon:hover img { transform: scale(1.12); }
+.navbar__icon:active img { transform: scale(.92); }
+
+/* ---------- 4. LATAR HALAMAN & KARTU ---------- */
+.auth { min-height: calc(100vh - var(--nav-h)); padding: 1.9rem 1rem 3.2rem; display: flex; justify-content: center;
+        align-items: flex-start; background: var(--c-cream) var(--bg) center top / cover no-repeat; }
+.page-login    { --bg: url('../img/bg-login.jpg'); }
+.page-register { --bg: url('../img/bg-register.jpg'); }
+
+.card { width: min(var(--card-w), 100%); padding: 1.2rem 0 5.5rem; background: #fff; border-radius: 1rem;
+        box-shadow: 0 .5rem 1.4rem rgba(0, 0, 0, .35); animation: rise .6s ease-out both; }
+.card__logo { width: 23.7rem; max-width: 70%; margin: 0 auto; }
+
+/* ---------- 5. FORM ---------- */
+.form { width: min(var(--field-w), 88%); margin: 2.2rem auto 0; }
+.form__title { margin: 0 0 4rem; font-size: 2.1rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+.field + .form__title { margin-top: 3rem; }
+
+.field { margin-bottom: var(--gap-field); animation: rise .5s ease-out both; animation-delay: calc(var(--i, 0) * .07s + .2s); }
+.field__label { display: block; margin-bottom: .9rem; font-size: 2.1rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+
+.input-box { display: flex; align-items: center; height: var(--field-h); padding: 0 1.4rem; background: #fff; color: var(--c-icon);
+             border: 1px solid var(--c-border); border-radius: .7rem; transition: border-color .2s, box-shadow .2s, color .2s; }
+.input-box:focus-within { color: var(--c-orange); border-color: var(--c-orange); box-shadow: 0 0 0 .35rem rgba(255, 159, 28, .2); }
+.input-box svg { flex: none; width: 2.3rem; height: 2.3rem; margin: 0 1.1rem 0 .9rem; }
+.input-box input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--c-text);
+                   font: inherit; font-size: 1.45rem; }
+.input-box input::placeholder { color: #A9A9A9; opacity: 1; }
+
+/* ---------- 6. TOMBOL SUBMIT ---------- */
+.btn { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 1.4rem;
+       width: 100%; height: 6.3rem; border: 0; border-radius: .6rem; background: var(--c-btn); color: #000; cursor: pointer;
+       font: 700 2.3rem var(--font); letter-spacing: .12em; text-transform: uppercase;
+       transition: transform .15s, box-shadow .2s, background .2s; }
+.btn svg { width: 4.6rem; height: 2.3rem; transition: transform .25s; }
+.btn:hover { background: #FFAA3D; box-shadow: 0 .5rem 1.2rem rgba(255, 159, 28, .4); transform: translateY(-.15rem); }
+.btn:hover svg { transform: translateX(.7rem); }
+.btn:active { transform: scale(.97); box-shadow: none; }
+.btn:focus-visible { outline: .2rem solid #000; outline-offset: .2rem; }
+
+.btn.is-loading { pointer-events: none; }                       /* saat form dikirim */
+.btn.is-loading > :not(.spinner, .ripple) { opacity: 0; }
+.spinner { display: none; position: absolute; width: 2.6rem; height: 2.6rem; border: .3rem solid rgba(0, 0, 0, .2);
+           border-top-color: #000; border-radius: 50%; animation: spin .7s linear infinite; }
+.is-loading .spinner { display: block; }
+.ripple { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .55); pointer-events: none;
+          transform: scale(0); animation: ripple .6s ease-out forwards; }
+
+/* ---------- 7. PESAN & LINK PINDAH HALAMAN ---------- */
+.alert { margin-bottom: 2.5rem; padding: 1.2rem 1.6rem; border-radius: .7rem; font-size: 1.3rem; line-height: 1.4; }
+.alert--error   { color: var(--c-maroon); background: #FBEAEA; border: 1px solid var(--c-maroon); }
+.alert--success { color: #1B5E20; background: #E8F5E9; border: 1px solid #2E7D32; }
+
+.switch { display: flex; align-items: center; justify-content: center; gap: 1.2rem; width: 42rem; max-width: 100%;
+          margin: 2.4rem auto 0; color: var(--c-muted); font-size: 1.15rem; text-transform: uppercase; }
+.switch::before, .switch::after { content: ""; flex: none; width: 6.7rem; border-top: 1px solid #000; }
+.switch a { color: var(--c-orange); text-decoration: none; }
+.switch a:hover { text-decoration: underline; }
+
+/* ---------- 8. ANIMASI ---------- */
+@keyframes rise   { from { opacity: 0; transform: translateY(1.5rem); } to { opacity: 1; transform: none; } }
+@keyframes shake  { 0%, 100% { transform: none; } 20% { transform: translateX(-.6rem); } 40% { transform: translateX(.6rem); }
+                    60% { transform: translateX(-.4rem); } 80% { transform: translateX(.4rem); } }
+@keyframes spin   { to { transform: rotate(360deg); } }
+@keyframes ripple { to { transform: scale(2.6); opacity: 0; } }
+.shake { animation: shake .45s; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ---------- 9. LAYAR KECIL (desain mobile belum ada, ini hanya cadangan) ---------- */
+@media (max-width: 900px) {
+  html { font-size: 12px; }
+  .navbar__link { display: none; }
+  .navbar__menu { margin-right: 1.5rem; gap: 1rem; }
+}

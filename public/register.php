@@ -142,63 +142,57 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 ?>
 
+<?php
+require_once __DIR__ . "/includes/components.php";
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Register - Merchandise Kampus</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/auth.js" defer></script>
 </head>
-<body>
+<body class="page-register">
 
-    <h1>Register Mahasiswa</h1>
+<?php require __DIR__ . "/includes/navbar.php"; ?>
 
-    <?php if ($error !== ""): ?>
-        <p><?= htmlspecialchars($error) ?></p>
-    <?php endif; ?>
+<main class="auth">
+    <section class="card">
+        <img class="card__logo" src="assets/img/logo-jti.png" alt="Logo JTI">
 
-    <form method="POST">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
+        <form class="form" method="POST" data-auth>
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
 
-        <h2>Akun</h2>
+            <?php if ($error !== ""): ?>
+                <div class="alert alert--error" role="alert"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
 
-        <label>Username</label><br>
-        <input type="text" name="username" required>
+            <h2 class="form__title">Registrasi</h2>
+            <?php
+            // Nama field (parameter ke-2) harus sama dengan $_POST[...] di register.php
+            field("Username", "username", "ENTER USERNAME", ["icon" => "user", "value" => $username ?? "", "attrs" => 'autocomplete="username"']);
+            field("Email", "email", "ENTER EMAIL", ["type" => "email", "value" => $email ?? "", "attrs" => 'autocomplete="email"']);
+            field("Password", "password", "ENTER PASSWORD", ["type" => "password", "icon" => "lock", "attrs" => 'minlength="8" autocomplete="new-password"']);
+            ?>
 
-        <br><br>
+            <h2 class="form__title">Data Mahasiswa</h2>
+            <?php
+            field("NIM", "nim", "ENTER NIM", ["value" => $nim ?? "", "attrs" => 'inputmode="numeric"']);
+            field("Nama Lengkap", "nama", "ENTER NAMA", ["value" => $nama ?? "", "attrs" => 'autocomplete="name"']);
+            field("No. HP", "no_hp", "ENTER NO. HP", ["type" => "tel", "value" => $no_hp ?? "", "attrs" => 'autocomplete="tel"']);
+            ?>
 
-        <label>Email</label><br>
-        <input type="email" name="email" required>
+            <button class="btn" type="submit">
+                <span>Submit</span><?= icon("arrow") ?><span class="spinner"></span>
+            </button>
+        </form>
 
-        <br><br>
-
-        <label>Password</label><br>
-        <input type="password" name="password" required>
-
-        <h2>Data Mahasiswa</h2>
-
-        <label>NIM</label><br>
-        <input type="text" name="nim" required>
-
-        <br><br>
-
-        <label>Nama</label><br>
-        <input type="text" name="nama" required>
-
-        <br><br>
-
-        <label>No. HP</label><br>
-        <input type="text" name="no_hp" required>
-
-        <br><br>
-
-        <button type="submit">Register</button>
-
-    </form>
-
-    <p>
-        Sudah punya akun?
-        <a href="login.php">Login</a>
-    </p>
+        <p class="switch">Sudah punya akun? <a href="login.php">Login</a></p>
+    </section>
+</main>
 
 </body>
 </html>
