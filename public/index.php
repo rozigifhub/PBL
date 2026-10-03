@@ -28,7 +28,7 @@ $kategori = $query->fetchAll(PDO::FETCH_ASSOC);
 
     <?php if (empty($kategori)): ?>
 
-        <p>Belum ada kategori merchandise.</p>
+        <p>Belum ada kategori merchandise untuk saat ini.</p>
 
     <?php else: ?>
 
