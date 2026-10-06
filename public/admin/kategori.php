@@ -2,10 +2,6 @@
 
 /**
  * Admin — CRUD kategori merchandise.
- *
- * CATATAN UI/UX: seluruh logika ada di bagian atas file.
- * Bagian tampilan paling bawah sengaja dibuat fungsional-minimal —
- * silakan di-restyle sesuai desain tim UI/UX tanpa mengubah logika.
  */
 
 require_once "../config/functions.php";
@@ -86,11 +82,6 @@ $flash = take_flash();
     <title>Kelola Kategori - Admin</title>
 </head>
 <body>
-
-    <!-- ============================================================
-         VIEW — UI/UX MILIK TIM DESAIN, silakan restyle.
-         Kelas bawah cuma penanda fungsional.
-         ============================================================ -->
 
     <h1>Kelola Kategori Merchandise</h1>
     <p><a href="dashboard.php">&larr; Dashboard</a></p>

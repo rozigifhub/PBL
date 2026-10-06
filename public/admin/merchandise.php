@@ -3,10 +3,6 @@
 /**
  * Admin — CRUD merchandise (dengan upload foto).
  *
- * CATATAN UI/UX: seluruh logika ada di bagian atas file.
- * Bagian tampilan paling bawah sengaja dibuat fungsional-minimal —
- * silakan di-restyle sesuai desain tim UI/UX tanpa mengubah logika.
- *
  * Keamanan upload:
  *  - tipe file diverifikasi dari ISI file (finfo), bukan dari nama/ekstensi
  *  - hanya jpeg / png / webp
@@ -230,10 +226,6 @@ $flash = take_flash();
     <title>Kelola Merchandise - Admin</title>
 </head>
 <body>
-
-    <!-- ============================================================
-         VIEW — UI/UX MILIK TIM DESAIN, silakan restyle.
-         ============================================================ -->
 
     <h1>Kelola Merchandise</h1>
     <p>
