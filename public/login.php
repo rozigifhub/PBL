@@ -127,6 +127,7 @@ require_once __DIR__ . "/includes/components.php";
         </form>
 
         <p class="switch">Tidak punya akun? <a href="register.php">Register</a></p>
+        <p class="switch"><a href="lupa_password.php">Lupa password?</a></p>
     </section>
 </main>
 
