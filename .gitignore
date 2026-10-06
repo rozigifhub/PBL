@@ -2,4 +2,6 @@ secret.md
 .env
 database/
 mail_log.txt
+public/uploads/*
+!public/uploads/.gitkeep
 laporan.md
