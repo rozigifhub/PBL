@@ -1,25 +1,17 @@
 <?php
 
 /**
- * Pengirim email reset password via SMTP (Brevo).
+ * Pengirim email reset password via Brevo API (HTTPS, port 443).
  *
- * Kredensial dibaca dari .env:
- *   SMTP_HOST  (mis. smtp-relay.brevo.com)
- *   SMTP_PORT  (mis. 587)
- *   SMTP_SECURE ("tls" untuk port 587, "ssl" untuk port 465)
- *   SMTP_USER  (email akun Brevo)
- *   SMTP_PASS  (SMTP key Brevo, diawali "xkeysib-")
- *   MAIL_FROM  (email pengirim: email akun Brevo atau sender terverifikasi)
+ * Tidak memakai SMTP lagi — cukup API key Brevo (diawali "xkeysib-")
+ * yang dibaca dari .env:
+ *   SMTP_PASS  = API key Brevo   (wajib)
+ *   MAIL_FROM  = email pengirim  (default: email akun Brevo)
  *
- * Mode pengembangan: jika SMTP_USER kosong, email TIDAK dikirim.
+ * Mode pengembangan: jika SMTP_PASS kosong, email TIDAK dikirim.
  * Tautan reset dicatat ke mail_log.txt di folder project
  * (folder ini tidak dilayani nginx, jadi aman).
  */
-
-$autoload = dirname(__DIR__) . '/vendor/autoload.php';
-if (is_file($autoload)) {
-    require_once $autoload;
-}
 
 function send_reset_email(string $toEmail, string $username, string $resetLink): bool
 {
@@ -29,8 +21,8 @@ function send_reset_email(string $toEmail, string $username, string $resetLink):
           . $resetLink . "\n\n"
           . "Jika kamu tidak merasa meminta reset password, abaikan email ini.\n";
 
-    // Mode pengembangan: tanpa SMTP_USER, catat tautan ke file log
-    if (empty($_ENV["SMTP_USER"])) {
+    // Mode pengembangan: tanpa API key, catat tautan ke file log
+    if (empty($_ENV["SMTP_PASS"])) {
         $logFile = dirname(__DIR__) . "/mail_log.txt";
         file_put_contents(
             $logFile,
@@ -40,34 +32,48 @@ function send_reset_email(string $toEmail, string $username, string $resetLink):
         return true;
     }
 
-    if (!class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {
-        error_log("PHPMailer tidak ditemukan. Jalankan: composer require phpmailer/phpmailer");
+    $payload = json_encode([
+        "sender" => [
+            "name"  => "Merchandise Kampus",
+            "email" => $_ENV["MAIL_FROM"] ?? $_ENV["SMTP_USER"],
+        ],
+        "to" => [
+            ["email" => $toEmail, "name" => $username],
+        ],
+        "subject"     => "Reset Password - Merchandise Kampus",
+        "textContent" => $body,
+    ]);
+
+    $context = stream_context_create(["http" => [
+        "method"        => "POST",
+        "header"        => "accept: application/json\r\n"
+                         . "content-type: application/json\r\n"
+                         . "api-key: " . $_ENV["SMTP_PASS"] . "\r\n",
+        "content"       => $payload,
+        "timeout"       => 15,
+        "ignore_errors" => true,
+    ]]);
+
+    $response = @file_get_contents("https://api.brevo.com/v3/smtp/email", false, $context);
+
+    if ($response === false) {
+        error_log("Gagal kirim email reset: API Brevo tidak terjangkau.");
         return false;
     }
 
-    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-
-    try {
-        $mail->isSMTP();
-        $mail->Host       = $_ENV["SMTP_HOST"];
-        $mail->SMTPAuth   = true;
-        $mail->Username   = $_ENV["SMTP_USER"];
-        $mail->Password   = $_ENV["SMTP_PASS"];
-        $mail->SMTPSecure = ($_ENV["SMTP_SECURE"] ?? "tls") === "ssl"
-            ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
-            : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = (int)($_ENV["SMTP_PORT"] ?? 587);
-        $mail->CharSet    = "UTF-8";
-
-        $mail->setFrom($_ENV["MAIL_FROM"] ?? $_ENV["SMTP_USER"], "Merchandise Kampus");
-        $mail->addAddress($toEmail, $username);
-
-        $mail->Subject = "Reset Password - Merchandise Kampus";
-        $mail->Body    = $body;
-
-        return $mail->send();
-    } catch (Throwable $e) {
-        error_log("Gagal kirim email reset: " . $e->getMessage());
-        return false;
+    // Ambil kode HTTP dari response header terakhir
+    $status = 0;
+    foreach ($http_response_header ?? [] as $header) {
+        if (preg_match('#^HTTP/\S+\s+(\d{3})#', $header, $m)) {
+            $status = (int)$m[1];
+        }
     }
+
+    if ($status === 201) {
+        return true;
+    }
+
+    // Catat alasan penolakan dari Brevo agar mudah didiagnosis
+    error_log("Brevo API menolak email (HTTP {$status}): " . substr($response, 0, 300));
+    return false;
 }
