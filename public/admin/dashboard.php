@@ -34,7 +34,11 @@ if ($_SESSION["role"] !== "Admin") {
         <?= htmlspecialchars($_SESSION["role"]) ?>
     </p>
 
-    <a href="../logout.php">Logout</a>
+    <p>
+        <a href="kategori.php">Kelola Kategori</a> |
+        <a href="merchandise.php">Kelola Merchandise</a> |
+        <a href="../logout.php">Logout</a>
+    </p>
 
 </body>
 </html>
