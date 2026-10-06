@@ -2,8 +2,8 @@
 
 session_start();
 
-require_once "../config/database.php";
-require_once "../config/mailer.php";
+require_once __DIR__ . "/../config/database.php";
+require_once __DIR__ . "/../config/mailer.php";
 
 // Token CSRF untuk form
 if (empty($_SESSION["csrf_token"])) {

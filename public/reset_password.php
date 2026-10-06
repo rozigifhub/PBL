@@ -2,7 +2,7 @@
 
 session_start();
 
-require_once "../config/database.php";
+require_once __DIR__ . "/../config/database.php";
 
 // Token CSRF untuk form
 if (empty($_SESSION["csrf_token"])) {
