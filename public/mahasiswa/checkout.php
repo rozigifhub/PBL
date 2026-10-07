@@ -27,6 +27,11 @@ if (empty($keranjang)) {
     redirect("/mahasiswa/keranjang.php");
 }
 
+// Alamat default tersimpan pada profil (untuk prefilled form checkout)
+$stmt = $pdo->prepare("SELECT alamat FROM mahasiswa WHERE id_akun = :id_akun");
+$stmt->execute([":id_akun" => $_SESSION["id_akun"]]);
+$alamatDefault = $stmt->fetchColumn();
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (!csrf_validate()) {
@@ -145,6 +150,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 // Pesanan selesai → keranjang dikosongkan
                 unset($_SESSION["keranjang"]);
 
+                // Simpan alamat yang dipakai sebagai alamat default profil
+                try {
+                    $stmt = $pdo->prepare("UPDATE mahasiswa SET alamat = :alamat WHERE id_akun = :id_akun");
+                    $stmt->execute([":alamat" => $alamat, ":id_akun" => $_SESSION["id_akun"]]);
+                } catch (PDOException $e) {
+                    error_log("Gagal menyimpan alamat default: " . $e->getMessage());
+                }
+
                 redirect("/mahasiswa/pesanan.php?id=" . $idPesanan . "&baru=1");
 
             } catch (PDOException $e) {
@@ -189,6 +202,9 @@ foreach ($keranjang as $id => $item) {
     ];
     $total += $subtotal;
 }
+
+// Nilai awal textarea: input terakhir (jika gagal) > alamat default profil
+$alamatForm = array_key_exists("alamat", $_POST) ? $_POST["alamat"] : ($alamatDefault ?: "");
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -244,7 +260,8 @@ foreach ($keranjang as $id => $item) {
 
             <textarea name="alamat" rows="4" cols="50" maxlength="500"
                       placeholder="Contoh: Jl. Kenanga No. 10, RT 02/RW 03, Surabaya"
-                      required><?= e($_POST["alamat"] ?? "") ?></textarea>
+                      required><?= e($alamatForm) ?></textarea>
+            <br><small>Alamat tersimpan akan terisi otomatis saat checkout berikutnya (tetap bisa diubah).</small>
 
             <p>
                 <button type="submit"><b>Buat Pesanan</b></button>
