@@ -232,6 +232,7 @@ $flash = take_flash();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Kelola Merchandise - Admin</title>
+    <script src="/assets/js/admin.js" defer></script>
 </head>
 <body>
 
