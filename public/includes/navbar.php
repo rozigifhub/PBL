@@ -2,7 +2,7 @@
 // Menu navbar: ubah teks / URL di sini (ganti '#' jika halamannya sudah ada).
 $navLinks = [
     'BERANDA'      => 'index.php',
-    'PRODUK'       => '#',
+    'PRODUK'       => 'index.php',
     'TENTANG KAMI' => '#',
 ];
 ?>
