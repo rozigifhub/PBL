@@ -54,15 +54,19 @@ $idPesanan = (int)$baris["id_pesanan"];
 // 3. Petakan status Midtrans → status_bayar kita
 $statusBayar = midtrans_petakan_status($transaction, $fraud);
 
+// Metode pembayaran asli yang dipilih pengguna (gopay, bank_transfer, qris, ...)
+$paymentType = (string)($notif["payment_type"] ?? "");
+
 // 4. Perbarui attempt pembayaran
 $stmt = $pdo->prepare("
     UPDATE pembayaran
-    SET status_bayar = :status, transaction_id = :tid
+    SET status_bayar = :status, transaction_id = :tid, metode_pembayaran = :metode
     WHERE order_id = :order_id
 ");
 $stmt->execute([
     ":status"   => $statusBayar,
     ":tid"      => $transactionId,
+    ":metode"   => $paymentType !== "" ? $paymentType : "Midtrans Snap",
     ":order_id" => $order_id,
 ]);
 
