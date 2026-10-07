@@ -1,0 +1,103 @@
+/* =========================================================
+   KATALOG PRODUK  (mahasiswa/katalog.php)
+   Dimuat SETELAH style.css, memakai token (--c-navy, --nav-h, dll) dari sana.
+   Ukuran dalam rem (1rem = 16px di layar 1920). Boleh ditempel ke akhir style.css.
+   ========================================================= */
+
+/* ---------- 1. TOKEN KHUSUS KATALOG ---------- */
+:root {
+  --c-title: #2A4580;   /* judul halaman */
+  --c-name:  #45619D;   /* nama produk */
+  --c-price: #FF7B00;   /* harga */
+  --c-cta:   #FF9F1C;   /* tombol keranjang */
+  --c-chip:  #E3D3AE;   /* garis chip & search */
+  --pcard-w:  25.44rem;  /* ukuran kartu = ukuran gambar card-frame.png */
+  --pcard-h:  30.6rem;
+}
+
+/* ---------- 2. HERO: judul, search, filter ---------- */
+.catalog { min-height: calc(100vh - var(--nav-h)); padding: 3.4rem 0 6rem;
+           background: var(--c-cream) url('../img/bg-katalog.jpg') center top / cover no-repeat fixed; }
+.catalog__inner { width: min(100rem, 100% - 2rem); margin: 0 auto; }
+
+.catalog__hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.6rem 3rem; }
+.catalog__title { margin: 0; color: var(--c-title); font-size: 2.5rem; line-height: 1.1; text-transform: uppercase; }
+.catalog__subtitle { margin: .8rem 0 0; color: #9B9B9B; font-size: .85rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+.catalog__tools { display: flex; flex-direction: column; align-items: flex-end; gap: 1rem; }
+.catalog__links { color: var(--c-muted); font-size: 1rem; }
+.catalog__links a { color: var(--c-title); font-weight: 700; text-decoration: none; }
+.catalog__links a:hover { text-decoration: underline; }
+
+.search { position: relative; width: 26rem; max-width: 100%; }
+.search svg { position: absolute; left: 1.3rem; top: 50%; width: 1.4rem; height: 1.4rem; color: var(--c-muted); transform: translateY(-50%); }
+.search input { width: 100%; height: 3.4rem; padding: 0 1.4rem 0 3.7rem; border: 1px solid var(--c-chip); border-radius: 99px; outline: 0;
+                background: rgba(255, 255, 255, .85); font: inherit; font-size: 1.1rem; transition: border-color .2s, box-shadow .2s; }
+.search input:focus { border-color: var(--c-cta); box-shadow: 0 0 0 .3rem rgba(255, 159, 28, .2); }
+
+.chips { display: flex; flex-wrap: wrap; gap: .8rem; margin: 2.2rem 0 3rem; }
+.chip { padding: .6rem 1.5rem; border: 1px solid var(--c-chip); border-radius: 99px; background: rgba(255, 255, 255, .7);
+        color: var(--c-navy); font-size: 1.05rem; font-weight: 700; text-decoration: none; transition: transform .15s, background .2s, color .2s; }
+.chip:hover { transform: translateY(-.15rem); background: #fff; }
+.chip:active { transform: scale(.96); }
+.chip.is-active { background: var(--c-navy); border-color: var(--c-navy); color: #fff; }
+
+/* ---------- 3. GRID PRODUK ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, var(--pcard-w)); justify-content: space-between; gap: 6rem 2rem; }
+
+/* ---------- 4. KARTU PRODUK ---------- */
+.pcard { position: relative; display: flex; flex-direction: column; width: var(--pcard-w); height: var(--pcard-h); padding: 1.5rem 1.3rem 1.1rem;
+         transition: transform .25s; animation: rise .5s ease-out backwards; }
+.pcard[hidden] { display: none; }
+.pcard:nth-child(3n+2) { animation-delay: .08s; }
+.pcard:nth-child(3n)   { animation-delay: .16s; }
+.pcard:hover { transform: translateY(-.5rem); }
+.pcard::before { content: ""; position: absolute; inset: 0; z-index: 0; background: url('../img/card-frame.png') 0 0 / 100% 100%;
+                 filter: drop-shadow(0 .6rem 1rem rgba(0, 0, 0, .22)); }
+.pcard > * { position: relative; z-index: 1; }
+
+.pcard__photo { position: relative; display: flex; align-items: center; justify-content: center; height: 17.9rem; padding: 1rem; overflow: hidden; border-radius: .8rem; }
+.pcard__photo img { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform .35s; }
+.pcard:hover .pcard__photo img { transform: scale(1.07); }
+.pcard__nofoto { color: #B9AB8D; font-size: 1rem; font-style: italic; }
+.pcard--habis .pcard__photo img { filter: grayscale(1); opacity: .55; }
+
+.badge { position: absolute; top: .9rem; padding: .3rem .8rem; border-radius: 99px; background: rgba(255, 255, 255, .92);
+         font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; box-shadow: 0 .1rem .4rem rgba(0, 0, 0, .12); }
+.badge--kat { left: .9rem; color: var(--c-navy); }
+.badge--ok  { right: .9rem; color: #1B7A3A; }
+.badge--out { right: .9rem; color: #fff; background: var(--c-maroon); }
+
+.pcard__name  { margin: .9rem 0 0; overflow: hidden; color: var(--c-name); font-size: 1.5rem; line-height: 1.2; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.pcard__meta  { margin: .2rem 0 0; color: #BFBFBF; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.pcard__price { margin: .5rem 0 0; color: var(--c-price); font-size: 1.7rem; font-weight: 700; line-height: 1.2; }
+
+.pcard__actions { display: flex; gap: .6rem; margin-top: auto; }
+.pcard__actions form { display: flex; flex: 1; min-width: 0; margin: 0; }
+
+.pbtn { display: flex; align-items: center; justify-content: center; gap: .4rem; height: 2.9rem; padding: 0 .9rem; border: 1px solid transparent; border-radius: 99px;
+        font: 700 .9rem var(--font); letter-spacing: .02em; text-decoration: none; text-transform: uppercase; white-space: nowrap; cursor: pointer;
+        transition: transform .15s, box-shadow .2s, background .2s; }
+.pbtn img { flex: none; height: 2.1rem; width: auto; }
+.pbtn:active { transform: scale(.95); }
+.pbtn--ghost { flex: none; color: var(--c-name); background: transparent; border-color: var(--c-name); }
+.pbtn--ghost:hover { background: var(--c-name); color: #fff; }
+.pbtn--cta { flex: 1; min-width: 0; color: #fff; background: var(--c-cta); }
+.pbtn--cta:hover { background: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); transform: translateY(-.1rem); }
+.pbtn--cta.is-loading { opacity: .7; cursor: wait; pointer-events: none; }
+.pbtn--off { flex: 1; min-width: 0; color: #fff; background: #B8B8B8; cursor: not-allowed; }
+
+/* ---------- 5. KONDISI KOSONG ---------- */
+.empty { max-width: 44rem; margin: 2rem auto; padding: 3.5rem 2rem; text-align: center; color: var(--c-muted); background: rgba(255, 255, 255, .8);
+         border: 1px dashed var(--c-chip); border-radius: 1.2rem; animation: rise .5s ease-out backwards; }
+.empty[hidden] { display: none; }
+.empty svg { width: 5rem; height: 5rem; margin-bottom: 1rem; color: var(--c-chip); }
+.empty h2 { margin: 0 0 .6rem; color: var(--c-title); font-size: 1.6rem; }
+.empty p { margin: 0 0 1.2rem; font-size: 1.1rem; line-height: 1.5; }
+.empty .pbtn { display: inline-flex; }
+
+/* ---------- 6. RESPONSIF ---------- */
+@media (max-width: 900px) {
+  .grid { justify-content: center; }
+  .catalog__tools { align-items: stretch; width: 100%; }
+  .search { width: 100%; }
+}
