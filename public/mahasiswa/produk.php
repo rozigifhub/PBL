@@ -85,8 +85,14 @@ if ($produk !== false) {
         </table>
 
         <?php if ((int)$produk["stok"] > 0): ?>
-            <!-- TODO fase 3: tombol ini dihubungkan ke fitur keranjang/checkout -->
-            <p><button type="button" disabled>Tambah ke Keranjang (segera)</button></p>
+            <form method="POST" action="/mahasiswa/keranjang.php">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="tambah">
+                <input type="hidden" name="id_merchandise" value="<?= (int)$produk["id_merchandise"] ?>">
+                <label>Jumlah (maks <?= (int)$produk["stok"] ?>)</label><br>
+                <input type="number" name="jumlah" value="1" min="1" max="<?= (int)$produk["stok"] ?>" required>
+                <button type="submit">Tambah ke Keranjang</button>
+            </form>
         <?php endif; ?>
 
     <?php endif; ?>
