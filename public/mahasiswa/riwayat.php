@@ -14,7 +14,12 @@ $stmt = $pdo->prepare("
     SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga, p.status_pesanan, p.tipe_pesanan,
            (SELECT COALESCE(SUM(d.jumlah), 0)
             FROM detail_pesanan d
-            WHERE d.id_pesanan = p.id_pesanan) AS total_item
+            WHERE d.id_pesanan = p.id_pesanan) AS total_item,
+           (SELECT pb.status_bayar
+            FROM pembayaran pb
+            WHERE pb.id_pesanan = p.id_pesanan
+            ORDER BY pb.id_pembayaran DESC
+            LIMIT 1) AS status_bayar
     FROM pesanan p
     WHERE p.id_akun = :id_akun
     ORDER BY p.id_pesanan DESC
@@ -70,6 +75,9 @@ $pesanan = $stmt->fetchAll();
                             <span style="color:#b00020;"><b>⏳ Belum dibayar</b></span>
                         <?php else: ?>
                             <?= e($p["status_pesanan"]) ?>
+                        <?php endif; ?>
+                        <?php if (!empty($p["status_bayar"])): ?>
+                            <br><small>Pembayaran: <?= e($p["status_bayar"]) ?></small>
                         <?php endif; ?>
                     </td>
                 </tr>

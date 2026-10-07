@@ -10,8 +10,21 @@ app_session_start();
 require_once __DIR__ . "/../../config/database.php";
 require_mahasiswa();
 
-$id = (int)($_GET["id"] ?? 0);
+$id   = (int)($_GET["id"] ?? 0);
 $baru = isset($_GET["baru"]);
+
+// Status pembayaran terakhir pesanan ini
+$stmt = $pdo->prepare("
+    SELECT status_bayar, payment_url
+    FROM pembayaran
+    WHERE id_pesanan = :id
+    ORDER BY id_pembayaran DESC
+    LIMIT 1
+");
+$stmt->execute([":id" => $id]);
+$pembayaran = $stmt->fetch();
+
+$flash = take_flash();
 
 // Pastikan pesanan ada DAN milik mahasiswa yang sedang login
 $stmt = $pdo->prepare("
@@ -57,6 +70,12 @@ if ($pesanan !== false) {
 
     <?php else: ?>
 
+        <?php if ($flash): ?>
+            <p style="color:<?= $flash["type"] === "sukses" ? "#0a7d32" : "#b00020" ?>;">
+                <b><?= e($flash["msg"]) ?></b>
+            </p>
+        <?php endif; ?>
+
         <?php if ($baru): ?>
             <p style="color:#0a7d32;"><b>✅ Pesanan berhasil dibuat! Simpan nomor pesanan di bawah ini.</b></p>
         <?php endif; ?>
@@ -73,6 +92,10 @@ if ($pesanan !== false) {
             <tr>
                 <td><b>Status Pesanan</b></td>
                 <td><b><?= e($pesanan["status_pesanan"]) ?></b></td>
+            </tr>
+            <tr>
+                <td><b>Status Pembayaran</b></td>
+                <td><?= e($pembayaran["status_bayar"] ?? "Belum ada transaksi") ?></td>
             </tr>
             <tr>
                 <td><b>Tipe</b></td>
@@ -111,7 +134,15 @@ if ($pesanan !== false) {
             </tr>
         </table>
 
-        <p><i>Pembayaran online (Midtrans) akan tersedia pada tahap berikutnya.</i></p>
+        <?php if ($pesanan["status_pesanan"] === "Menunggu Pembayaran"): ?>
+            <p>
+                <a href="/mahasiswa/bayar.php?id=<?= (int)$pesanan["id_pesanan"] ?>"><b>Bayar Sekarang &rarr;</b></a>
+                <?php if (($pembayaran["status_bayar"] ?? "") === "Menunggu" && !empty($pembayaran["payment_url"])): ?>
+                    | <a href="<?= e($pembayaran["payment_url"]) ?>">Lanjutkan pembayaran sebelumnya</a>
+                <?php endif; ?>
+            </p>
+            <p><i>Pembayaran online (Midtrans) — selesaikan sebelum tautan kedaluwarsa.</i></p>
+        <?php endif; ?>
 
     <?php endif; ?>
 

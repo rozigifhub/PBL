@@ -18,6 +18,7 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../config/midtrans.php";
 require_mahasiswa();
 
 $error = "";
@@ -158,7 +159,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     error_log("Gagal menyimpan alamat default: " . $e->getMessage());
                 }
 
-                redirect("/mahasiswa/pesanan.php?id=" . $idPesanan . "&baru=1");
+                // Fase 4: buat transaksi pembayaran Midtrans lalu arahkan ke sana
+                [$okBayar, $hasilBayar] = midtrans_buat_pembayaran($pdo, $idPesanan, $total);
+
+                if ($okBayar) {
+                    redirect($hasilBayar); // keluar ke halaman pembayaran Midtrans
+                }
+
+                set_flash("gagal", "Pesanan #{$idPesanan} dibuat, namun pembayaran online gagal dibuat: {$hasilBayar} Silakan bayar lewat halaman pesanan.");
+                redirect("/mahasiswa/pesanan.php?id=" . $idPesanan);
 
             } catch (PDOException $e) {
                 if ($pdo->inTransaction()) {
