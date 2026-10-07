@@ -40,10 +40,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         $alamat = trim($_POST["alamat"] ?? "");
 
+        // Pilihan metode: 'full' (bayar penuh) atau 'dp' (bayar sebagian dulu)
+        $jenisPembayaran = ($_POST["jenis_pembayaran"] ?? "full") === "dp" ? "dp" : "full";
+        $persenDp        = (int)($_POST["persentase_dp"] ?? 50);
+
         if ($alamat === "") {
             $error = "Alamat pengiriman wajib diisi.";
         } elseif (strlen($alamat) > 500) {
             $error = "Alamat maksimal 500 karakter.";
+        } elseif ($jenisPembayaran === "dp" && ($persenDp < 1 || $persenDp > 99)) {
+            $error = "Persentase DP harus antara 1–99 (100% berarti Full Payment).";
         } else {
             try {
                 $pdo->beginTransaction();
@@ -97,17 +103,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     redirect("/mahasiswa/keranjang.php");
                 }
 
-                // 3. INSERT pesanan
+                // 3. INSERT pesanan — status & persentase sesuai metode
+                $statusAwal  = $jenisPembayaran === "dp" ? "Menunggu DP" : "Menunggu Pembayaran";
+                $persenDb    = $jenisPembayaran === "dp" ? $persenDp : 0;
+                $jumlahDibayar = $jenisPembayaran === "dp"
+                    ? $total * $persenDp / 100
+                    : $total;
+
                 $stmt = $pdo->prepare("
                     INSERT INTO pesanan
                         (id_akun, total_harga, status_pesanan, tipe_pesanan, persentase_dp)
                     VALUES
-                        (:id_akun, :total, 'Menunggu Pembayaran', 'Ready Stock', 0)
+                        (:id_akun, :total, :status, 'Ready Stock', :persen)
                     RETURNING id_pesanan
                 ");
                 $stmt->execute([
                     ":id_akun" => $_SESSION["id_akun"],
                     ":total"   => number_format($total, 2, ".", ""),
+                    ":status"  => $statusAwal,
+                    ":persen"  => $persenDb,
                 ]);
                 $idPesanan = (int)$stmt->fetchColumn();
 
@@ -160,7 +174,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 }
 
                 // Fase 4: buat transaksi pembayaran Midtrans lalu arahkan ke sana
-                [$okBayar, $hasilBayar] = midtrans_buat_pembayaran($pdo, $idPesanan, $total);
+                // (DP → gross sebesar persentase; Full → gross sebesar total)
+                [$okBayar, $hasilBayar] = midtrans_buat_pembayaran(
+                    $pdo,
+                    $idPesanan,
+                    $jumlahDibayar,
+                    $jenisPembayaran === "dp" ? "DP" : "Full Payment"
+                );
 
                 if ($okBayar) {
                     redirect($hasilBayar); // keluar ke halaman pembayaran Midtrans
@@ -261,6 +281,21 @@ $alamatForm = array_key_exists("alamat", $_POST) ? $_POST["alamat"] : ($alamatDe
                 <td><b>Rp <?= number_format($total, 0, ",", ".") ?></b></td>
             </tr>
         </table>
+
+        <h2>Metode Pembayaran</h2>
+
+        <p>
+            <label><input type="radio" name="jenis_pembayaran" value="full" checked>
+                Full Payment — bayar penuh (Rp <?= number_format($total, 0, ",", ".") ?>)</label><br>
+            <label><input type="radio" name="jenis_pembayaran" value="dp">
+                DP — bayar sebagian dulu, sisanya pelunasan setelah barang diproses</label>
+        </p>
+
+        <p>
+            <label>Persentase DP (%)</label><br>
+            <input type="number" name="persentase_dp" min="1" max="99" value="50">
+            <br><small>Dipakai hanya jika memilih DP (1–99%).</small>
+        </p>
 
         <h2>Alamat Pengiriman</h2>
 

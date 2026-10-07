@@ -39,7 +39,11 @@ if ($order_id === "" || !hash_equals($diharapkan, $signature)) {
 }
 
 // 2. Cari attempt pembayaran berdasarkan order_id
-$stmt = $pdo->prepare("SELECT id_pesanan FROM pembayaran WHERE order_id = :order_id");
+$stmt = $pdo->prepare("
+    SELECT id_pesanan, jenis_pembayaran
+    FROM pembayaran
+    WHERE order_id = :order_id
+");
 $stmt->execute([":order_id" => $order_id]);
 $baris = $stmt->fetch();
 
@@ -70,15 +74,20 @@ $stmt->execute([
     ":order_id" => $order_id,
 ]);
 
-// 5. Pembayaran berhasil → pesanan masuk proses
+// 5. Pembayaran berhasil → status pesanan mengikuti jenis pembayaran:
+//    Full Payment → Lunas | DP → DP Lunas | Pelunasan → Lunas
+//    ('Diproses' dan seterusnya menjadi wewenang admin — fase 5)
 if ($statusBayar === "Berhasil") {
+    $statusPesananBaru = $jenis === "DP" ? "DP Lunas" : "Lunas";
+
     $stmt = $pdo->prepare("
         UPDATE pesanan
-        SET status_pesanan = 'Diproses'
+        SET status_pesanan = :status
         WHERE id_pesanan = :id
-          AND status_pesanan = 'Menunggu Pembayaran'
+          AND status_pesanan IN
+              ('Menunggu Pembayaran', 'Menunggu DP', 'DP Lunas', 'Menunggu Pelunasan')
     ");
-    $stmt->execute([":id" => $idPesanan]);
+    $stmt->execute([":status" => $statusPesananBaru, ":id" => $idPesanan]);
 }
 
 error_log("Webhook Midtrans: {$order_id} → {$transaction} ({$statusBayar})");

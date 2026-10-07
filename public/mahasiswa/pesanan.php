@@ -36,7 +36,7 @@ $flash = take_flash();
 // Pastikan pesanan ada DAN milik mahasiswa yang sedang login
 $stmt = $pdo->prepare("
     SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga,
-           p.status_pesanan, p.tipe_pesanan,
+           p.status_pesanan, p.tipe_pesanan, p.persentase_dp,
            g.alamat, g.status_pengiriman, g.tanggal_pengiriman
     FROM pesanan p
     LEFT JOIN pengiriman g ON g.id_pesanan = p.id_pesanan
@@ -44,6 +44,20 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([":id" => $id, ":id_akun" => $_SESSION["id_akun"]]);
 $pesanan = $stmt->fetch();
+
+// Total yang sudah berhasil dibayar + sisa tagihan
+$terbayar = 0.0;
+$sisa     = 0.0;
+if ($pesanan !== false) {
+    $stmt = $pdo->prepare("
+        SELECT COALESCE(SUM(jumlah_bayar), 0)
+        FROM pembayaran
+        WHERE id_pesanan = :id AND status_bayar = 'Berhasil'
+    ");
+    $stmt->execute([":id" => $id]);
+    $terbayar = (float)$stmt->fetchColumn();
+    $sisa     = max(0, (float)$pesanan["total_harga"] - $terbayar);
+}
 
 $detail = [];
 if ($pesanan !== false) {
@@ -104,6 +118,22 @@ if ($pesanan !== false) {
                 <td><b>Status Pembayaran</b></td>
                 <td><?= e($pembayaran["status_bayar"] ?? "Belum ada transaksi") ?></td>
             </tr>
+            <?php if ((int)$pesanan["persentase_dp"] > 0): ?>
+            <tr>
+                <td><b>Persentase DP</b></td>
+                <td><?= (int)$pesanan["persentase_dp"] ?>% (Rp <?= number_format((float)$pesanan["total_harga"] * (int)$pesanan["persentase_dp"] / 100, 0, ",", ".") ?>)</td>
+            </tr>
+            <?php endif; ?>
+            <tr>
+                <td><b>Sudah Dibayar</b></td>
+                <td>Rp <?= number_format($terbayar, 0, ",", ".") ?></td>
+            </tr>
+            <?php if ($sisa > 0): ?>
+            <tr>
+                <td><b>Sisa Tagihan</b></td>
+                <td><b>Rp <?= number_format($sisa, 0, ",", ".") ?></b></td>
+            </tr>
+            <?php endif; ?>
             <tr>
                 <td><b>Tipe</b></td>
                 <td><?= e($pesanan["tipe_pesanan"]) ?></td>
@@ -141,14 +171,28 @@ if ($pesanan !== false) {
             </tr>
         </table>
 
-        <?php if ($pesanan["status_pesanan"] === "Menunggu Pembayaran"): ?>
+        <?php
+        $statusPesanan = $pesanan["status_pesanan"];
+        $bisaBayar    = in_array($statusPesanan, ["Menunggu Pembayaran", "DP Lunas", "Menunggu Pelunasan"], true);
+
+        $labelBayar = "Bayar Sekarang";
+        if ($statusPesanan === "Menunggu Pembayaran" && (int)$pesanan["persentase_dp"] > 0) {
+            $labelBayar = "Bayar DP Sekarang";
+        } elseif ($statusPesanan === "DP Lunas" || $statusPesanan === "Menunggu Pelunasan") {
+            $labelBayar = "Bayar Pelunasan";
+        }
+        ?>
+
+        <?php if ($bisaBayar): ?>
             <p>
-                <a href="/mahasiswa/bayar.php?id=<?= (int)$pesanan["id_pesanan"] ?>"><b>Bayar Sekarang &rarr;</b></a>
+                <a href="/mahasiswa/bayar.php?id=<?= (int)$pesanan["id_pesanan"] ?>"><b><?= e($labelBayar) ?> &rarr;</b></a>
                 <?php if (($pembayaran["status_bayar"] ?? "") === "Menunggu" && !empty($pembayaran["payment_url"])): ?>
                     | <a href="<?= e($pembayaran["payment_url"]) ?>">Lanjutkan pembayaran sebelumnya</a>
                 <?php endif; ?>
             </p>
             <p><i>Pembayaran online (Midtrans) — selesaikan sebelum tautan kedaluwarsa.</i></p>
+        <?php elseif ($statusPesanan === "Lunas"): ?>
+            <p><b>Pesanan sudah lunas.</b> Menunggu diproses oleh admin.</p>
         <?php endif; ?>
 
     <?php endif; ?>

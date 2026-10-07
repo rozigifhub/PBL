@@ -82,12 +82,13 @@ function midtrans_request(string $method, string $path, ?array $jsonBody = null)
 }
 
 /**
- * Buat transaksi Snap untuk satu pesanan + catat attempt ke tabel pembayaran.
+ * Buat transaksi Snap untuk satu tagihan + catat attempt ke tabel pembayaran.
  * Setiap attempt = satu baris pembayaran (order_id unik per attempt).
  *
+ * $jenis: 'Full Payment' | 'DP' | 'Pelunasan'
  * Return: [ok(bool), payment_url | pesan error]
  */
-function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $total): array
+function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $gross, string $jenis): array
 {
     if (!midtrans_terkonfigurasi()) {
         return [false, "Pembayaran online belum dikonfigurasi di server."];
@@ -145,12 +146,13 @@ function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $total): array
              status_bayar, jenis_pembayaran, payment_url)
         VALUES
             (:id_pesanan, :order_id, 'Midtrans Snap', :jumlah,
-             'Menunggu', 'Full Payment', :payment_url)
+             'Menunggu', :jenis, :payment_url)
     ");
     $stmt->execute([
         ":id_pesanan"  => $idPesanan,
         ":order_id"    => $orderId,
-        ":jumlah"      => number_format($total, 2, ".", ""),
+        ":jumlah"      => number_format($gross, 2, ".", ""),
+        ":jenis"       => $jenis,
         ":payment_url" => $data["redirect_url"],
     ]);
 
