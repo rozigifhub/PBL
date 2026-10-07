@@ -1,10 +1,11 @@
 <?php
 
-// Detail produk publik: produk.php?id=ID
+// Detail produk: produk.php?id=ID
 
-require_once __DIR__ . "/../config/functions.php";
+require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
-require_once __DIR__ . "/../config/database.php";
+require_once __DIR__ . "/../../config/database.php";
+require_mahasiswa();
 
 $id = (int)($_GET["id"] ?? 0);
 
@@ -21,8 +22,8 @@ $produk = $stmt->fetch();
 $fotoUrl = "";
 if ($produk !== false) {
     $namaFoto = basename($produk["foto"]);
-    $fotoUrl  = is_file(__DIR__ . "/uploads/merchandise/" . $namaFoto)
-        ? "uploads/merchandise/" . $namaFoto
+    $fotoUrl  = is_file(__DIR__ . "/../uploads/merchandise/" . $namaFoto)
+        ? "/uploads/merchandise/" . $namaFoto
         : "";
 }
 ?>
@@ -32,21 +33,21 @@ if ($produk !== false) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $produk !== false ? e($produk["nama_merchandise"]) . " - Merchandise Kampus" : "Produk tidak ditemukan" ?></title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-<?php require __DIR__ . "/includes/navbar.php"; ?>
+<?php require __DIR__ . "/../includes/navbar.php"; ?>
 
 <main>
     <?php if ($produk === false): ?>
 
         <h1>Produk tidak ditemukan</h1>
         <p>Produk mungkin sudah dihapus atau tautannya salah.</p>
-        <p><a href="index.php">&larr; Kembali ke Katalog</a></p>
+        <p><a href="/mahasiswa/katalog.php">&larr; Kembali ke Katalog</a></p>
 
     <?php else: ?>
 
-        <p><a href="index.php">&larr; Kembali ke Katalog</a></p>
+        <p><a href="/mahasiswa/katalog.php">&larr; Kembali ke Katalog</a></p>
 
         <h1><?= e($produk["nama_merchandise"]) ?></h1>
 
@@ -61,7 +62,7 @@ if ($produk !== false) {
         <table cellpadding="6">
             <tr>
                 <td><b>Kategori</b></td>
-                <td><a href="index.php?kategori=<?= (int)$produk["id_kategori"] ?>"><?= e($produk["nama_kategori"]) ?></a></td>
+                <td><a href="/mahasiswa/katalog.php?kategori=<?= (int)$produk["id_kategori"] ?>"><?= e($produk["nama_kategori"]) ?></a></td>
             </tr>
             <tr>
                 <td><b>Ukuran</b></td>

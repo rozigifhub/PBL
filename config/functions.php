@@ -69,6 +69,16 @@ function require_admin(string $loginUrl = "../login.php"): void
     }
 }
 
+function require_mahasiswa(string $loginUrl = "../login.php"): void
+{
+    require_login($loginUrl);
+
+    if (($_SESSION["role"] ?? "") !== "Mahasiswa") {
+        header("Location: " . $loginUrl);
+        exit;
+    }
+}
+
 // ---------- Util ----------
 
 /** Escape output HTML. */

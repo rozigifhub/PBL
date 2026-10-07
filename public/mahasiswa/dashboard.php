@@ -34,7 +34,10 @@ if ($_SESSION["role"] !== "Mahasiswa") {
         <?= htmlspecialchars($_SESSION["role"]) ?>
     </p>
 
-    <a href="../logout.php">Logout</a>
+    <p>
+        <a href="katalog.php">Lihat Katalog</a> |
+        <a href="../logout.php">Logout</a>
+    </p>
 
 </body>
 </html>
