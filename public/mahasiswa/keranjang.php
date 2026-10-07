@@ -41,6 +41,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             redirect("/mahasiswa/keranjang.php");
         }
 
+        // Tambah item (dari halaman detail produk)
+        if ($action === "tambah") {
+            $jumlah = max(1, (int)($_POST["jumlah"] ?? 1));
+
+            // Ambil stok terkini dari database
+            $stmt = $pdo->prepare("SELECT stok FROM merchandise WHERE id_merchandise = :id");
+            $stmt->execute([":id" => $id]);
+            $stok = $stmt->fetchColumn();
+
+            if ($stok === false || (int)$stok < 1) {
+                set_flash("gagal", "Produk tidak tersedia.");
+            } else {
+                $jumlahLama = (int)($keranjang[$id]["jumlah"] ?? 0);
+                $jumlahBaru = min($jumlahLama + $jumlah, (int)$stok);
+                $keranjang[$id] = ["jumlah" => $jumlahBaru];
+                $_SESSION["keranjang"] = $keranjang;
+
+                if ($jumlahBaru < $jumlahLama + $jumlah) {
+                    set_flash("gagal", "Stok tidak cukup — jumlah di keranjang disesuaikan menjadi {$jumlahBaru}.");
+                } else {
+                    set_flash("sukses", "Produk ditambahkan ke keranjang.");
+                }
+            }
+            redirect("/mahasiswa/keranjang.php");
+        }
+
         // Perbarui jumlah satu item (dengan clamp ke stok terkini)
         if ($action === "update") {
             $jumlah = (int)($_POST["jumlah"] ?? 1);
