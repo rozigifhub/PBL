@@ -282,6 +282,9 @@ $alamatForm = array_key_exists("alamat", $_POST) ? $_POST["alamat"] : ($alamatDe
             </tr>
         </table>
 
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+
         <h2>Metode Pembayaran</h2>
 
         <p>
@@ -298,9 +301,6 @@ $alamatForm = array_key_exists("alamat", $_POST) ? $_POST["alamat"] : ($alamatDe
         </p>
 
         <h2>Alamat Pengiriman</h2>
-
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
 
             <textarea name="alamat" rows="4" cols="50" maxlength="500"
                       placeholder="Contoh: Jl. Kenanga No. 10, RT 02/RW 03, Surabaya"
