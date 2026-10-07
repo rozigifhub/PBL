@@ -15,6 +15,15 @@ app_session_start();
 require_once __DIR__ . "/../../config/database.php";
 require_mahasiswa();
 
+/** URL foto produk (absolut dari root web); string kosong jika file tidak ada. */
+function foto_url(string $foto): string
+{
+    $nama = basename($foto);
+    return is_file(__DIR__ . "/../uploads/merchandise/" . $nama)
+        ? "/uploads/merchandise/" . $nama
+        : "";
+}
+
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -176,6 +185,7 @@ $flash = take_flash();
 
         <table border="1" cellpadding="8" cellspacing="0">
             <tr>
+                <th>Foto</th>
                 <th>Produk</th>
                 <th>Harga</th>
                 <th>Jumlah</th>
@@ -184,7 +194,15 @@ $flash = take_flash();
             </tr>
             <?php foreach ($items as $item): ?>
                 <?php if ($item["stok_kurang"]) $adaStokKurang = true; ?>
+                <?php $foto = foto_url($item["foto"]); ?>
                 <tr>
+                    <td>
+                        <?php if ($foto !== ""): ?>
+                            <img src="<?= e($foto) ?>" alt="" width="60">
+                        <?php else: ?>
+                            <i>(tanpa foto)</i>
+                        <?php endif; ?>
+                    </td>
                     <td>
                         <b><?= e($item["nama"]) ?></b><br>
                         <small><?= e($item["kategori"]) ?></small>
@@ -215,7 +233,7 @@ $flash = take_flash();
                 </tr>
             <?php endforeach; ?>
             <tr>
-                <td colspan="3" align="right"><b>Total</b></td>
+                <td colspan="4" align="right"><b>Total</b></td>
                 <td colspan="2"><b>Rp <?= number_format($total, 0, ",", ".") ?></b></td>
             </tr>
         </table>
