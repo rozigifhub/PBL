@@ -54,6 +54,7 @@ if ($baris === false) {
 }
 
 $idPesanan = (int)$baris["id_pesanan"];
+$jenis     = (string)$baris["jenis_pembayaran"];
 
 // 3. Petakan status Midtrans → status_bayar kita
 $statusBayar = midtrans_petakan_status($transaction, $fraud);
