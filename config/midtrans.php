@@ -112,13 +112,26 @@ function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $total): array
         $customer["email"] = $cust["email"];
     }
 
-    [$kode, $data] = midtrans_request("POST", "/snap/v1/transactions", [
+    $payload = [
         "transaction_details" => [
             "order_id"     => $orderId,
             "gross_amount" => number_format($total, 2, ".", ""),
         ],
         "customer_details" => $customer,
-    ]);
+    ];
+
+    // Setelah selesai/pending/gagal, kembalikan pengguna ke halaman pesanan.
+    // Midtrans menambahkan parameter order_id & transaction_status — aman diabaikan.
+    if (!empty($_ENV["APP_URL"])) {
+        $kembali = rtrim($_ENV["APP_URL"], "/") . "/mahasiswa/pesanan.php?id=" . $idPesanan;
+        $payload["callbacks"] = [
+            "finish"   => $kembali,
+            "unfinish" => $kembali,
+            "error"    => $kembali,
+        ];
+    }
+
+    [$kode, $data] = midtrans_request("POST", "/snap/v1/transactions", $payload);
 
     if ($kode !== 201 || empty($data["redirect_url"])) {
         error_log("Midtrans Snap gagal (HTTP {$kode}): " . json_encode($data));
