@@ -40,16 +40,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         $alamat = trim($_POST["alamat"] ?? "");
 
-        // Pilihan metode: 'full' (bayar penuh) atau 'dp' (bayar sebagian dulu)
+        // Pilihan metode: 'full' (bayar penuh) atau 'dp' (DP 50%, sisanya pelunasan)
         $jenisPembayaran = ($_POST["jenis_pembayaran"] ?? "full") === "dp" ? "dp" : "full";
-        $persenDp        = (int)($_POST["persentase_dp"] ?? 50);
+        $persenDp        = $jenisPembayaran === "dp" ? 50 : 0;
 
         if ($alamat === "") {
             $error = "Alamat pengiriman wajib diisi.";
         } elseif (strlen($alamat) > 500) {
             $error = "Alamat maksimal 500 karakter.";
-        } elseif ($jenisPembayaran === "dp" && ($persenDp < 1 || $persenDp > 99)) {
-            $error = "Persentase DP harus antara 1–99 (100% berarti Full Payment).";
         } else {
             try {
                 $pdo->beginTransaction();
@@ -291,13 +289,8 @@ $alamatForm = array_key_exists("alamat", $_POST) ? $_POST["alamat"] : ($alamatDe
             <label><input type="radio" name="jenis_pembayaran" value="full" checked>
                 Full Payment — bayar penuh (Rp <?= number_format($total, 0, ",", ".") ?>)</label><br>
             <label><input type="radio" name="jenis_pembayaran" value="dp">
-                DP — bayar sebagian dulu, sisanya pelunasan setelah barang diproses</label>
-        </p>
-
-        <p>
-            <label>Persentase DP (%)</label><br>
-            <input type="number" name="persentase_dp" min="1" max="99" value="50">
-            <br><small>Dipakai hanya jika memilih DP (1–99%).</small>
+                DP 50% — bayar Rp <?= number_format($total / 2, 0, ",", ".") ?> dulu,
+                sisanya Rp <?= number_format($total / 2, 0, ",", ".") ?> pelunasan</label>
         </p>
 
         <h2>Alamat Pengiriman</h2>
