@@ -116,7 +116,7 @@ function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $gross, string
     $payload = [
         "transaction_details" => [
             "order_id"     => $orderId,
-            "gross_amount" => number_format($total, 2, ".", ""),
+            "gross_amount" => number_format($gross, 2, ".", ""),
         ],
         "customer_details" => $customer,
     ];
