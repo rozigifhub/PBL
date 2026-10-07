@@ -31,8 +31,16 @@ const MIME_DIIZINKAN = [
  */
 function proses_upload(array $file): array
 {
-    if (($file["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-        return [false, "Upload foto gagal (kode error {$file["error"]})."];
+    $kode = (int)($file["error"] ?? UPLOAD_ERR_NO_FILE);
+
+    if ($kode !== UPLOAD_ERR_OK) {
+        $pesan = match ($kode) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => "Ukuran foto melebihi batas yang diizinkan server.",
+            UPLOAD_ERR_PARTIAL => "Upload terputus. Silakan coba lagi.",
+            UPLOAD_ERR_NO_FILE => "Foto wajib diunggah.",
+            default => "Upload foto gagal (kode error {$kode}).",
+        };
+        return [false, $pesan];
     }
 
     if (($file["size"] ?? 0) <= 0 || $file["size"] > MAX_FOTO_BYTE) {
