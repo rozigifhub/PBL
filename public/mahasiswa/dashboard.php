@@ -65,6 +65,7 @@ $profil = $stmt->fetch();
 
     <p>
         <a href="katalog.php"><b>Lihat Katalog</b></a> |
+        <a href="riwayat.php">Riwayat Pesanan</a> |
         <a href="profil.php">Kelola Profil</a> |
         <a href="/logout.php">Logout</a>
     </p>

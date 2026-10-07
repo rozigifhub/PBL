@@ -20,6 +20,9 @@ $navLinks = [
             <a class="navbar__link" href="/admin/kategori.php">KELOLA KATEGORI</a>
             <a class="navbar__link" href="/admin/merchandise.php">KELOLA PRODUK</a>
         <?php endif; ?>
+        <?php if (($_SESSION["role"] ?? "") === "Mahasiswa"): ?>
+            <a class="navbar__link" href="/mahasiswa/riwayat.php">PESANAN</a>
+        <?php endif; ?>
         <a class="navbar__icon" href="#" aria-label="Cari"><img src="/assets/img/icon-search.png" alt=""></a>
         <a class="navbar__icon" href="/mahasiswa/keranjang.php" aria-label="Keranjang"><img src="/assets/img/icon-cart.png" alt=""></a>
     </nav>

@@ -63,7 +63,7 @@ if ($pesanan !== false) {
 
         <h1>Pesanan #<?= (int)$pesanan["id_pesanan"] ?></h1>
 
-        <p><a href="/mahasiswa/katalog.php">Lanjut belanja</a> | <a href="/mahasiswa/dashboard.php">Dashboard</a></p>
+        <p><a href="/mahasiswa/katalog.php">Lanjut belanja</a> | <a href="/mahasiswa/riwayat.php">Riwayat Pesanan</a> | <a href="/mahasiswa/dashboard.php">Dashboard</a></p>
 
         <table cellpadding="6">
             <tr>
