@@ -13,6 +13,13 @@ require_mahasiswa();
 $id   = (int)($_GET["id"] ?? 0);
 $baru = isset($_GET["baru"]);
 
+// Callback Midtrans mengirim order_id (format: PBL-00001-<timestamp>), bukan id.
+// Bila parameter id tidak ada, ambil id pesanan dari situ.
+if ($id === 0 && !empty($_GET["order_id"])
+    && preg_match('/^PBL-(\d+)-/', (string)$_GET["order_id"], $m)) {
+    $id = (int)$m[1];
+}
+
 // Status pembayaran terakhir pesanan ini
 $stmt = $pdo->prepare("
     SELECT status_bayar, payment_url
