@@ -71,7 +71,7 @@ function foto_url(string $foto): string
         <!-- Hero: judul, pencarian, filter kategori -->
         <header class="catalog__hero">
             <div>
-                <h1 class="catalog__title">Produk Merchandise<?= $namaKategori !== "" ? " — " . e($namaKategori) : "" ?></h1>
+                <h1 class="catalog__title">Produk anjay<?= $namaKategori !== "" ? " — " . e($namaKategori) : "" ?></h1>
                 <p class="catalog__subtitle">Koleksi merchandise resmi Jurusan Teknologi Informasi Polinema</p>
             </div>
 
