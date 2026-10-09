@@ -37,6 +37,7 @@ if ($_SESSION["role"] !== "Admin") {
     <p>
         <a href="kategori.php">Kelola Kategori</a> |
         <a href="merchandise.php">Kelola Merchandise</a> |
+        <a href="pesanan.php">Kelola Pesanan</a> |
         <a href="../logout.php">Logout</a>
     </p>
 
