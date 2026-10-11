@@ -5,3 +5,4 @@ mail_log.txt
 public/uploads/*
 !public/uploads/.gitkeep
 laporan.md
+DOKUMENTASI_DATABASE.md
