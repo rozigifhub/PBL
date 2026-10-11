@@ -73,15 +73,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         ");
                         $stmt->execute([":status" => $statusBaru, ":id" => $id]);
 
-                        // Pembatalan: kembalikan stok semua item
+                        // Pembatalan: logika bisnis di database (function)
+                        // — kembalikan stok semua item + set status Dibatalkan
                         if ($statusBaru === "Dibatalkan") {
-                            $stmt = $pdo->prepare("
-                                UPDATE merchandise m
-                                SET stok = m.stok + d.jumlah
-                                FROM detail_pesanan d
-                                WHERE d.id_merchandise = m.id_merchandise
-                                  AND d.id_pesanan = :id
-                            ");
+                            $stmt = $pdo->prepare("SELECT fn_batalkan_pesanan(:id) AS pesan");
                             $stmt->execute([":id" => $id]);
                         }
 
@@ -134,6 +129,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 if ($error === "") {
                     $pdo->commit();
+
+                    // Perubahan status pesanan memengaruhi rekap penjualan
+                    if ($action === "status") {
+                        refresh_mv_rekap($pdo);
+                    }
+
                     redirect("pesanan-detail.php?id=" . $id);
                 }
 

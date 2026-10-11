@@ -13,6 +13,7 @@
  */
 
 require_once __DIR__ . "/../config/database.php";
+require_once __DIR__ . "/../config/functions.php";
 require_once __DIR__ . "/../config/midtrans.php";
 
 $notif = json_decode(file_get_contents("php://input"), true);
@@ -89,6 +90,9 @@ if ($statusBayar === "Berhasil") {
               ('Menunggu Pembayaran', 'Menunggu DP', 'DP Lunas', 'Menunggu Pelunasan')
     ");
     $stmt->execute([":status" => $statusPesananBaru, ":id" => $idPesanan]);
+
+    // Statistik penjualan berubah → segarkan rekap
+    refresh_mv_rekap($pdo);
 }
 
 error_log("Webhook Midtrans: {$order_id} → {$transaction} ({$statusBayar})");

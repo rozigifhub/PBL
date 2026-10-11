@@ -79,6 +79,18 @@ function require_mahasiswa(string $loginUrl = "../login.php"): void
     }
 }
 
+// ---------- Optimasi database ----------
+
+/** Segarkan materialized view rekap penjualan (gagal hanya dicatat di log). */
+function refresh_mv_rekap(PDO $pdo): void
+{
+    try {
+        $pdo->exec("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rekap_penjualan_produk");
+    } catch (PDOException $e) {
+        error_log("Gagal refresh mv_rekap_penjualan_produk: " . $e->getMessage());
+    }
+}
+
 // ---------- Util ----------
 
 /** Escape output HTML. */
