@@ -41,6 +41,22 @@ $semuaPesanan = $stmt->fetchAll();
 $batasPesanan = 5;
 $pesanan      = array_slice($semuaPesanan, 0, $batasPesanan);
 
+// Ringkasan pesanan untuk 4 kartu statistik.
+// Dihitung di PHP dari $semuaPesanan (data yang sudah diambil di atas), jadi TIDAK ada query tambahan.
+// Dihitung dari SEMUA pesanan, bukan dari $pesanan yang dipotong $batasPesanan.
+$jumlahStatus = ["Diproses" => 0, "Dikirim" => 0, "Selesai" => 0];
+foreach ($semuaPesanan as $row) {
+    if (isset($jumlahStatus[$row["status_pesanan"]])) {
+        $jumlahStatus[$row["status_pesanan"]]++;
+    }
+}
+$ringkasan = [
+    ["label" => "Total Pesanan",    "jumlah" => count($semuaPesanan),             "ikon" => "stat-total.png"],
+    ["label" => "Pesanan Diproses", "jumlah" => $jumlahStatus["Diproses"], "ikon" => "stat-diproses.png"],
+    ["label" => "Pesanan Dikirim",  "jumlah" => $jumlahStatus["Dikirim"],  "ikon" => "stat-dikirim.png"],
+    ["label" => "Pesanan Selesai",  "jumlah" => $jumlahStatus["Selesai"],  "ikon" => "stat-selesai.png"],
+];
+
 // Warna badge per status pesanan (hanya untuk tampilan, tidak memengaruhi data).
 $kelasStatus = [
     "Menunggu Pembayaran" => "wait",
@@ -119,7 +135,20 @@ $kelasStatus = [
             </dl>
         </section>
 
-        <!-- 2. Riwayat / List Pesanan -->
+        <!-- 2. Ringkasan pesanan (4 kartu statistik) -->
+        <section class="dash-stats" aria-label="Ringkasan pesanan">
+            <?php foreach ($ringkasan as $k): ?>
+                <div class="dash-stat">
+                    <img class="dash-stat__icon" src="/assets/img/<?= e($k["ikon"]) ?>" alt="" width="113" height="113">
+                    <div class="dash-stat__body">
+                        <span class="dash-stat__label"><?= e($k["label"]) ?></span>
+                        <strong class="dash-stat__num"><?= (int)$k["jumlah"] ?></strong>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </section>
+
+        <!-- 3. Riwayat / List Pesanan -->
         <section class="dash-panel dash-orders" aria-labelledby="judul-riwayat">
             <div class="dash-orders__head">
                 <span class="dash-orders__icon" aria-hidden="true">
@@ -204,7 +233,7 @@ $kelasStatus = [
             <?php endif; ?>
         </section>
 
-        <!-- 3. Menu cepat -->
+        <!-- 4. Menu cepat -->
         <nav class="dash-quick" aria-label="Menu cepat">
             <a class="dash-quick__main" href="katalog.php">Lihat Katalog</a>
             <a href="riwayat.php">Riwayat Pesanan</a>
