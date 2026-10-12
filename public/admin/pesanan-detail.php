@@ -130,8 +130,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 if ($error === "") {
                     $pdo->commit();
 
-                    // Perubahan status pesanan memengaruhi rekap penjualan
-                    if ($action === "status") {
+                    // Rekap penjualan hanya berubah saat pesanan dibatalkan
+                    // (keluar dari himpunan status sah) — itu satu-satunya
+                    // transisi admin yang perlu refresh MV
+                    if ($action === "status" && $statusBaru === "Dibatalkan") {
                         refresh_mv_rekap($pdo);
                     }
 
