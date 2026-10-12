@@ -1,0 +1,175 @@
+/* =========================================================
+   BERANDA  (index.php)  — desain "Beranda Mahasiswa"
+   Dimuat SETELAH style.css; memakai token (--c-navy, --c-muted, --font, --nav-h)
+   dan @keyframes `rise` dari sana.
+   Ukuran dalam rem (1rem = 16px di layar 1920), sama seperti halaman lain.
+   Mode "kurangi gerakan" sudah ditangani style.css (semua animasi dimatikan).
+   ========================================================= */
+
+/* ---------- 1. TOKEN KHUSUS BERANDA ---------- */
+:root {
+  --c-title:    #2A4580;   /* judul */
+  --c-name:     #45619D;   /* nama produk, "Flash Sale" */
+  --c-price:    #FF7B00;   /* harga, angka ringkasan */
+  --c-cta:      #FF9F1C;   /* tombol oranye */
+  --c-chip:     #E3D3AE;   /* garis tepi kartu */
+  --c-bg-cream: #FBF4E2;   /* krem background desain (menyambung dua gambar background) */
+  --c-body:     #3B4C73;   /* teks isi kartu */
+  --pcard-w:    25.44rem;  /* ukuran kartu = ukuran gambar card-frame.png */
+  --pcard-h:    30.6rem;
+  --ease:       cubic-bezier(.22, .7, .25, 1);
+}
+
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+           clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- 2. LATAR HALAMAN ----------
+   Gambar background dipotong di baris yang polos krem (tanpa hiasan):
+   bagian atas menempel di atas, bagian bawah menempel di dasar halaman.
+   Jadi berapa pun tinggi halaman, tidak ada sambungan yang terlihat. */
+.home { position: relative; isolation: isolate; overflow-x: clip; padding: 3.6rem 0 7.5rem;
+        min-height: calc(100vw * 1504 / 1903);   /* minimal setinggi gambar background utuh */
+        background: var(--c-bg-cream) url('../img/beranda/bg-beranda-atas.jpg') center top / 100% auto no-repeat; }
+.home::after { content: ""; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; aspect-ratio: 1903 / 514;
+               background: url('../img/beranda/bg-beranda-bawah.jpg') center bottom / 100% 100% no-repeat; pointer-events: none; }
+.home__inner { width: min(102rem, 100% - 2rem); margin: 0 auto; }
+
+/* ---------- 3. BANNER DISKON ---------- */
+/* Gambar banner punya tepi transparan 1rem (bayangan), jadi dilebarkan 1.25rem ke kiri-kanan
+   agar sisi kartu banner sejajar dengan lebar konten. */
+.promo { margin: 0 -1.25rem; animation: rise .7s var(--ease) backwards; }
+.promo__frame { position: relative; transform-origin: 50% 50%; transition: transform .6s var(--ease); will-change: transform; }
+.promo__frame:hover { transform: scale(1.03); }        /* zoom-in halus saat kursor di atas banner */
+.promo__img { display: block; width: 100%; height: auto; }
+
+/* Megaphone: posisi & ukuran dalam % dari gambar banner (1672 x 693), jadi ikut mengecil/membesar bersama banner. */
+.promo__mega { position: absolute; left: 5.3828%; top: 17.0274%; width: 7.2368%; height: auto; pointer-events: none;
+               transform-origin: 41.3% 49%; animation: mega-ring 7s ease-in-out 2.5s infinite; }
+
+/* Area klik di atas tombol "BELI SEKARANG" (yang menyatu dengan gambar banner) */
+.promo__cta { position: absolute; left: 4.605%; top: 69.408%; width: 28.409%; height: 12.698%; border-radius: 99px;
+              transition: background .25s, box-shadow .25s; }
+.promo__cta:hover { background: rgba(255, 255, 255, .14); box-shadow: 0 0 0 .3rem rgba(255, 159, 28, .38), 0 .7rem 1.5rem rgba(255, 123, 0, .3); }
+.promo__cta:active { background: rgba(255, 255, 255, .05); }
+.promo__cta:focus-visible { outline: .25rem solid var(--c-navy); outline-offset: .35rem; }
+
+/* Megaphone bergoyang ± 1 detik, lalu diam ± 6 detik (siklus 7 detik, mulai 2,5 detik setelah halaman terbuka) */
+@keyframes mega-ring {
+  0%, 15%, 100% { transform: none; }
+  2%  { transform: rotate(-12deg) scale(1.08); }
+  4%  { transform: rotate(10deg)  scale(1.08); }
+  6%  { transform: rotate(-8deg)  scale(1.06); }
+  8%  { transform: rotate(6deg)   scale(1.04); }
+  10% { transform: rotate(-3deg)  scale(1.02); }
+  12.5% { transform: rotate(1.5deg); }
+}
+
+/* ---------- 4. KARTU TEKS (rounded rectangle) ---------- */
+.hm-card { position: relative; border: 1px solid var(--c-chip); border-radius: 1.8rem; color: var(--c-body);
+           background: linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(255, 246, 226, .95));
+           box-shadow: 0 .6rem 1.6rem rgba(20, 38, 77, .10), 0 .1rem .3rem rgba(20, 38, 77, .06);
+           transition: transform .3s var(--ease), box-shadow .3s; }
+.hm-card:hover { transform: translateY(-.25rem); box-shadow: 0 1rem 2.2rem rgba(20, 38, 77, .14), 0 .1rem .3rem rgba(20, 38, 77, .06); }
+
+/* Lingkaran ikon oranye */
+.hm-bubble { flex: none; display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%; color: #fff;
+             background: linear-gradient(135deg, #FFB71E, #FF8A2A); box-shadow: 0 .3rem .8rem rgba(255, 138, 42, .38); }
+.hm-bubble svg { width: 1.6rem; height: 1.6rem; }
+
+/* Tagline di bawah banner */
+.hm-tagline { display: flex; align-items: center; justify-content: center; gap: 1.3rem; width: fit-content; max-width: 100%;
+              margin: 1.8rem auto 0; padding: 1.2rem 3.2rem 1.2rem 1.5rem; font-size: 1.25rem; line-height: 1.4;
+              animation: rise .6s .15s var(--ease) backwards; }
+.hm-tagline strong { color: var(--c-title); font-weight: 700; }
+
+/* ---------- 5. FLASH SALE: JUDUL ---------- */
+.flash { margin-top: 1.2rem; }
+.flash__head { display: flex; align-items: flex-end; gap: 1.2rem; animation: rise .6s .25s var(--ease) backwards; }
+.flash__bolt { flex: none; width: 6.625rem; height: 6.625rem; transform-origin: 50% 70%; animation: bolt-pulse 4.5s ease-in-out infinite; }
+.flash__titles { display: flex; align-items: baseline; gap: .9rem; min-width: 0; padding-bottom: 1.45rem; }
+.flash__title { margin: 0; color: var(--c-name); font-size: 3.25rem; font-weight: 700; line-height: 1; }
+.flash__sub { margin: 0; color: #9B9B9B; font-size: 1.25rem; font-weight: 700; }
+.flash__all { display: inline-flex; align-items: center; gap: .9rem; margin: 0 .2rem 0 auto; padding-bottom: 1.55rem;
+              color: var(--c-cta); font-size: 1.25rem; font-weight: 700; text-decoration: none; text-transform: uppercase; }
+.flash__all span { text-decoration: underline; text-underline-offset: .3rem; }
+.flash__all svg { width: 2.4rem; height: 1.2rem; transition: transform .25s var(--ease); }
+.flash__all:hover svg { transform: translateX(.6rem); }
+.flash__all:focus-visible { outline: .2rem solid var(--c-navy); outline-offset: .3rem; border-radius: .4rem; }
+
+/* Ikon petir berdenyut sebentar setiap beberapa detik */
+@keyframes bolt-pulse {
+  0%, 55%, 100% { transform: none; filter: drop-shadow(0 0 0 rgba(255, 159, 28, 0)); }
+  62% { transform: scale(1.14) rotate(-5deg); filter: drop-shadow(0 0 .9rem rgba(255, 159, 28, .85)); }
+  70% { transform: scale(.98); }
+  78% { transform: scale(1.06) rotate(2deg);  filter: drop-shadow(0 0 .6rem rgba(255, 159, 28, .6)); }
+  88% { transform: none; filter: drop-shadow(0 0 0 rgba(255, 159, 28, 0)); }
+}
+
+/* ---------- 6. FLASH SALE: KARTU PRODUK ---------- */
+.flash__grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4rem 8rem; margin-top: .9rem; padding: 0 2.5rem; }
+.flash__grid--few { justify-content: center; }
+.flash__empty { margin: 1.5rem auto 0; padding: 3rem 2rem; max-width: 44rem; text-align: center; color: var(--c-muted); font-size: 1.15rem;
+                background: rgba(255, 255, 255, .8); border: 1px dashed var(--c-chip); border-radius: 1.2rem; }
+.flash__empty p { margin: 0; }
+
+.fcard { position: relative; display: flex; flex-direction: column; flex: none; width: var(--pcard-w); height: var(--pcard-h);
+         padding: 1.5rem 1.3rem .9rem; transition: transform .3s var(--ease);
+         animation: rise .6s var(--ease) backwards; animation-delay: calc(.35s + var(--i, 0) * .1s); }
+.fcard::before { content: ""; position: absolute; inset: 0; z-index: 0; background: url('../img/card-frame.png') 0 0 / 100% 100% no-repeat;
+                 filter: drop-shadow(0 .6rem 1rem rgba(0, 0, 0, .2)); transition: filter .3s; }
+.fcard > * { position: relative; z-index: 1; }
+.fcard:hover { transform: translateY(-.7rem); }
+.fcard:hover::before { filter: drop-shadow(0 1.3rem 1.6rem rgba(20, 38, 77, .28)); }
+
+.fcard__photo { display: flex; align-items: center; justify-content: center; height: 17.9rem; padding: 1rem; overflow: hidden; border-radius: .8rem; }
+.fcard__photo img { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform .45s var(--ease); }
+.fcard:hover .fcard__photo img { transform: scale(1.08); }
+.fcard__nofoto { color: #B9AB8D; font-size: 1rem; font-style: italic; }
+
+.fcard__name, .fcard__meta, .fcard__price { padding: 0 .35rem; }
+.fcard__name  { margin: .9rem 0 0; overflow: hidden; color: var(--c-name); font-size: 1.5rem; line-height: 1.2; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; transition: color .25s; }
+.fcard:hover .fcard__name { color: var(--c-title); }
+.fcard__meta  { margin: .2rem 0 0; overflow: hidden; color: #BFBFBF; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.fcard__price { margin: .5rem 0 0; color: var(--c-price); font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+
+.fcard__actions { margin-top: auto; padding: 0 .2rem; }
+.fcard__actions form { display: flex; margin: 0; }
+
+.fbtn { display: flex; align-items: center; justify-content: center; gap: .5rem; width: 100%; height: 2.9rem; padding: 0 1rem; border: 0; border-radius: 99px;
+        background: var(--c-cta); color: #fff; font: 700 .9rem var(--font); letter-spacing: .02em; text-decoration: none; text-transform: uppercase; white-space: nowrap; cursor: pointer;
+        transition: transform .15s, box-shadow .25s, background .25s; }
+.fbtn img { flex: none; height: 2.1rem; width: auto; }
+.fbtn:hover { background: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); transform: translateY(-.1rem); }
+.fbtn:active { transform: scale(.97); box-shadow: none; }
+.fbtn:focus-visible { outline: .2rem solid var(--c-navy); outline-offset: .2rem; }
+.fbtn.is-loading { opacity: .7; cursor: wait; pointer-events: none; }
+
+/* ---------- 7. KARTU RINGKASAN (paling bawah) ---------- */
+.hm-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1.2rem 2.2rem; width: fit-content; max-width: 100%;
+              margin: 4.6rem auto 0; padding: 1.5rem 3rem 1.5rem 1.7rem; animation: rise .6s .7s var(--ease) backwards; }
+.hm-summary p { margin: 0; }
+.hm-summary .hm-bubble { margin-right: -.9rem; }   /* ikon lebih dekat ke teks ringkasan */
+.hm-summary__stat { font-size: 1.3rem; }
+.hm-summary__stat b { color: var(--c-price); font-size: 1.7rem; font-weight: 700; }
+.hm-summary__note { font-size: 1.1rem; color: var(--c-muted); }
+.hm-summary__links { display: flex; align-items: center; gap: 1.2rem; font-size: 1.15rem; }
+.hm-summary__sep { width: 1px; height: 1.9rem; background: var(--c-chip); }
+
+.hm-summary__main { display: inline-flex; align-items: center; gap: .6rem; padding: .8rem 1.9rem; border-radius: 99px; background: var(--c-cta); color: #fff;
+                    font-weight: 700; text-decoration: none; transition: transform .15s, box-shadow .25s, background .25s; }
+.hm-summary__main:hover { background: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); transform: translateY(-.1rem); }
+.hm-summary__main:active { transform: scale(.97); box-shadow: none; }
+.hm-summary__arrow { display: inline-block; transition: transform .25s var(--ease); }
+.hm-summary__main:hover .hm-summary__arrow { transform: translateX(.4rem); }
+.hm-summary__alt { color: var(--c-name); font-weight: 700; text-decoration: underline; text-underline-offset: .3rem; transition: color .2s; }
+.hm-summary__alt:hover { color: var(--c-price); }
+.hm-summary__main:focus-visible, .hm-summary__alt:focus-visible { outline: .2rem solid var(--c-navy); outline-offset: .2rem; }
+
+/* ---------- 8. LAYAR KECIL (desain mobile belum ada, ini hanya cadangan) ---------- */
+@media (max-width: 1050px) {
+  .promo { margin: 0 -1rem; }
+  .flash__grid { justify-content: center; padding: 0; }
+  .flash__head { flex-wrap: wrap; }
+  .flash__sub { display: none; }
+  .hm-tagline { padding-right: 1.6rem; }
+}
