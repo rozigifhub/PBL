@@ -1,0 +1,167 @@
+/* =========================================================
+   DASHBOARD MAHASISWA  (mahasiswa/dashboard.php)
+   Dimuat SETELAH style.css, memakai token (--nav-h, --c-maroon, dll) dari sana.
+   Ukuran dalam rem (1rem = 16px di layar 1920), sama seperti katalog.css.
+   Boleh ditempel ke akhir style.css (lalu hapus <link> dashboard.css di dashboard.php).
+   Semua class berawalan "dash-" supaya tidak bentrok dengan .card, .btn, .badge, .empty, dll.
+   ========================================================= */
+
+/* ---------- 1. TOKEN KHUSUS DASHBOARD (warna diambil dari desain UI/UX) ---------- */
+.dash {
+  --d-navy:   #14264D;   /* teks di atas tombol oranye */
+  --d-title:  #2A4580;   /* judul & teks utama */
+  --d-muted:  #50639A;   /* label & keterangan kecil (kontras 5.4:1 di atas krem) */
+  --d-card:   #FFF6E0;   /* kartu daftar pesanan */
+  --d-card-2: #FBF6E8;   /* kartu data diri */
+  --d-head:   #FFEBBC;   /* baris judul kolom tabel */
+  --d-blob:   #FAEBCB;   /* lingkaran pucat dekorasi kartu */
+  --d-orange: #FF9F1C;
+  --d-stripe: #FFB627;   /* garis diagonal dekorasi */
+  --d-chip:   #E3D3AE;   /* garis tepi tombol menu cepat */
+  --d-line:   rgba(42, 69, 128, .22);
+  --d-shadow: 0 .5rem 1.4rem rgba(20, 38, 77, .16);
+}
+
+/* ---------- 2. LATAR HALAMAN & KERANGKA ---------- */
+.dash { position: relative; isolation: isolate; min-height: calc(100vh - var(--nav-h)); background: var(--c-cream); color: var(--d-title); }
+/* Latar dekoratif dibuat dari pseudo-element "fixed" (bukan background-attachment: fixed) agar tetap jalan di iOS */
+.dash::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+                background: var(--c-cream) url('../img/bg-dashboard.jpg') center top / cover no-repeat; }
+.dash__inner { width: min(100rem, 100% - 2rem); margin: 0 auto; padding: 3.4rem 0 6rem; }
+
+.dash__title { margin: 0 0 2.2rem; color: var(--d-title); font-size: 2.6rem; line-height: 1.1; text-transform: uppercase; }
+
+/* Kartu dasar (dipakai Data Diri & Riwayat Pesanan) */
+.dash-panel { position: relative; overflow: hidden; border-radius: 1.2rem; box-shadow: var(--d-shadow); }
+.dash-panel + .dash-panel { margin-top: 3rem; }
+.dash-panel > * { position: relative; z-index: 1; }
+
+/* ---------- 3. GREETING & DATA DIRI ---------- */
+.dash-profile { --arc: 17rem; --blob: 13rem; padding: 3rem 4rem 3.6rem;
+                /* lingkaran pucat + garis lengkung oranye di pojok kanan atas, seperti kartu statistik di desain */
+                background: radial-gradient(circle at 100% 0, transparent 0 var(--arc), #FFA81C var(--arc) calc(var(--arc) + .25rem), transparent calc(var(--arc) + .25rem)),
+                            radial-gradient(circle at 100% 0, var(--d-blob) 0 var(--blob), transparent var(--blob)),
+                            var(--d-card-2); }
+/* garis diagonal oranye di pojok kanan bawah */
+.dash-profile::after { content: ""; position: absolute; z-index: 0; right: -5rem; bottom: -5rem; width: 13rem; height: 13rem; border-radius: 50%;
+                       background: repeating-linear-gradient(135deg, var(--d-stripe) 0 .9rem, transparent .9rem 1.8rem); pointer-events: none; }
+
+.dash-hello { display: flex; align-items: center; gap: 1.6rem; margin: 0; font-size: 1.9rem; line-height: 1.3; overflow-wrap: anywhere; }
+.dash-hello b { font-weight: 700; }
+.dash-avatar { flex: none; display: grid; place-items: center; width: 5.6rem; height: 5.6rem; border-radius: 50%; background: var(--d-title); color: #fff; }
+.dash-avatar svg { width: 3rem; height: 3rem; }
+
+.dash-profile__title { margin: 2.6rem 0 1.6rem; padding-top: 2.2rem; border-top: 1px solid var(--d-line); font-size: 1.7rem; font-weight: 700; }
+
+.dash-data { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2.2rem 3rem; margin: 0; }
+.dash-data__item { margin: 0; min-width: 0; }
+.dash-data__item--wide { grid-column: span 2; }
+.dash-data dt { margin: 0 0 .4rem; color: var(--d-muted); font-size: 1.25rem; font-weight: 700; }
+.dash-data dd { margin: 0; font-size: 1.6rem; font-weight: 500; line-height: 1.45; overflow-wrap: anywhere; }
+.dash-data dd i { color: var(--d-muted); font-weight: 400; }
+
+/* ---------- 4. RIWAYAT / LIST PESANAN ---------- */
+.dash-orders { padding: 3.2rem 4rem 3rem; background: var(--d-card); }
+
+.dash-orders__head { display: flex; align-items: center; gap: 1.8rem; margin-bottom: 2.6rem; }
+.dash-orders__icon { flex: none; display: grid; place-items: center; width: 6.2rem; height: 6.2rem; border-radius: 50%; background: var(--d-title); color: #fff; }
+.dash-orders__icon svg { width: 3.4rem; height: 3.4rem; }
+.dash-orders__title { margin: 0; font-size: 2.2rem; line-height: 1.1; text-transform: uppercase; }
+.dash-orders__sub { margin: .5rem 0 0; color: var(--d-muted); font-size: 1.25rem; font-weight: 700; }
+
+.dash-table-wrap { overflow-x: auto; }
+.dash-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 1.4rem; }
+.dash-table th { padding: 1.3rem 1.4rem; background: var(--d-head); font-weight: 700; text-align: left; white-space: nowrap; }
+.dash-table th:first-child { border-radius: 1rem 0 0 1rem; }
+.dash-table th:last-child  { border-radius: 0 1rem 1rem 0; }
+.dash-table td { padding: 1.7rem 1.4rem; border-bottom: 1px solid var(--d-line); font-weight: 500; vertical-align: middle; }
+.dash-table tbody tr:last-child td { border-bottom: 0; }
+.dash-table tbody tr { transition: background .2s; }
+.dash-table tbody tr:hover { background: rgba(255, 235, 188, .45); }
+.dash-table .is-num    { font-variant-numeric: tabular-nums; }
+.dash-table .is-center { text-align: center; }
+.dash-table .is-right  { text-align: right; }
+.dash-table td.is-right { font-weight: 700; }
+
+.dash-table__no { font-weight: 700; text-underline-offset: .3rem; }
+.dash-table__no:hover { color: var(--d-navy); }
+.dash-table__state { min-width: 0; }
+.dash-table__pay { display: block; margin-top: .6rem; color: var(--d-muted); font-size: 1.15rem; font-weight: 500; }
+
+/* Badge status: warna mengikuti desain (Diproses biru, Dikirim merah muda, selesai hijau), teks digelapkan agar terbaca */
+.dash-status { display: inline-flex; align-items: center; gap: .6rem; padding: .35rem 1.2rem; border-radius: 99px; background: #E4E1DA; color: #4A4A4A;
+               font-size: 1.2rem; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+.dash-status::before { content: ""; flex: none; width: .7rem; height: .7rem; border-radius: 50%; background: currentColor; }
+.dash-status--wait    { background: #FFD9A0; color: #7A3E00; }   /* Menunggu Pembayaran / DP / Pelunasan */
+.dash-status--process { background: #A7CBF7; color: #17418C; }   /* Diproses */
+.dash-status--ship    { background: #FFA79F; color: #8F1F1B; }   /* Dikirim */
+.dash-status--done    { background: #C4FDB2; color: #17602C; }   /* Lunas / DP Lunas / Selesai */
+.dash-status--unpaid::before { display: none; }                  /* "Belum dibayar" sudah punya ikon ⏳ */
+
+/* Tombol Detail */
+.dash-btn { display: inline-flex; align-items: center; gap: .6rem; padding: .6rem 1.4rem; border-radius: .8rem; background: var(--d-orange); color: var(--d-navy);
+            font-size: 1.25rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: transform .15s, box-shadow .2s, background .2s; }
+.dash-btn svg { flex: none; width: 1.5rem; height: 1.5rem; }
+.dash-btn:hover { background: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); transform: translateY(-.1rem); }
+.dash-btn:active { transform: scale(.95); box-shadow: none; }
+
+.dash-more { margin: 2rem 0 0; font-size: 1.35rem; }
+.dash-more a { font-weight: 700; text-underline-offset: .3rem; }
+
+/* Kondisi kosong (belum ada pesanan) */
+.dash-empty { padding: 3rem 2rem; text-align: center; border: 1px dashed var(--d-chip); border-radius: 1.2rem; background: rgba(255, 255, 255, .55); }
+.dash-empty p { margin: 0 0 1.4rem; color: var(--d-muted); font-size: 1.5rem; }
+.dash-empty p:last-child { margin-bottom: 0; }
+.dash-empty a { font-weight: 700; color: var(--d-title); text-underline-offset: .3rem; }
+
+/* ---------- 5. MENU CEPAT: Lihat Katalog | Riwayat Pesanan | Kelola Profil | Logout ---------- */
+.dash-quick { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: 3rem; }
+.dash-quick a { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2.4rem; border: 1px solid var(--d-chip); border-radius: 99px;
+                background: rgba(255, 255, 255, .75); color: var(--d-title); font-size: 1.4rem; font-weight: 700; text-decoration: none;
+                transition: transform .15s, background .2s, box-shadow .2s; }
+.dash-quick a:hover { background: #fff; transform: translateY(-.15rem); }
+.dash-quick a:active { transform: scale(.96); }
+.dash-quick a.dash-quick__main { background: var(--d-orange); border-color: var(--d-orange); color: var(--d-navy); }
+.dash-quick a.dash-quick__main:hover { background: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); }
+.dash-quick a.dash-quick__out { margin-left: auto; color: var(--c-maroon); }   /* Logout dipisah ke kanan */
+
+/* Fokus keyboard yang terlihat */
+.dash a:focus-visible { outline: .25rem solid var(--d-navy); outline-offset: .25rem; }
+
+/* ---------- 6. RESPONSIF ---------- */
+@media (max-width: 900px) {
+  /* Navbar bersama: logo setinggi --nav-h terlalu lebar di HP sehingga menu terdorong keluar layar.
+     Dibatasi lewat body.page-dashboard supaya halaman lain tidak berubah. */
+  .page-dashboard .navbar__brand img { height: 4.4rem; }
+  .page-dashboard .navbar__icon img  { height: 3.6rem; }
+
+  .dash__inner { padding: 2.4rem 0 4rem; }
+  .dash__title { font-size: 2.3rem; }
+  .dash-profile, .dash-orders { padding: 2.2rem 2rem 2.4rem; }
+  .dash-hello { font-size: 1.7rem; }
+  .dash-data { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.8rem 2rem; }
+  .dash-data__item--wide { grid-column: 1 / -1; }
+  .dash-data dd { font-size: 1.5rem; }
+
+  /* Tabel berubah jadi kartu per pesanan */
+  .dash-table-wrap { overflow: visible; }
+  .dash-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }   /* disembunyikan visual, tetap terbaca screen reader */
+  .dash-table, .dash-table tbody, .dash-table tr, .dash-table td { display: block; }
+  .dash-table tr { padding: 1.2rem 0; border-bottom: 1px solid var(--d-line); }
+  .dash-table tbody tr:last-child { border-bottom: 0; }
+  .dash-table tbody tr:hover { background: none; }
+  .dash-table td { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; padding: .7rem 0; border: 0; text-align: right; }
+  .dash-table td::before { content: attr(data-label); flex: none; color: var(--d-muted); font-size: 1.25rem; font-weight: 700; text-align: left; }
+  .dash-table .is-center, .dash-table .is-right { text-align: right; }
+  .dash-table__pay { margin-top: .5rem; text-align: right; }
+  .dash-table__state { text-align: right; }
+
+  .dash-quick a.dash-quick__out { margin-left: 0; }
+}
+
+@media (max-width: 560px) {
+  .dash-profile { --arc: 7rem; --blob: 5.2rem; }
+  .dash-profile::after { right: -4.5rem; bottom: -4.5rem; width: 10rem; height: 10rem; }
+  .dash-data { grid-template-columns: minmax(0, 1fr); }
+  .dash-quick a { flex: 1 1 calc(50% - .6rem); padding: 1.1rem .8rem; font-size: 1.3rem; text-align: center; line-height: 1.25; }
+}
