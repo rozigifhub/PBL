@@ -33,6 +33,13 @@ function midtrans_base_url(): string
     return $produksi ? "https://app.midtrans.com" : "https://app.sandbox.midtrans.com";
 }
 
+/** Base URL untuk Core API (/v2/...) — berbeda host dari Snap. */
+function midtrans_api_base_url(): string
+{
+    $produksi = strtolower($_ENV["MIDTRANS_IS_PRODUCTION"] ?? "false") === "true";
+    return $produksi ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com";
+}
+
 /** Petakan transaction_status + fraud_status Midtrans ke status_bayar kita. */
 function midtrans_petakan_status(string $transactionStatus, string $fraudStatus): string
 {
@@ -44,11 +51,13 @@ function midtrans_petakan_status(string $transactionStatus, string $fraudStatus)
 
 /**
  * Request HTTP ke Midtrans (cURL, dipaksa IPv4).
+ * Path /snap/... memakai host Snap, path lain (mis. /v2/...) memakai host API.
  * Return: [kode_http, body_array]
  */
 function midtrans_request(string $method, string $path, ?array $jsonBody = null): array
 {
-    $ch = curl_init(midtrans_base_url() . $path);
+    $base = str_starts_with($path, "/snap/") ? midtrans_base_url() : midtrans_api_base_url();
+    $ch   = curl_init($base . $path);
 
     $headers = [
         "accept: application/json",
@@ -132,6 +141,12 @@ function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $gross, string
         ];
     }
 
+    // Link pembayaran otomatis kedaluwarsa dalam 60 menit
+    $payload["expiry"] = [
+        "unit"     => "minutes",
+        "duration" => 60,
+    ];
+
     [$kode, $data] = midtrans_request("POST", "/snap/v1/transactions", $payload);
 
     if ($kode !== 201 || empty($data["redirect_url"])) {
@@ -157,4 +172,29 @@ function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $gross, string
     ]);
 
     return [true, $data["redirect_url"]];
+}
+
+/**
+ * Tutup transaksi Snap agar tidak bisa dibayar lagi
+ * (dipakai saat admin membatalkan pesanan).
+ * Return: [ok(bool), pesan]
+ */
+function midtrans_batalkan(string $orderId): array
+{
+    if (!midtrans_terkonfigurasi()) {
+        return [true, " dilewati (Midtrans belum dikonfigurasi)"];
+    }
+
+    // Endpoint Close Order berada di host Core API (/v2/...)
+    [$kode, $data] = midtrans_request("POST", "/v2/" . rawurlencode($orderId) . "/close", null);
+
+    if ($kode === 200) {
+        return [true, " ditutup"];
+    }
+    if ($kode === 404) {
+        return [true, " tidak ditemukan (mungkin sudah kedaluwarsa)"];
+    }
+
+    error_log("Midtrans close gagal (HTTP {$kode}): " . json_encode($data));
+    return [false, " gagal ditutup (HTTP {$kode})"];
 }

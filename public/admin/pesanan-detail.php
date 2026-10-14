@@ -12,6 +12,7 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../config/midtrans.php";
 require_admin();
 
 /** Transisi status yang sah: status sekarang → status berikutnya. */
@@ -71,6 +72,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         // stok dikembalikan + status jadi 'Dibatalkan'
                         $stmt = $pdo->prepare("SELECT fn_batalkan_pesanan(:id) AS pesan");
                         $stmt->execute([":id" => $id]);
+
+                        // Attempt pembayaran yang masih 'Menunggu' → Gagal
+                        // (tautan bayar lamanya terkunci di sisi aplikasi)
+                        $stmt = $pdo->prepare("
+                            SELECT order_id FROM pembayaran
+                            WHERE id_pesanan = :id AND status_bayar = 'Menunggu'
+                        ");
+                        $stmt->execute([":id" => $id]);
+                        $orderIdsMenunggu = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                        $stmt = $pdo->prepare("
+                            UPDATE pembayaran SET status_bayar = 'Gagal'
+                            WHERE id_pesanan = :id AND status_bayar = 'Menunggu'
+                        ");
+                        $stmt->execute([":id" => $id]);
                     } else {
                         $stmt = $pdo->prepare("
                             UPDATE pesanan SET status_pesanan = :status
@@ -128,11 +144,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 if ($error === "") {
                     $pdo->commit();
 
-                    // Rekap penjualan hanya berubah saat pesanan dibatalkan
-                    // (keluar dari himpunan status sah) — itu satu-satunya
-                    // transisi admin yang perlu refresh MV
                     if ($action === "status" && $statusBaru === "Dibatalkan") {
                         refresh_mv_rekap($pdo);
+
+                        // Tutup transaksi Midtrans yang masih menunggu (best-effort,
+                        // dilakukan setelah commit agar lock tidak tertahan HTTP)
+                        foreach (($orderIdsMenunggu ?? []) as $oid) {
+                            [, $pesanClose] = midtrans_batalkan($oid);
+                            error_log("Close Midtrans {$oid}{$pesanClose}");
+                        }
                     }
 
                     redirect("pesanan-detail.php?id=" . $id);
