@@ -66,19 +66,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                     if (!in_array($statusBaru, transisi_diizinkan($statusKini), true)) {
                         $error = "Perubahan {$statusKini} → {$statusBaru} tidak diizinkan.";
+                    } elseif ($statusBaru === "Dibatalkan") {
+                        // Pembatalan lewat function database:
+                        // stok dikembalikan + status jadi 'Dibatalkan'
+                        $stmt = $pdo->prepare("SELECT fn_batalkan_pesanan(:id) AS pesan");
+                        $stmt->execute([":id" => $id]);
                     } else {
                         $stmt = $pdo->prepare("
                             UPDATE pesanan SET status_pesanan = :status
                             WHERE id_pesanan = :id
                         ");
                         $stmt->execute([":status" => $statusBaru, ":id" => $id]);
-
-                        // Pembatalan: logika bisnis di database (function)
-                        // — kembalikan stok semua item + set status Dibatalkan
-                        if ($statusBaru === "Dibatalkan") {
-                            $stmt = $pdo->prepare("SELECT fn_batalkan_pesanan(:id) AS pesan");
-                            $stmt->execute([":id" => $id]);
-                        }
 
                         // Pesanan dikirim → pengiriman ikut diperbarui
                         if ($statusBaru === "Dikirim") {
