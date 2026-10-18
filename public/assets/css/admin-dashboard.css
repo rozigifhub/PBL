@@ -1,0 +1,154 @@
+/* =========================================================
+   DASHBOARD ADMIN  (admin/dashboard.php)
+   Dimuat SETELAH style.css dan dashboard.css.
+   Memakai ulang komponen dashboard.css (.dash-panel, .dash-stat, .dash-table,
+   .dash-status, .dash-btn, .dash-empty, ...) — file ini hanya berisi tambahan
+   khusus admin, semua di bawah .dash--admin / .navbar--admin agar halaman lain
+   tidak terpengaruh. Satuan rem (1rem = 16px di layar 1920), seperti file lain.
+   ========================================================= */
+
+/* ---------- 1. NAVBAR ADMIN ----------
+   DASHBOARD | KELOLA PESANAN | KELOLA KATEGORI | KELOLA PRODUK | cari | pesanan | akun */
+.navbar--admin .navbar__menu { margin: 0 0 0 auto; gap: 2.2rem; }
+.navbar--admin .navbar__link { white-space: nowrap; }
+.navbar--admin .navbar__link[aria-current="page"] { color: var(--c-btn); }
+.navbar--admin a:focus-visible,
+.navbar--admin summary:focus-visible { outline: .25rem solid var(--c-btn); outline-offset: .3rem; border-radius: .4rem; }
+
+.navbar__tools { display: flex; align-items: center; gap: 2.4rem; margin: 0 3.4rem 0 3.6rem; }
+
+/* Ikon akun (lingkaran + siluet), kotak 4.8rem agar sejajar dengan ikon PNG lain */
+.navbar__account { position: relative; }
+.navbar__account summary { display: grid; place-items: center; width: 4.8rem; height: 4.8rem; list-style: none; cursor: pointer; color: #fff; transition: color .2s; }
+.navbar__account summary::-webkit-details-marker { display: none; }
+.navbar__account summary svg { width: 100%; height: 100%; transition: transform .2s; }
+.navbar__account summary:hover,
+.navbar__account[open] summary { color: var(--c-btn); }
+.navbar__account summary:hover svg { transform: scale(1.12); }
+.navbar__account summary:active svg { transform: scale(.92); }
+
+.navbar__pop { position: absolute; right: 0; top: calc(100% + 1.4rem); z-index: 20; min-width: 21rem; padding: 1.5rem 1.6rem 1.6rem;
+               border-radius: 1.2rem; background: #FFF6E0; color: #2A4580; box-shadow: 0 .8rem 2rem rgba(20, 38, 77, .3);
+               transform-origin: top right; animation: popIn .18s ease-out; }
+.navbar__who { margin: 0 0 1.2rem; font-size: 1.35rem; line-height: 1.4; overflow-wrap: anywhere; }
+.navbar__logout { display: block; padding: .9rem 1.2rem; border-radius: .8rem; background: var(--c-orange); color: #14264D;
+                  font-size: 1.4rem; font-weight: 700; text-align: center; text-decoration: none; transition: background .2s, transform .15s; }
+.navbar__logout:hover { background: #FFAA3D; }
+.navbar__logout:active { transform: scale(.96); }
+@keyframes popIn { from { opacity: 0; transform: translateY(-.6rem) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* ---------- 2. JUDUL & SAMBUTAN ---------- */
+.dash--admin .dash__title { margin-bottom: .8rem; }
+.dash-greet { margin: 0; color: var(--d-title); font-size: 1.25rem; font-weight: 700; text-transform: uppercase; overflow-wrap: anywhere; }
+
+/* ---------- 3. KARTU STATISTIK ----------
+   Kartu Pendapatan lebih lebar dari tiga kartu lain (seperti di desain) karena isinya "Rp 1.500.000". */
+.dash--admin .dash-stats { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.33fr); margin: 2.8rem 0 3.4rem; }
+.dash--admin .dash-stat { container-type: inline-size; min-height: 16rem;
+                          /* satu-satunya animasi masuk di halaman: empat kartu muncul berurutan */
+                          animation: rise .65s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * .09s); }
+.dash--admin .dash-stat { gap: 1.3rem; }
+
+/* Label selalu satu baris (di desain 24px). Bila kartu terlalu sempit, ukurannya mengecil mengikuti
+   sisa lebar: 100cqw = lebar isi kartu, dikurangi ikon (6.4rem) dan jarak (1.3rem). */
+.dash--admin .dash-stat__label { min-height: 0; white-space: nowrap; font-size: 1.3rem;
+                                 font-size: clamp(1.1rem, calc((100cqw - 7.7rem) / 8.2), 1.5rem); }
+
+/* Nominal rupiah: ukuran mengikuti lebar kartu supaya tidak meluap. */
+.dash-stat__num--money { font-size: 2.6rem; font-size: clamp(1.7rem, 10.8cqw, 3.2rem); line-height: 1.1; white-space: nowrap; }
+.dash-stat__num--money.is-long { font-size: 2.2rem; font-size: clamp(1.5rem, 9.2cqw, 2.6rem); }
+
+/* ---------- 4. PANEL & TABEL ---------- */
+.dash--admin .dash-orders__title { font-size: 2.5rem; }
+.dash--admin .dash-orders__sub { text-transform: uppercase; }
+
+/* Dua tabel (List Merchandise & Produk Terlaris) memakai lebar kolom yang sama persis,
+   jadi kolom Kategori, Status, Aksi, dll. sejajar di kedua tabel. */
+.dash--admin .dash-table { table-layout: fixed; min-width: 78rem; color: var(--d-title); font-size: 1.5rem; }
+.dash--admin .dash-table col:nth-child(1) { width: 8%; }    /* No */
+.dash--admin .dash-table col:nth-child(2) { width: 9%; }    /* Gambar */
+.dash--admin .dash-table col:nth-child(3) { width: 22%; }   /* Nama Produk */
+.dash--admin .dash-table col:nth-child(4) { width: 13%; }   /* Kategori */
+.dash--admin .dash-table col:nth-child(5) { width: 14%; }   /* Harga / Pendapatan */
+.dash--admin .dash-table col:nth-child(6) { width: 8%; }    /* Stock / Terjual */
+.dash--admin .dash-table col:nth-child(7) { width: 11%; }   /* Status */
+.dash--admin .dash-table col:nth-child(8) { width: 15%; }   /* Aksi */
+
+.dash--admin .dash-table th { padding: 1.5rem 1rem; font-size: 1.5rem; text-align: center; }
+.dash--admin .dash-table th.is-left { text-align: left; padding-left: 1.6rem; }
+.dash--admin .dash-table td { padding: 1.5rem 1rem; text-align: center; border-bottom: .125rem solid #000; }   /* garis hitam seperti di desain */
+.dash--admin .dash-table tbody tr:last-child td { border-bottom: .125rem solid #000; }                        /* desain juga menutup baris terakhir */
+.dash--admin .dash-table td.is-left { text-align: left; padding-left: 1.6rem; overflow-wrap: anywhere; }
+.dash--admin .dash-table td.is-money { white-space: nowrap; }
+
+/* Foto produk: kotak krem 98x112 di desain */
+.dash-thumb { display: grid; place-items: center; width: 6.2rem; height: 7rem; margin: 0 auto; overflow: hidden; border-radius: 1.1rem; background: #F3E8D4; }
+.dash-thumb img { width: 100%; height: 100%; padding: .5rem; object-fit: contain; transition: transform .3s cubic-bezier(.2, .7, .2, 1); }
+.dash-table tbody tr:hover .dash-thumb img { transform: scale(1.08); }
+
+/* Badge kategori: 4 warna pertama dari desain (Kaos, Jaket, Topi, Tas), 2 warna tambahan untuk kategori baru.
+   Warna teks digelapkan dari desain agar kontrasnya cukup. */
+.dash-cat { display: inline-block; max-width: 100%; padding: .35rem 1.2rem; border-radius: 99px; font-size: 1.4rem; font-weight: 500; line-height: 1.35; text-wrap: balance; }
+.dash-cat--0 { background: #B6CBF7; color: #17418C; }
+.dash-cat--1 { background: #B9A4F7; color: #3B1F8C; }
+.dash-cat--2 { background: #FFB8AD; color: #8F1F1B; }
+.dash-cat--3 { background: #FFD995; color: #6B3F00; }
+.dash-cat--4 { background: #A8E6E1; color: #0B4F4C; }
+.dash-cat--5 { background: #F7B9DC; color: #7A1B52; }
+
+.dash--admin .dash-status { padding: .35rem 1.3rem; font-size: 1.4rem; }
+.dash-status--out { background: #FFA79F; color: #8F1F1B; }   /* stok habis */
+
+/* Tombol Kelola: membesar halus saat disentuh kursor; ikon gigi ikut berputar sedikit */
+.dash--admin .dash-btn { padding: .7rem 1.5rem; font-size: 1.4rem;
+                         transition: transform .28s cubic-bezier(.2, .7, .2, 1), box-shadow .25s, background .2s; }
+.dash--admin .dash-btn svg { transition: transform .4s cubic-bezier(.2, .7, .2, 1); }
+.dash--admin .dash-btn:hover,
+.dash--admin .dash-btn:focus-visible { transform: scale(1.08); background: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); }
+.dash--admin .dash-btn:hover svg,
+.dash--admin .dash-btn:focus-visible svg { transform: rotate(60deg); }
+.dash--admin .dash-btn:active { transform: scale(.97); box-shadow: none; }
+
+/* Keterangan rekap penjualan (di bawah tabel Produk Terlaris) */
+.dash-note { margin: 2rem 0 0; color: var(--d-muted); font-size: 1.25rem; line-height: 1.5; }
+
+/* ---------- 5. RESPONSIF ---------- */
+@media (max-width: 1180px) {
+  /* Navbar admin punya 4 menu + 3 ikon, jadi di layar sedang dipadatkan agar tidak meluap */
+  .navbar--admin .navbar__brand img { height: 6rem; }
+  .navbar--admin .navbar__menu { gap: 1.8rem; }
+  .navbar--admin .navbar__link { font-size: 1.3rem; }
+  .navbar__tools { gap: 1.2rem; margin: 0 1.6rem 0 1.8rem; }
+  .navbar--admin .navbar__icon img { height: 3.6rem; }
+  .navbar__account summary { width: 3.8rem; height: 3.8rem; }
+}
+
+@media (max-width: 900px) {
+  /* style.css menyembunyikan semua menu di layar kecil; admin tetap butuh navigasi,
+     jadi menu dipindah ke baris sendiri di bawah logo dan bisa digeser ke samping. */
+  .navbar--admin { height: auto; flex-wrap: wrap; row-gap: 0; }
+  .navbar--admin .navbar__tools { margin: 0 1.5rem 0 auto; }
+  .navbar--admin .navbar__menu { order: 3; flex: 1 0 100%; margin: 0; padding: .4rem 1.5rem 1.2rem; gap: 2.2rem; overflow-x: auto; scrollbar-width: none; }
+  .navbar--admin .navbar__menu::-webkit-scrollbar { display: none; }
+  .navbar--admin .navbar__link { display: inline; font-size: 1.4rem; }
+  .navbar__pop { min-width: 19rem; }
+
+  .dash--admin .dash-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-greet { font-size: 1.15rem; }
+
+  /* Tabel menjadi kartu per baris (pola yang sama dengan dashboard mahasiswa) */
+  .dash--admin .dash-table { table-layout: auto; min-width: 0; font-size: 1.4rem; }
+  .dash--admin .dash-table colgroup { display: none; }
+  .dash--admin .dash-table td,
+  .dash--admin .dash-table td.is-left { padding: .7rem 0; text-align: right; border: 0; }
+  .dash--admin .dash-table tbody tr:last-child td { border: 0; }
+  .dash--admin .dash-table tr { border-bottom: .125rem solid #000; }
+  .dash--admin .dash-table tbody tr:last-child { border-bottom: .125rem solid #000; }
+  .dash-thumb { margin: 0; }
+  .dash--admin .dash-btn { padding: .7rem 1.5rem; }
+}
+
+@media (max-width: 560px) {
+  .dash--admin .dash-stats { grid-template-columns: minmax(0, 1fr); }   /* nominal rupiah butuh lebar penuh */
+  .dash--admin .dash-stat { min-height: 11rem; }
+}
