@@ -45,6 +45,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         try {
             $pdo->beginTransaction();
 
+            // Identitas aktor untuk trigger audit (berlaku dalam transaksi ini)
+            $stmt = $pdo->prepare("
+                SELECT set_config('app.admin_id', :admin, true),
+                       set_config('app.aktor', :aktor, true)
+            ");
+            $stmt->execute([
+                ":admin" => (string)$_SESSION["id_akun"],
+                ":aktor" => "admin:" . ($_SESSION["username"] ?? ""),
+            ]);
+
             // Kunci baris pesanan
             $stmt = $pdo->prepare("
                 SELECT id_pesanan, status_pesanan
@@ -94,20 +104,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         ");
                         $stmt->execute([":status" => $statusBaru, ":id" => $id]);
 
-                        // Pesanan dikirim → pengiriman ikut diperbarui
-                        if ($statusBaru === "Dikirim") {
-                            $stmt = $pdo->prepare("
-                                UPDATE pengiriman
-                                SET status_pengiriman = 'Dikirim',
-                                    tanggal_pengiriman = COALESCE(tanggal_pengiriman, now()),
-                                    id_admin = COALESCE(id_admin, :admin)
-                                WHERE id_pesanan = :id
-                            ");
-                            $stmt->execute([
-                                ":admin" => $_SESSION["id_akun"],
-                                ":id"    => $id,
-                            ]);
-                        }
+                        // Sinkronisasi pengiriman saat 'Dikirim' ditangani
+                        // trigger trg_pesanan_status di level database
 
                         set_flash("sukses", "Status pesanan #{$id} → {$statusBaru}.");
                     }

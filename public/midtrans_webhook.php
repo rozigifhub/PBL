@@ -16,6 +16,9 @@ require_once __DIR__ . "/../config/database.php";
 require_once __DIR__ . "/../config/functions.php";
 require_once __DIR__ . "/../config/midtrans.php";
 
+// Identitas aktor untuk audit trail trigger
+$pdo->exec("SET app.aktor = 'midtrans'");
+
 $notif = json_decode(file_get_contents("php://input"), true);
 
 if (!is_array($notif)) {
