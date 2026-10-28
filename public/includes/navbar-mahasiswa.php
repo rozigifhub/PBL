@@ -17,6 +17,18 @@ $mhsLinks = [
     "pesanan"   => ["PESANAN",   "/mahasiswa/riwayat.php"],
     "tentang"   => ["TENTANG KAMI", "#"],   // belum ada halamannya; ganti "#" dengan URL halaman Tentang Kami nanti
 ];
+
+// Saldo dompet untuk pill di navbar (dilewati bila belum login / tabel belum ada)
+$saldoNavbar = null;
+if (!empty($_SESSION["id_akun"]) && isset($pdo)) {
+    try {
+        $stmtSaldo = $pdo->prepare("SELECT COALESCE((SELECT saldo FROM dompet WHERE id_akun = :id), 0)");
+        $stmtSaldo->execute([":id" => (int)$_SESSION["id_akun"]]);
+        $saldoNavbar = (float)$stmtSaldo->fetchColumn();
+    } catch (PDOException $e) {
+        error_log("Navbar: gagal membaca saldo dompet: " . $e->getMessage());
+    }
+}
 ?>
 <header class="navbar navbar--mhs">
     <a class="navbar__brand" href="/index.php">
@@ -32,6 +44,10 @@ $mhsLinks = [
     <div class="navbar__tools">
         <!-- Cari: kolom pencarian produk ada di halaman katalog (id="cari-produk"). -->
         <a class="navbar__icon" href="/mahasiswa/katalog.php#cari-produk" aria-label="Cari produk"><img src="/assets/img/icon-search.png" alt=""></a>
+
+        <?php if ($saldoNavbar !== null): ?>
+            <a class="navbar__saldo" href="/mahasiswa/dompet.php" aria-label="Dompet saya">Rp <?= number_format($saldoNavbar, 0, ",", ".") ?></a>
+        <?php endif; ?>
 
         <a class="navbar__icon" href="/mahasiswa/keranjang.php" aria-label="Keranjang"<?= $mhsActive === "keranjang" ? ' aria-current="page"' : "" ?>><img src="/assets/img/icon-cart.png" alt=""></a>
 

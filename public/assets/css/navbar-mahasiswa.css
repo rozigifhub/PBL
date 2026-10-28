@@ -17,6 +17,9 @@
 
 /* Penanda halaman aktif pada ikon (keranjang): garis oranye kecil di bawah ikon */
 .navbar--mhs .navbar__icon { position: relative; }
+.navbar--mhs .navbar__saldo { white-space: nowrap; padding: .6rem 1.4rem; border-radius: 99rem; border: 1px solid #E3D3AE; background: rgba(255, 255, 255, .6);
+  color: #2A4580; font-size: 1.3rem; font-weight: 700; }
+.navbar--mhs .navbar__saldo:hover { background: #fff; }
 .navbar--mhs .navbar__icon[aria-current="page"]::after { content: ""; position: absolute; left: 50%; bottom: .1rem; width: 2.4rem; height: .3rem;
                                                          border-radius: 99px; background: var(--c-btn); transform: translateX(-50%); }
 
