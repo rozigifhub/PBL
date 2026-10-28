@@ -1,0 +1,69 @@
+/* =========================================================
+   NAVBAR MAHASISWA  (includes/navbar-mahasiswa.php)
+   Dimuat SETELAH style.css, memakai token (--c-navy, --c-btn, --nav-h, dll) dari sana.
+   Polanya sama dengan navbar admin (admin-dashboard.css), semua di bawah .navbar--mhs
+   agar tidak mengubah halaman lain. Boleh ditempel ke akhir style.css.
+   BERANDA | DASHBOARD | PESANAN | cari | keranjang | akun
+   ========================================================= */
+
+/* ---------- 1. MENU & IKON ---------- */
+.navbar--mhs .navbar__menu { margin: 0 0 0 auto; gap: 2.9rem; }
+.navbar--mhs .navbar__link { white-space: nowrap; }
+.navbar--mhs .navbar__link[aria-current="page"] { color: var(--c-btn); }
+.navbar--mhs a:focus-visible,
+.navbar--mhs summary:focus-visible { outline: .25rem solid var(--c-btn); outline-offset: .3rem; border-radius: .4rem; }
+
+.navbar--mhs .navbar__tools { display: flex; align-items: center; gap: 2.4rem; margin: 0 3.4rem 0 2rem; }
+
+/* Penanda halaman aktif pada ikon (keranjang): garis oranye kecil di bawah ikon */
+.navbar--mhs .navbar__icon { position: relative; }
+.navbar--mhs .navbar__icon[aria-current="page"]::after { content: ""; position: absolute; left: 50%; bottom: .1rem; width: 2.4rem; height: .3rem;
+                                                         border-radius: 99px; background: var(--c-btn); transform: translateX(-50%); }
+
+/* ---------- 2. AKUN (lingkaran + siluet) ---------- */
+/* Lingkaran ±3rem, ukurannya sama dengan ikon pada desain */
+.navbar--mhs .navbar__account { position: relative; }
+.navbar--mhs .navbar__account summary { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; list-style: none; cursor: pointer;
+                                        color: #fff; transition: color .2s; }
+.navbar--mhs .navbar__account summary::-webkit-details-marker { display: none; }
+.navbar--mhs .navbar__account summary svg { width: 100%; height: 100%; transition: transform .2s; }
+.navbar--mhs .navbar__account summary:hover,
+.navbar--mhs .navbar__account[open] summary { color: var(--c-btn); }
+.navbar--mhs .navbar__account summary:hover svg { transform: scale(1.12); }
+.navbar--mhs .navbar__account summary:active svg { transform: scale(.92); }
+
+.navbar--mhs .navbar__pop { position: absolute; right: 0; top: calc(100% + 1.4rem); z-index: 20; min-width: 21rem; padding: 1.5rem 1.6rem 1.6rem;
+                            border-radius: 1.2rem; background: #FFF6E0; color: #2A4580; box-shadow: 0 .8rem 2rem rgba(20, 38, 77, .3);
+                            transform-origin: top right; animation: navPopIn .18s ease-out; }
+.navbar--mhs .navbar__who { margin: 0 0 1.2rem; font-size: 1.35rem; line-height: 1.4; overflow-wrap: anywhere; }
+.navbar--mhs .navbar__sub,
+.navbar--mhs .navbar__logout { display: block; padding: .9rem 1.2rem; border-radius: .8rem; font-size: 1.4rem; font-weight: 700; text-align: center;
+                               text-decoration: none; transition: background .2s, transform .15s; }
+.navbar--mhs .navbar__sub { margin-bottom: .8rem; border: 1px solid #E3D3AE; background: rgba(255, 255, 255, .6); color: #2A4580; }
+.navbar--mhs .navbar__sub:hover { background: #fff; }
+.navbar--mhs .navbar__logout { background: var(--c-orange); color: #14264D; }
+.navbar--mhs .navbar__logout:hover { background: #FFAA3D; }
+.navbar--mhs .navbar__sub:active,
+.navbar--mhs .navbar__logout:active { transform: scale(.96); }
+@keyframes navPopIn { from { opacity: 0; transform: translateY(-.6rem) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* ---------- 3. RESPONSIF ---------- */
+@media (max-width: 1180px) {
+  /* 3 menu + 3 ikon: dipadatkan agar tidak meluap di layar sedang */
+  .navbar--mhs .navbar__brand img { height: 6rem; }
+  .navbar--mhs .navbar__menu { gap: 1.8rem; }
+  .navbar--mhs .navbar__link { font-size: 1.3rem; }
+  .navbar--mhs .navbar__tools { gap: 1.2rem; margin: 0 1.6rem 0 1.8rem; }
+  .navbar--mhs .navbar__icon img { height: 3.6rem; }
+  .navbar--mhs .navbar__account summary { width: 3rem; height: 3rem; }
+}
+
+@media (max-width: 900px) {
+  /* style.css menyembunyikan semua menu di layar kecil; menu dipindah ke baris sendiri di bawah logo */
+  .navbar--mhs { height: auto; flex-wrap: wrap; row-gap: 0; }
+  .navbar--mhs .navbar__tools { margin: 0 1.5rem 0 auto; }
+  .navbar--mhs .navbar__menu { order: 3; flex: 1 0 100%; margin: 0; padding: .4rem 1.5rem 1.2rem; gap: 2.2rem; overflow-x: auto; scrollbar-width: none; }
+  .navbar--mhs .navbar__menu::-webkit-scrollbar { display: none; }
+  .navbar--mhs .navbar__link { display: inline; font-size: 1.4rem; }
+  .navbar--mhs .navbar__pop { min-width: 19rem; }
+}

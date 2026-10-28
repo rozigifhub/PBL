@@ -34,9 +34,13 @@ if ($produk !== false) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $produk !== false ? e($produk["nama_merchandise"]) . " - Merchandise Kampus" : "Produk tidak ditemukan" ?></title>
     <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
 </head>
 <body>
-<?php require __DIR__ . "/../includes/navbar.php"; ?>
+<?php
+$mhsActive = "produk";
+require __DIR__ . "/../includes/navbar-mahasiswa.php";
+?>
 
 <main>
     <?php if ($produk === false): ?>

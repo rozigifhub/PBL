@@ -1,0 +1,231 @@
+/* =========================================================
+   KERANJANG BELANJA  (mahasiswa/keranjang.php)
+   Dimuat SETELAH style.css & navbar-mahasiswa.css, memakai token (--nav-h, --c-btn, dll) dari style.css.
+   Ukuran dalam rem (1rem = 16px di layar 1920), sama seperti katalog.css & dashboard.css.
+   Semua class berawalan "cart-" agar tidak bentrok dengan .card, .btn, .badge, .empty, dll.
+   Boleh ditempel ke akhir style.css (lalu hapus <link> keranjang.css di keranjang.php).
+   ========================================================= */
+
+/* ---------- 1. TOKEN KHUSUS KERANJANG (warna diambil dari desain UI/UX) ---------- */
+.cart {
+  --k-title:  #2A4580;   /* judul, "Pilih Semua", total */
+  --k-name:   #45619D;   /* nama produk */
+  --k-card:   #FFF6E0;   /* kartu daftar & ringkasan */
+  --k-orange: #FF9F1C;   /* tombol utama */
+  --k-price:  #FF7B00;   /* harga satuan */
+  --k-text:   #5D5D5D;   /* teks sekunder (Hapus Yang Dipilih) */
+  --k-muted:  #7B7B7B;   /* label kecil — sedikit lebih gelap dari desain agar terbaca */
+  --k-rule:   #000;      /* garis pemisah tebal */
+  --k-danger: #B00020;   /* peringatan stok (sama dengan pesan error backend) */
+  --k-maroon: #963834;
+  --k-shadow: 0 .5rem 1.4rem rgba(20, 38, 77, .16);
+}
+
+/* ---------- 2. LATAR HALAMAN & KERANGKA ---------- */
+.cart { position: relative; isolation: isolate; min-height: calc(100vh - var(--nav-h)); color: var(--k-title); }
+/* Latar dekoratif lewat pseudo-element "fixed" (bukan background-attachment: fixed) agar tetap jalan di iOS.
+   Dimulai tepat di bawah navbar seperti pada desain. */
+.cart::before { content: ""; position: fixed; z-index: -1; inset: var(--nav-h) 0 0 0; pointer-events: none;
+                background: var(--c-cream) url('../img/bg-keranjang.jpg') center top / cover no-repeat; }
+.cart__inner { width: min(113rem, 100% - 4rem); margin: 0 auto; padding: 2.8rem 0 6rem; }
+
+.cart-panel { background: var(--k-card); border-radius: 1.5rem; box-shadow: var(--k-shadow); }
+
+/* ---------- 3. JEJAK HALAMAN & JUDUL ---------- */
+.cart-crumb { display: flex; align-items: center; gap: .7rem; margin: 0 0 1.5rem; padding-left: 1.5rem; font-size: 1.5rem; text-transform: uppercase; line-height: 1.2; }
+.cart-crumb a { color: inherit; text-underline-offset: .3rem; }
+.cart-crumb a:hover { color: var(--k-name); }
+.cart-crumb [aria-current] { font-weight: 700; }
+.cart-crumb__home { flex: none; width: 2rem; height: 2rem; margin-right: .5rem; }
+
+.cart-head { display: flex; align-items: center; gap: 2.5rem; margin: 0 0 2.4rem; padding-left: 1.1rem; }
+.cart-head__icon { flex: none; display: grid; place-items: center; width: 7.1rem; height: 7.1rem; border-radius: 50%; background: var(--k-orange); color: #fff; }
+.cart-head__icon svg { width: 3.8rem; height: 3.8rem; }
+.cart-head__title { margin: 0; font-size: 2.5rem; line-height: 1.1; text-transform: uppercase; }
+.cart-head__sub { margin: .8rem 0 0; color: #707070; font-size: 1.25rem; font-weight: 500; line-height: 1.4; }
+
+/* Pesan dari backend (flash) */
+.cart-flash { margin: 0 0 2rem; padding: 1.2rem 1.8rem; border-radius: .9rem; font-size: 1.4rem; font-weight: 500; line-height: 1.4; }
+.cart-flash--ok  { color: #1B5E20; background: #E8F5E9; border: 1px solid #2E7D32; }
+.cart-flash--err { color: var(--k-maroon); background: #FBEAEA; border: 1px solid var(--k-maroon); }
+
+/* ---------- 4. TATA LETAK DUA KOLOM ---------- */
+.cart-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 4.4rem; align-items: start; }
+
+/* ---------- 5. KARTU KIRI: BAR ATAS ---------- */
+.cart-bar { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; height: 5.6rem; margin: 0 1.1rem; padding: 0 1.9rem;
+            border-bottom: .2rem solid var(--k-rule); }
+.cart-selectall { display: inline-flex; align-items: center; gap: .8rem; font-size: 1.5rem; font-weight: 500; cursor: pointer; user-select: none; }
+
+/* Checkbox kustom (kotak abu pada desain; terpilih = biru tua) */
+.cart-check { appearance: none; -webkit-appearance: none; flex: none; display: grid; place-content: center; width: 1.65rem; height: 1.65rem; margin: 0;
+              border: .13rem solid #9C9C9C; border-radius: .4rem; background: #E3E1DB; cursor: pointer; transition: background .15s, border-color .15s; }
+.cart-check::after { content: ""; width: .9rem; height: .5rem; border-left: .2rem solid #fff; border-bottom: .2rem solid #fff;
+                     transform: translateY(-.1rem) rotate(-45deg) scale(0); transition: transform .12s; }
+.cart-check:hover { border-color: var(--k-title); }
+.cart-check:checked,
+.cart-check:indeterminate { background: var(--k-title); border-color: var(--k-title); }
+.cart-check:checked::after { transform: translateY(-.1rem) rotate(-45deg) scale(1); }
+.cart-check:indeterminate::after { width: .8rem; height: 0; border-left: 0; transform: none; }
+.cart-check:focus-visible { outline: .25rem solid rgba(255, 159, 28, .75); outline-offset: .2rem; }
+
+.cart-bulkdel { display: inline-flex; align-items: center; gap: .8rem; padding: .6rem 1rem; border: 0; border-radius: .8rem; background: transparent;
+                color: var(--k-text); font: 500 1.5rem var(--font); cursor: pointer; transition: color .2s, background .2s, transform .15s; }
+.cart-bulkdel svg { width: 2.2rem; height: 2.2rem; transition: transform .2s; }
+.cart-bulkdel:not(:disabled):hover { color: var(--k-maroon); background: rgba(150, 56, 52, .09); }
+.cart-bulkdel:not(:disabled):hover svg { transform: rotate(-10deg) scale(1.08); }
+.cart-bulkdel:not(:disabled):active { transform: scale(.96); }
+.cart-bulkdel:disabled { color: #8A8A8A; cursor: not-allowed; }
+.cart-bulkdel:focus-visible { outline: .25rem solid rgba(255, 159, 28, .75); outline-offset: .2rem; }
+
+/* ---------- 6. KARTU KIRI: BARIS PRODUK ---------- */
+.cart-items { margin: 0; padding: 0; list-style: none; }
+
+.cart-item { position: relative; display: grid; align-items: center; column-gap: 1.5rem; margin: 0 1.1rem; padding: 2.4rem 1.9rem; border-radius: 1.2rem;
+             grid-template-columns: 1.65rem 12.3rem minmax(0, 1fr) 13.2rem 11rem 3.4rem;
+             transition: background .2s, opacity .25s, transform .25s; }
+/* garis pemisah antar produk (sedikit masuk ke dalam, seperti desain) */
+.cart-item + .cart-item::before { content: ""; position: absolute; top: 0; left: 1.9rem; right: 1.9rem; border-top: .2rem solid var(--k-rule); }
+.cart-item:hover { background: rgba(255, 255, 255, .55); }
+.cart-item.is-selected { background: rgba(255, 183, 85, .16); }
+.cart-item.is-leaving { opacity: 0; transform: translateX(2rem); pointer-events: none; }
+
+.cart-item__photo { display: grid; place-items: center; width: 12.3rem; height: 14rem; overflow: hidden; border-radius: 1.25rem; background: #F3E8D4;
+                    color: var(--k-muted); font-size: 1.2rem; text-align: center; }
+.cart-item__photo img { width: 100%; height: 100%; padding: 1rem; object-fit: contain; transition: transform .35s ease; }
+.cart-item:hover .cart-item__photo img { transform: scale(1.07); }
+
+.cart-item__info { display: flex; flex-direction: column; align-items: flex-start; align-self: stretch; gap: .6rem; min-width: 0; padding: .6rem 0 .4rem; }
+.cart-item__name { margin: 0; color: var(--k-name); font-size: 1.5rem; font-weight: 700; line-height: 1.25; text-transform: uppercase; overflow-wrap: anywhere; }
+.cart-item__cat { margin: 0; color: var(--k-muted); font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+/* Ukuran dari kolom merchandise.ukuran — hanya informasi, bukan pilihan */
+.cart-item__size { margin: 0; padding: .45rem 1.2rem; border: .1rem solid #D6D1C4; border-radius: .7rem; background: #EBE7DC; color: #6A6A6A;
+                   font-size: 1.4rem; font-weight: 500; line-height: 1.2; white-space: nowrap; }
+.cart-item__unit { margin: auto 0 0; white-space: nowrap; color: var(--k-price); font-size: 1.5rem; font-weight: 700; text-transform: uppercase; }
+.cart-item__warn { margin: 0; color: var(--k-danger); font-size: 1.25rem; font-weight: 700; line-height: 1.35; }
+.cart-item__warn[hidden] { display: none; }
+
+/* Pengubah jumlah: [ - | 1 | + ] */
+.cart-item__qty { display: flex; flex-direction: column; align-items: center; gap: .6rem; margin: 0; }
+.cart-stepper { display: grid; grid-template-columns: 3.45rem minmax(0, 1fr) 3.45rem; width: 13.2rem; height: 3.8rem; overflow: hidden;
+                border: .1rem solid #A8A8A8; border-radius: .8rem; background: #fff; transition: border-color .2s, box-shadow .2s; }
+.cart-stepper:focus-within { border-color: var(--k-orange); box-shadow: 0 0 0 .3rem rgba(255, 159, 28, .25); }
+.cart-stepper__btn { display: grid; place-items: center; padding: 0; border: 0; background: #D9D9D9; color: #000; font: 700 2.2rem/1 var(--font); cursor: pointer;
+                     transition: background .15s, transform .1s; }
+.cart-stepper__btn:hover:not(:disabled) { background: #CBCBCB; }
+.cart-stepper__btn:active:not(:disabled) { background: #BEBEBE; transform: scale(.92); }
+.cart-stepper__btn:disabled { color: #9A9A9A; cursor: not-allowed; }
+.cart-stepper__btn:focus-visible { outline: .25rem solid rgba(255, 159, 28, .85); outline-offset: -.25rem; }
+.cart-stepper__input { width: 100%; min-width: 0; padding: 0; border: 0; border-radius: 0; outline: 0; background: transparent; color: #000;
+                       font: 700 2rem var(--font); text-align: center; appearance: textfield; -moz-appearance: textfield; }
+.cart-stepper__input::-webkit-outer-spin-button,
+.cart-stepper__input::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }
+.cart-stepper__input:disabled { color: #9A9A9A; }
+.cart-item.is-short .cart-stepper { border-color: var(--k-danger); }
+.cart-item.is-saving .cart-stepper__input { color: #8A8A8A; }
+
+.cart-update { padding: .4rem 1.2rem; border: .1rem solid #A8A8A8; border-radius: .6rem; background: #fff; font: 500 1.2rem var(--font); cursor: pointer; }
+
+.cart-item__total { margin: 0; color: #000; font-size: 1.5rem; font-weight: 700; text-transform: uppercase; }
+.cart-item__total.is-bump { animation: cartBump .35s ease-out; }
+@keyframes cartBump { 40% { transform: scale(1.1); color: var(--k-price); } }
+
+.cart-item__del { margin: 0; justify-self: end; }
+.cart-item__del button { display: grid; place-items: center; width: 3.4rem; height: 3.4rem; padding: 0; border: 0; border-radius: 50%; background: transparent;
+                         color: #8A8A8A; cursor: pointer; transition: color .2s, background .2s, transform .15s; }
+.cart-item__del svg { width: 2rem; height: 2rem; }
+.cart-item__del button:hover { color: var(--k-maroon); background: rgba(150, 56, 52, .1); }
+.cart-item__del button:active { transform: scale(.9); }
+.cart-item__del button:focus-visible { outline: .25rem solid rgba(255, 159, 28, .75); outline-offset: .15rem; }
+
+/* ---------- 7. KARTU KIRI: KAKI ---------- */
+.cart-foot { margin: 0 1.1rem; padding: 2.2rem 1.9rem 2.6rem; border-top: .2rem solid var(--k-rule); }
+.cart-back { display: inline-flex; align-items: center; gap: .7rem; color: var(--k-title); font-size: 1.5rem; font-weight: 500; text-decoration: none; transition: color .2s; }
+.cart-back span { display: inline-block; transition: transform .2s; }
+.cart-back:hover { color: var(--k-name); text-decoration: underline; text-underline-offset: .3rem; }
+.cart-back:hover span { transform: translateX(-.5rem); }
+.cart-back:focus-visible { outline: .25rem solid rgba(255, 159, 28, .75); outline-offset: .3rem; border-radius: .4rem; }
+
+/* ---------- 8. KARTU KANAN: RINGKASAN BELANJA ---------- */
+.cart-summary { position: sticky; top: calc(var(--nav-h) + 2rem); padding: 3.3rem 1.9rem 3.2rem 1.7rem; }
+.cart-summary__title { margin: 0 0 2.2rem; color: var(--k-title); font-size: 2.25rem; line-height: 1.1; }
+
+.cart-sum { margin: 0; }
+.cart-sum__row { display: flex; align-items: baseline; justify-content: space-between; gap: 1.2rem; color: #8C8C8C; font-size: 1.5rem; font-weight: 500; }
+.cart-sum__row dt, .cart-sum__row dd { margin: 0; }
+.cart-sum__row dd { white-space: nowrap; }
+.cart-sum__row--sub { padding-bottom: 1.1rem; border-bottom: .2rem solid var(--k-rule); }
+.cart-sum__row--sub + .cart-sum__row { padding-top: 1.5rem; }
+.cart-sum__row--total { margin-top: 1.9rem; color: var(--k-title); }
+.cart-sum__row--total dd { font-weight: 700; }
+.cart-sum__note { margin: 1rem 0 0; color: var(--k-muted); font-size: 1.15rem; line-height: 1.4; }
+
+/* Tombol utama "Lanjut Ke Pembayaran" */
+.cart-cta { display: flex; align-items: center; justify-content: center; gap: .9rem; width: 100%; height: 4.25rem; margin-top: 1.7rem; border-radius: .8rem;
+            background: var(--k-orange); color: #fff; font-size: 1.5rem; font-weight: 500; text-decoration: none; cursor: pointer;
+            transition: transform .18s, box-shadow .2s, background .2s; }
+.cart-cta img { width: 3.2rem; height: 3.2rem; transition: transform .25s; }
+.cart-cta__arrow { display: inline-block; transition: transform .25s; }
+.cart-cta:hover { background: #FFAA3D; box-shadow: 0 .8rem 1.8rem rgba(255, 159, 28, .45); transform: translateY(-.2rem); }
+.cart-cta:hover .cart-cta__arrow { transform: translateX(.6rem); }
+.cart-cta:hover img { transform: rotate(-8deg) scale(1.08); }
+.cart-cta:active { transform: scale(.98); box-shadow: none; }
+.cart-cta:focus-visible { outline: .25rem solid var(--c-navy); outline-offset: .25rem; }
+.cart-cta--inline { display: inline-flex; width: auto; padding: 0 3rem; }
+
+/* Stok bermasalah: tombol dikunci sampai jumlah diperbaiki */
+.cart-cta.is-disabled { background: #D9CDB4; box-shadow: none; transform: none; cursor: not-allowed; }
+.cart-cta.is-disabled:hover img,
+.cart-cta.is-disabled:hover .cart-cta__arrow { transform: none; }
+.cart-sum__warn { margin: 1.2rem 0 0; color: var(--k-danger); font-size: 1.25rem; font-weight: 700; line-height: 1.4; }
+.cart-sum__warn[hidden] { display: none; }
+
+/* ---------- 9. KERANJANG KOSONG ---------- */
+.cart-empty { display: grid; justify-items: center; gap: 1rem; padding: 6rem 2rem 6.4rem; text-align: center; }
+.cart-empty svg { width: 8rem; height: 8rem; color: #E2B95C; }
+.cart-empty h2 { margin: 1rem 0 0; color: var(--k-title); font-size: 2.2rem; }
+.cart-empty p { margin: 0; color: #707070; font-size: 1.4rem; }
+.cart-empty .cart-cta { margin-top: 1.8rem; }
+
+/* ---------- 10. PESAN SINGKAT (hasil AJAX) ---------- */
+.cart-toast { position: fixed; left: 50%; bottom: 2.4rem; z-index: 30; display: flex; flex-direction: column; align-items: center; gap: .8rem;
+              width: max-content; max-width: calc(100vw - 3rem); transform: translateX(-50%); pointer-events: none; }
+.cart-toast__msg { padding: 1.1rem 1.8rem; border-radius: .9rem; background: var(--c-navy); color: #fff; font-size: 1.4rem; font-weight: 500; line-height: 1.4;
+                   box-shadow: 0 .6rem 1.6rem rgba(20, 38, 77, .35); animation: cartToastIn .2s ease-out; }
+.cart-toast__msg--err { background: var(--k-maroon); }
+@keyframes cartToastIn { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: none; } }
+
+/* ---------- 11. RESPONSIF ---------- */
+@media (max-width: 1180px) {
+  /* ringkasan pindah ke bawah daftar produk */
+  .cart-layout { grid-template-columns: minmax(0, 1fr); gap: 2.4rem; }
+  .cart-summary { position: static; }
+}
+
+@media (max-width: 900px) {
+  .cart__inner { width: min(113rem, 100% - 2.4rem); padding-top: 2rem; }
+  .cart-head { gap: 1.6rem; padding-left: 0; }
+  .cart-head__icon { width: 5.6rem; height: 5.6rem; }
+  .cart-head__icon svg { width: 3rem; height: 3rem; }
+  .cart-crumb { padding-left: 0; }
+  .cart-head__title { font-size: 2.1rem; }
+
+  .cart-bar { flex-wrap: wrap; height: auto; padding: 1.4rem 1.2rem; }
+  .cart-selectall { white-space: nowrap; }
+  .cart-item { margin: 0 .6rem; padding: 2rem 1.2rem; row-gap: 1rem;
+               grid-template-columns: 1.65rem 9.5rem minmax(0, 1fr) 3.4rem;
+               grid-template-areas: "chk photo info  del"
+                                    "chk photo qty   qty"
+                                    "chk photo total total";
+               align-items: start; }
+  .cart-item + .cart-item::before { left: 1.2rem; right: 1.2rem; }
+  .cart-item__check { grid-area: chk; margin-top: .4rem; }
+  .cart-item__photo { grid-area: photo; width: 9.5rem; height: 11rem; }
+  .cart-item__info { grid-area: info; padding: 0; }
+  .cart-item__qty { grid-area: qty; align-items: flex-start; }
+  .cart-item__total { grid-area: total; }
+  .cart-item__del { grid-area: del; align-self: start; }
+  .cart-foot { margin: 0 .6rem; padding-inline: 1.2rem; }
+  .cart-summary { padding: 2.6rem 1.6rem 2.8rem; }
+  .cart-toast { bottom: 1.6rem; }
+}

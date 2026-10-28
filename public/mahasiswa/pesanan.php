@@ -79,9 +79,13 @@ if ($pesanan !== false) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pesanan #<?= $id ?> - Merchandise Kampus</title>
     <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
 </head>
 <body>
-<?php require __DIR__ . "/../includes/navbar.php"; ?>
+<?php
+$mhsActive = "pesanan";
+require __DIR__ . "/../includes/navbar-mahasiswa.php";
+?>
 
 <main>
     <?php if ($pesanan === false): ?>
