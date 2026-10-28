@@ -38,7 +38,7 @@ if ($produk !== false) {
 </head>
 <body>
 <?php
-$mhsActive = "";
+$mhsActive = "produk";
 require __DIR__ . "/../includes/navbar-mahasiswa.php";
 ?>
 

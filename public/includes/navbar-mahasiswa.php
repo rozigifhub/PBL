@@ -6,14 +6,16 @@
 //   require __DIR__ . "/../includes/navbar-mahasiswa.php";
 //
 // Butuh CSS: assets/css/navbar-mahasiswa.css (dimuat setelah style.css).
-// Ubah teks / URL menu di array $mhsLinks di bawah.
+// Ubah teks / URL menu di array $mhsLinks di bawah (beranda | dashboard | produk | pesanan | tentang; keranjang hanya untuk ikon).
 // Path memakai awalan "/" (absolut dari root web), sama seperti includes/navbar.php.
 $mhsActive = $mhsActive ?? "";
 
 $mhsLinks = [
     "beranda"   => ["BERANDA",   "/index.php"],
     "dashboard" => ["DASHBOARD", "/mahasiswa/dashboard.php"],
+    "produk"    => ["PRODUK",    "/mahasiswa/katalog.php"],
     "pesanan"   => ["PESANAN",   "/mahasiswa/riwayat.php"],
+    "tentang"   => ["TENTANG KAMI", "#"],   // belum ada halamannya; ganti "#" dengan URL halaman Tentang Kami nanti
 ];
 ?>
 <header class="navbar navbar--mhs">
