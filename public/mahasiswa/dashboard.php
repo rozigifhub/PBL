@@ -9,7 +9,9 @@ require_mahasiswa();
 
 // Profil mahasiswa (join akun_login untuk email)
 $stmt = $pdo->prepare("
-    SELECT m.nim, m.nama, m.no_hp, m.alamat, a.email
+    SELECT m.nim, m.nama, m.no_hp, a.email,
+           (SELECT d.alamat FROM alamat_mahasiswa d
+            WHERE d.id_akun = m.id_akun AND d.is_default) AS alamat
     FROM mahasiswa m
     JOIN akun_login a ON a.id_akun = m.id_akun
     WHERE m.id_akun = :id_akun

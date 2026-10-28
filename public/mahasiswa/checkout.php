@@ -28,10 +28,16 @@ if (empty($keranjang)) {
     redirect("/mahasiswa/keranjang.php");
 }
 
-// Alamat default tersimpan pada profil (untuk prefilled form checkout)
-$stmt = $pdo->prepare("SELECT alamat FROM mahasiswa WHERE id_akun = :id_akun");
+// Alamat tersimpan di profil (default lebih dulu) untuk prefilled form checkout
+$stmt = $pdo->prepare("
+    SELECT id_alamat, label, alamat, is_default
+    FROM alamat_mahasiswa
+    WHERE id_akun = :id_akun
+    ORDER BY is_default DESC, id_alamat
+");
 $stmt->execute([":id_akun" => $_SESSION["id_akun"]]);
-$alamatDefault = $stmt->fetchColumn();
+$daftarAlamat  = $stmt->fetchAll();
+$alamatDefault = ($daftarAlamat && $daftarAlamat[0]["is_default"]) ? $daftarAlamat[0]["alamat"] : "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
@@ -163,12 +169,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 // Pesanan selesai → keranjang dikosongkan
                 unset($_SESSION["keranjang"]);
 
-                // Simpan alamat yang dipakai sebagai alamat default profil
-                try {
-                    $stmt = $pdo->prepare("UPDATE mahasiswa SET alamat = :alamat WHERE id_akun = :id_akun");
-                    $stmt->execute([":alamat" => $alamat, ":id_akun" => $_SESSION["id_akun"]]);
-                } catch (PDOException $e) {
-                    error_log("Gagal menyimpan alamat default: " . $e->getMessage());
+                // Belum punya alamat tersimpan → simpan alamat ini sebagai default
+                if (!$daftarAlamat) {
+                    try {
+                        $stmt = $pdo->prepare("
+                            INSERT INTO alamat_mahasiswa (id_akun, label, alamat, is_default)
+                            VALUES (:id_akun, 'Alamat utama', :alamat, TRUE)
+                        ");
+                        $stmt->execute([":alamat" => $alamat, ":id_akun" => $_SESSION["id_akun"]]);
+                    } catch (PDOException $e) {
+                        error_log("Gagal menyimpan alamat default: " . $e->getMessage());
+                    }
                 }
 
                 // Fase 4: buat transaksi pembayaran Midtrans lalu arahkan ke sana
@@ -299,10 +310,25 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
 
         <h2>Alamat Pengiriman</h2>
 
-            <textarea name="alamat" rows="4" cols="50" maxlength="500"
+            <?php if ($daftarAlamat): ?>
+                <p>
+                    <label for="pilih-alamat">Pilih alamat tersimpan</label><br>
+                    <select id="pilih-alamat" onchange="if (this.value !== '') document.getElementById('alamat').value = this.options[this.selectedIndex].dataset.alamat;">
+                        <option value="">— ketik alamat lain —</option>
+                        <?php foreach ($daftarAlamat as $a): ?>
+                            <option value="<?= (int)$a["id_alamat"] ?>" data-alamat="<?= e($a["alamat"]) ?>">
+                                <?= e($a["label"]) ?><?= $a["is_default"] ? " (default)" : "" ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small><a href="/mahasiswa/profil.php">Kelola alamat</a></small>
+                </p>
+            <?php endif; ?>
+
+            <textarea id="alamat" name="alamat" rows="4" cols="50" maxlength="500"
                       placeholder="Contoh: Jl. Kenanga No. 10, RT 02/RW 03, Surabaya"
                       required><?= e($alamatForm) ?></textarea>
-            <br><small>Alamat tersimpan akan terisi otomatis saat checkout berikutnya (tetap bisa diubah).</small>
+            <br><small>Alamat default terisi otomatis (tetap bisa diubah per pesanan).</small>
 
             <p>
                 <button type="submit"><b>Buat Pesanan</b></button>
