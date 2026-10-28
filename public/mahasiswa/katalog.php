@@ -5,7 +5,12 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
-require_mahasiswa();
+// Boleh dilihat tamu (belum login); akun non-mahasiswa tetap ditolak.
+$sudahLogin = !empty($_SESSION["id_akun"]);
+if ($sudahLogin) {
+    require_mahasiswa();
+}
+$loginNext = "/login.php?next=" . rawurlencode($_SERVER["REQUEST_URI"]);
 
 // Filter kategori (opsional): katalog.php?kategori=ID
 $idKat = (int)($_GET["kategori"] ?? 0);
@@ -81,8 +86,13 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
 
             <div class="catalog__tools">
                 <p class="catalog__links" style="margin:0">
-                    <a href="/mahasiswa/dashboard.php">Dashboard</a> |
-                    <a href="/logout.php">Logout</a>
+                    <?php if ($sudahLogin): ?>
+                        <a href="/mahasiswa/dashboard.php">Dashboard</a> |
+                        <a href="/logout.php">Logout</a>
+                    <?php else: ?>
+                        <a href="<?= e($loginNext) ?>">Login</a> |
+                        <a href="/register.php">Register</a>
+                    <?php endif; ?>
                 </p>
                 <div class="search" role="search">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -143,7 +153,12 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                         <div class="pcard__actions">
                             <a class="pbtn pbtn--ghost" href="<?= $detail ?>">Detail Produk</a>
 
-                            <?php if ($ada): ?>
+                            <?php if ($ada && !$sudahLogin): ?>
+                                <!-- Tamu: arahkan ke login, lalu kembali ke halaman ini -->
+                                <a class="pbtn pbtn--cta" href="<?= e($loginNext) ?>">
+                                    <img src="/assets/img/icon-cart.png" alt=""><span>+ Keranjang</span>
+                                </a>
+                            <?php elseif ($ada): ?>
                                 <!-- Sama seperti form di produk.php: POST ke keranjang.php -->
                                 <form method="POST" action="/mahasiswa/keranjang.php">
                                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">

@@ -36,6 +36,9 @@ $mhsLinks = [
         <a class="navbar__icon" href="/mahasiswa/keranjang.php" aria-label="Keranjang"<?= $mhsActive === "keranjang" ? ' aria-current="page"' : "" ?>><img src="/assets/img/icon-cart.png" alt=""></a>
 
         <!-- Akun: menu kecil berisi nama + Kelola Profil + Logout (tanpa JS pun tetap bisa dibuka/ditutup). -->
+        <?php if (empty($_SESSION["id_akun"])): ?>
+            <a class="navbar__link" href="/login.php?next=<?= rawurlencode($_SERVER["REQUEST_URI"]) ?>">LOGIN</a>
+        <?php else: ?>
         <details class="navbar__account">
             <summary class="navbar__icon" aria-label="Akun saya">
                 <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -50,5 +53,6 @@ $mhsLinks = [
                 <a class="navbar__logout" href="/logout.php">Logout</a>
             </div>
         </details>
+        <?php endif; ?>
     </div>
 </header>

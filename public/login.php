@@ -68,7 +68,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
 
             if ($akun["role"] === "Mahasiswa") {
-                header("Location: mahasiswa/dashboard.php");
+                // Kembali ke halaman asal (hanya path internal /mahasiswa/...)
+                $next = (string)($_GET["next"] ?? "");
+                $nextAman = preg_match('#^/mahasiswa/[A-Za-z0-9_./?=&%-]*$#', $next) === 1
+                    && strpos($next, "..") === false;
+                header("Location: " . ($nextAman ? $next : "mahasiswa/dashboard.php"));
                 exit;
             }
 

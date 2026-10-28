@@ -5,7 +5,12 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
-require_mahasiswa();
+// Boleh dilihat tamu (belum login); akun non-mahasiswa tetap ditolak.
+$sudahLogin = !empty($_SESSION["id_akun"]);
+if ($sudahLogin) {
+    require_mahasiswa();
+}
+$loginNext = "/login.php?next=" . rawurlencode($_SERVER["REQUEST_URI"]);
 
 $id = (int)($_GET["id"] ?? 0);
 
@@ -88,7 +93,9 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
             </tr>
         </table>
 
-        <?php if ((int)$produk["stok"] > 0): ?>
+        <?php if ((int)$produk["stok"] > 0 && !$sudahLogin): ?>
+            <p><a href="<?= e($loginNext) ?>">Login untuk menambahkan ke keranjang</a></p>
+        <?php elseif ((int)$produk["stok"] > 0): ?>
             <form method="POST" action="/mahasiswa/keranjang.php">
                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                 <input type="hidden" name="action" value="tambah">
