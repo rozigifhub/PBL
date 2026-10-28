@@ -49,6 +49,7 @@ $mhsLinks = [
             </summary>
             <div class="navbar__pop">
                 <p class="navbar__who">Masuk sebagai <b><?= htmlspecialchars((string)($_SESSION["username"] ?? "")) ?></b></p>
+                <a class="navbar__sub" href="/mahasiswa/dompet.php">Dompet</a>
                 <a class="navbar__sub" href="/mahasiswa/profil.php">Kelola Profil</a>
                 <a class="navbar__logout" href="/logout.php">Logout</a>
             </div>

@@ -19,6 +19,7 @@ require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../config/midtrans.php";
+require_once __DIR__ . "/../../config/dompet.php";
 require_mahasiswa();
 
 $error = "";
@@ -27,6 +28,8 @@ $keranjang = $_SESSION["keranjang"] ?? [];
 if (empty($keranjang)) {
     redirect("/mahasiswa/keranjang.php");
 }
+
+$saldoDompet = dompet_saldo($pdo, (int)$_SESSION["id_akun"]);
 
 // Alamat tersimpan di profil (default lebih dulu) untuk prefilled form checkout
 $stmt = $pdo->prepare("
@@ -182,14 +185,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     }
                 }
 
-                // Fase 4: buat transaksi pembayaran Midtrans lalu arahkan ke sana
+                // Fase 4: buat pembayaran lalu arahkan ke sana
                 // (DP → gross sebesar persentase; Full → gross sebesar total)
-                [$okBayar, $hasilBayar] = midtrans_buat_pembayaran(
+                // Saldo dompet (bila dipilih) dipakai lebih dulu, sisanya via Midtrans.
+                [$okBayar, $tipeBayar, $hasilBayar] = dompet_bayar_pesanan(
                     $pdo,
                     $idPesanan,
                     $jumlahDibayar,
-                    $jenisPembayaran === "dp" ? "DP" : "Full Payment"
+                    $jenisPembayaran === "dp" ? "DP" : "Full Payment",
+                    !empty($_POST["pakai_saldo"])
                 );
+
+                if ($okBayar && $tipeBayar === "lunas") {
+                    refresh_mv_rekap($pdo);
+                    set_flash("sukses", "Pembayaran berhasil dari saldo dompet.");
+                    redirect("/mahasiswa/pesanan.php?id=" . $idPesanan);
+                }
 
                 if ($okBayar) {
                     redirect($hasilBayar); // keluar ke halaman pembayaran Midtrans
@@ -307,6 +318,14 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                 DP 50% — bayar Rp <?= number_format($total / 2, 0, ",", ".") ?> dulu,
                 sisanya Rp <?= number_format($total / 2, 0, ",", ".") ?> pelunasan</label>
         </p>
+
+        <?php if ($saldoDompet > 0): ?>
+            <p>
+                <label><input type="checkbox" name="pakai_saldo" value="1" checked>
+                    Gunakan saldo dompet (tersedia Rp <?= number_format($saldoDompet, 0, ",", ".") ?>)</label><br>
+                <small>Saldo dipakai lebih dulu; kekurangannya dibayar lewat Midtrans.</small>
+            </p>
+        <?php endif; ?>
 
         <h2>Alamat Pengiriman</h2>
 

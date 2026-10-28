@@ -8,6 +8,7 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../config/midtrans.php";
 require_mahasiswa();
 
 $id   = (int)($_GET["id"] ?? 0);
@@ -18,6 +19,61 @@ $baru = isset($_GET["baru"]);
 if ($id === 0 && !empty($_GET["order_id"])
     && preg_match('/^PBL-(\d+)-/', (string)$_GET["order_id"], $m)) {
     $id = (int)$m[1];
+}
+
+// ---------- Refund ke dompet (maks 24 jam sejak pembayaran pertama) ----------
+if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["action"] ?? "") === "refund") {
+
+    if (!csrf_validate()) {
+        set_flash("gagal", "Sesi tidak valid. Silakan coba lagi.");
+        redirect("/mahasiswa/pesanan.php?id=" . $id);
+    }
+
+    try {
+        // Tagihan Midtrans yang masih menunggu ikut ditutup setelah commit
+        $stmt = $pdo->prepare("
+            SELECT order_id FROM pembayaran
+            WHERE id_pesanan = :id AND status_bayar = 'Menunggu'
+              AND metode_pembayaran <> 'Dompet'
+        ");
+        $stmt->execute([":id" => $id]);
+        $orderIdsMenunggu = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $pdo->beginTransaction();
+
+        $stmt = $pdo->prepare("
+            SELECT set_config('app.aktor', :aktor, true)
+        ");
+        $stmt->execute([":aktor" => "mahasiswa:" . ($_SESSION["username"] ?? "")]);
+
+        $stmt = $pdo->prepare("SELECT out_ok, out_pesan, out_jumlah FROM fn_refund_pesanan(:id, :akun)");
+        $stmt->execute([":id" => $id, ":akun" => $_SESSION["id_akun"]]);
+        $hasil = $stmt->fetch();
+
+        if (!$hasil["out_ok"]) {
+            $pdo->rollBack();
+            set_flash("gagal", $hasil["out_pesan"]);
+            redirect("/mahasiswa/pesanan.php?id=" . $id);
+        }
+
+        $pdo->commit();
+
+        refresh_mv_rekap($pdo);
+        foreach ($orderIdsMenunggu as $oid) {
+            [, $pesanClose] = midtrans_batalkan($oid);
+            error_log("Close Midtrans {$oid}{$pesanClose}");
+        }
+
+        set_flash("sukses", "Pesanan dibatalkan. Rp " . number_format((float)$hasil["out_jumlah"], 0, ",", ".") . " dikembalikan ke dompet Anda.");
+        redirect("/mahasiswa/dompet.php");
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("Refund gagal: " . $e->getMessage());
+        set_flash("gagal", "Terjadi kesalahan saat memproses refund. Coba lagi.");
+        redirect("/mahasiswa/pesanan.php?id=" . $id);
+    }
 }
 
 // Status pembayaran terakhir pesanan ini
@@ -58,6 +114,22 @@ if ($pesanan !== false) {
     $terbayar = (float)$stmt->fetchColumn();
     $sisa     = max(0, (float)$pesanan["total_harga"] - $terbayar);
 }
+
+// Batas refund: 24 jam sejak pembayaran pertama berhasil
+$batasRefund = null;
+if ($pesanan !== false && in_array($pesanan["status_pesanan"], ["DP Lunas", "Menunggu Pelunasan", "Lunas"], true)) {
+    $stmt = $pdo->prepare("
+        SELECT MIN(COALESCE(dibayar_pada, tanggal_pembayaran))
+        FROM pembayaran
+        WHERE id_pesanan = :id AND status_bayar = 'Berhasil'
+    ");
+    $stmt->execute([":id" => $id]);
+    $pertama = $stmt->fetchColumn();
+    if ($pertama) {
+        $batasRefund = (new DateTimeImmutable($pertama))->modify("+24 hours");
+    }
+}
+$bisaRefund = $batasRefund !== null && $batasRefund > new DateTimeImmutable("now");
 
 $detail = [];
 if ($pesanan !== false) {
@@ -197,6 +269,23 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
             <p><i>Pembayaran online (Midtrans) — selesaikan sebelum tautan kedaluwarsa.</i></p>
         <?php elseif ($statusPesanan === "Lunas"): ?>
             <p><b>Pesanan sudah lunas.</b> Menunggu diproses oleh admin.</p>
+        <?php endif; ?>
+
+        <?php if ($bisaRefund): ?>
+            <h2>Batalkan &amp; Refund</h2>
+            <p>
+                Tidak jadi membeli? Pesanan bisa dibatalkan dan seluruh pembayaran
+                (Rp <?= number_format($terbayar, 0, ",", ".") ?>) dikembalikan ke
+                <a href="/mahasiswa/dompet.php">dompet</a> Anda.
+                Batas refund: <b><?= e($batasRefund->format("d M Y H:i")) ?></b>.
+            </p>
+            <form method="POST" onsubmit="return confirm('Batalkan pesanan ini dan refund ke dompet?');">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="refund">
+                <button type="submit"><b>Batalkan &amp; Refund ke Dompet</b></button>
+            </form>
+        <?php elseif ($batasRefund !== null): ?>
+            <p><small>Batas refund otomatis (24 jam sejak pembayaran) sudah lewat. Hubungi customer service bila ingin membatalkan.</small></p>
         <?php endif; ?>
 
     <?php endif; ?>

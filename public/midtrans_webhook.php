@@ -42,6 +42,34 @@ if ($order_id === "" || !hash_equals($diharapkan, $signature)) {
     exit;
 }
 
+// 1b. Top up dompet (order_id berawalan TOPUP-) ditangani terpisah
+if (str_starts_with($order_id, "TOPUP-")) {
+    $statusTopup = midtrans_petakan_status($transaction, $fraud);
+
+    $stmt = $pdo->prepare("SELECT 1 FROM topup_dompet WHERE order_id = :order_id");
+    $stmt->execute([":order_id" => $order_id]);
+    if ($stmt->fetchColumn() === false) {
+        echo json_encode(["status" => "ignored", "reason" => "order_id tidak dikenal"]);
+        exit;
+    }
+
+    if ($statusTopup === "Berhasil") {
+        // Idempotent: notifikasi ganda tidak menambah saldo dua kali
+        $stmt = $pdo->prepare("SELECT fn_topup_berhasil(:order_id)");
+        $stmt->execute([":order_id" => $order_id]);
+    } elseif ($statusTopup !== "Menunggu") {
+        $stmt = $pdo->prepare("
+            UPDATE topup_dompet SET status = :status
+            WHERE order_id = :order_id AND status = 'Menunggu'
+        ");
+        $stmt->execute([":status" => $statusTopup, ":order_id" => $order_id]);
+    }
+
+    error_log("Webhook Midtrans: {$order_id} → {$transaction} ({$statusTopup})");
+    echo json_encode(["status" => "ok"]);
+    exit;
+}
+
 // 2. Cari attempt pembayaran berdasarkan order_id
 $stmt = $pdo->prepare("
     SELECT id_pesanan, jenis_pembayaran
@@ -78,6 +106,15 @@ $stmt->execute([
     ":metode"   => $paymentType !== "" ? $paymentType : "Midtrans Snap",
     ":order_id" => $order_id,
 ]);
+
+// Catat waktu pembayaran berhasil (acuan batas refund 24 jam)
+if ($statusBayar === "Berhasil") {
+    $stmt = $pdo->prepare("
+        UPDATE pembayaran SET dibayar_pada = now()
+        WHERE order_id = :order_id AND dibayar_pada IS NULL
+    ");
+    $stmt->execute([":order_id" => $order_id]);
+}
 
 // 5. Pembayaran berhasil → status pesanan mengikuti jenis pembayaran:
 //    Full Payment → Lunas | DP → DP Lunas | Pelunasan → Lunas

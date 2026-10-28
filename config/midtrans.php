@@ -95,9 +95,12 @@ function midtrans_request(string $method, string $path, ?array $jsonBody = null)
  * Setiap attempt = satu baris pembayaran (order_id unik per attempt).
  *
  * $jenis: 'Full Payment' | 'DP' | 'Pelunasan'
+ * $saldoPakai: porsi tagihan yang dibayar dari dompet (0 = seluruhnya via Midtrans).
+ *   Midtrans hanya menagih ($gross - $saldoPakai); saldo ditahan oleh fn_bayar_dompet
+ *   dan kembali otomatis bila attempt gagal/kedaluwarsa (database/dompet.sql).
  * Return: [ok(bool), payment_url | pesan error]
  */
-function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $gross, string $jenis): array
+function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $gross, string $jenis, float $saldoPakai = 0.0): array
 {
     if (!midtrans_terkonfigurasi()) {
         return [false, "Pembayaran online belum dikonfigurasi di server."];
@@ -125,7 +128,7 @@ function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $gross, string
     $payload = [
         "transaction_details" => [
             "order_id"     => $orderId,
-            "gross_amount" => number_format($gross, 2, ".", ""),
+            "gross_amount" => number_format($gross - $saldoPakai, 2, ".", ""),
         ],
         "customer_details" => $customer,
     ];
@@ -152,6 +155,35 @@ function midtrans_buat_pembayaran(PDO $pdo, int $idPesanan, float $gross, string
     if ($kode !== 201 || empty($data["redirect_url"])) {
         error_log("Midtrans Snap gagal (HTTP {$kode}): " . json_encode($data));
         return [false, "Gagal membuat transaksi pembayaran. Coba beberapa saat lagi."];
+    }
+
+    // Sebagian dibayar dari dompet: potong saldo + catat attempt dalam satu function
+    if ($saldoPakai > 0) {
+        try {
+            $stmt = $pdo->prepare("
+                SELECT fn_bayar_dompet(
+                    :akun, :pesanan, :jenis,
+                    CAST(:gross AS NUMERIC), CAST(:pakai AS NUMERIC), :order_id, :url
+                )
+            ");
+            $stmt->execute([
+                ":akun"     => (int)$_SESSION["id_akun"],
+                ":pesanan"  => $idPesanan,
+                ":jenis"    => $jenis,
+                ":gross"    => number_format($gross, 2, ".", ""),
+                ":pakai"    => number_format($saldoPakai, 2, ".", ""),
+                ":order_id" => $orderId,
+                ":url"      => $data["redirect_url"],
+            ]);
+        } catch (PDOException $e) {
+            error_log("Bayar sebagian dompet gagal: " . $e->getMessage());
+            midtrans_batalkan($orderId); // tutup transaksi Snap yang sudah terlanjur dibuat
+            return [false, str_contains($e->getMessage(), "Saldo dompet tidak cukup")
+                ? "Saldo dompet tidak cukup."
+                : "Terjadi kesalahan database. Coba lagi."];
+        }
+
+        return [true, $data["redirect_url"]];
     }
 
     // Catat attempt pembayaran
