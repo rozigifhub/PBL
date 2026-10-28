@@ -123,7 +123,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $stmt = $pdo->prepare("
                             UPDATE pengiriman
                             SET status_pengiriman = :status,
-                                tanggal_pengiriman = COALESCE(NULLIF(:tanggal, ''), tanggal_pengiriman),
+                                tanggal_pengiriman = COALESCE(CAST(NULLIF(:tanggal, '') AS TIMESTAMPTZ), tanggal_pengiriman),
                                 bukti_pengiriman   = NULLIF(:bukti, ''),
                                 id_admin = COALESCE(id_admin, :admin)
                             WHERE id_pesanan = :id
