@@ -51,11 +51,21 @@ if (!function_exists("foto_url")) {
     <title>Merchandise Kampus - JTI</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/assets/css/style.css") ?>">
+    <?php if (($_SESSION["role"] ?? "") === "Mahasiswa"): ?>
+    <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/assets/css/navbar-mahasiswa.css") ?>">
+    <?php endif; ?>
     <link rel="stylesheet" href="/assets/css/beranda.css?v=<?= @filemtime(__DIR__ . "/assets/css/beranda.css") ?>">
     <script src="/assets/js/beranda.js?v=<?= @filemtime(__DIR__ . "/assets/js/beranda.js") ?>" defer></script>
 </head>
 <body class="page-beranda">
-<?php require __DIR__ . "/includes/navbar.php"; ?>
+<?php
+if (($_SESSION["role"] ?? "") === "Mahasiswa") {
+    $mhsActive = "beranda";
+    require __DIR__ . "/includes/navbar-mahasiswa.php";
+} else {
+    require __DIR__ . "/includes/navbar.php";
+}
+?>
 
 <main class="home">
     <div class="home__inner">

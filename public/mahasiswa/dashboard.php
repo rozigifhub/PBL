@@ -77,10 +77,14 @@ $kelasStatus = [
     <title>Dashboard Mahasiswa - Merchandise Kampus</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
+    <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
     <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= @filemtime(__DIR__ . "/../assets/css/dashboard.css") ?>">
 </head>
 <body class="page-dashboard">
-<?php require __DIR__ . "/../includes/navbar.php"; ?>
+<?php
+$mhsActive = "dashboard";
+require __DIR__ . "/../includes/navbar-mahasiswa.php";
+?>
 
 <!-- Ikon yang dipakai berulang (tombol Detail) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">

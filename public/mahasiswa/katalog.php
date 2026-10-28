@@ -59,11 +59,15 @@ function foto_url(string $foto): string
     <title>Katalog Merchandise Kampus</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
     <link rel="stylesheet" href="/assets/css/katalog.css">
     <script src="/assets/js/katalog.js" defer></script>
 </head>
 <body>
-<?php require __DIR__ . "/../includes/navbar.php"; ?>
+<?php
+$mhsActive = "";
+require __DIR__ . "/../includes/navbar-mahasiswa.php";
+?>
 
 <main class="catalog">
     <div class="catalog__inner">
