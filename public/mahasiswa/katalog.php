@@ -5,6 +5,7 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_opsional(); // tamu tanpa cookie: tanpa session (halaman bisa di-cache)
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../config/gambar.php";
 // Boleh dilihat tamu (belum login); akun non-mahasiswa tetap ditolak.
 $sudahLogin = !empty($_SESSION["id_akun"]);
 if ($sudahLogin) {
@@ -54,6 +55,15 @@ function foto_url(string $foto): string
     return is_file(__DIR__ . "/../uploads/merchandise/" . $nama)
         ? "/uploads/merchandise/" . $nama
         : "";
+}
+
+/** URL thumbnail untuk kartu katalog; jatuh ke foto asli bila thumbnail belum ada. */
+function foto_thumb_url(string $foto): string
+{
+    $thumb = thumb_nama($foto);
+    return is_file(__DIR__ . "/../uploads/merchandise/" . $thumb)
+        ? "/uploads/merchandise/" . $thumb
+        : foto_url($foto);
 }
 ?>
 <!DOCTYPE html>
@@ -125,7 +135,7 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
             <div class="grid">
                 <?php foreach ($produk as $p): ?>
                     <?php
-                    $foto   = foto_url($p["foto"]);
+                    $foto   = foto_thumb_url($p["foto"]);
                     $ada    = (int)$p["stok"] > 0;
                     $ukuran = trim((string)$p["ukuran"]);
                     $detail = "/mahasiswa/produk.php?id=" . (int)$p["id_merchandise"];

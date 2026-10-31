@@ -8,11 +8,15 @@
  *  - hanya jpeg / png / webp
  *  - nama file diacak (mencegah overwrite & path traversal)
  *  - ukuran maksimal 2 MB
+ *
+ * Foto otomatis diperkecil + di-encode ulang ke WebP (config/gambar.php):
+ * foto detail maks 1000 px dan thumbnail 400 px untuk kartu katalog.
  */
 
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../config/gambar.php";
 require_admin();
 
 const UPLOAD_DIR   = __DIR__ . "/../uploads/merchandise";
@@ -59,6 +63,22 @@ function proses_upload(array $file): array
         return [false, "Gagal menyiapkan folder upload."];
     }
 
+    // Utama: perkecil + WebP, plus thumbnail untuk katalog
+    if (gambar_tersedia()) {
+        $namaBaru = bin2hex(random_bytes(8)) . ".webp";
+
+        $ok = gambar_simpan_webp($file["tmp_name"], $mime, [
+            UPLOAD_DIR . "/" . $namaBaru             => GAMBAR_SISI_UTAMA,
+            UPLOAD_DIR . "/" . thumb_nama($namaBaru) => GAMBAR_SISI_THUMB,
+        ]);
+        if (!$ok) {
+            return [false, "Foto tidak dapat diproses (file rusak atau resolusi terlalu besar, maks ~25 megapiksel)."];
+        }
+
+        return [true, $namaBaru];
+    }
+
+    // GD/WebP tidak tersedia di server: simpan file asli apa adanya
     $namaBaru = bin2hex(random_bytes(8)) . "." . MIME_DIIZINKAN[$mime];
 
     if (!move_uploaded_file($file["tmp_name"], UPLOAD_DIR . "/" . $namaBaru)) {
@@ -74,9 +94,11 @@ function hapus_foto(?string $filename): void
     if ($filename === null || $filename === "") {
         return;
     }
-    $path = UPLOAD_DIR . "/" . basename($filename);
-    if (is_file($path)) {
-        @unlink($path);
+    foreach ([basename($filename), thumb_nama($filename)] as $nama) {
+        $path = UPLOAD_DIR . "/" . $nama;
+        if (is_file($path)) {
+            @unlink($path);
+        }
     }
 }
 
