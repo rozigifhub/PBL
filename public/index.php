@@ -59,7 +59,12 @@ function foto_kartu_url(string $foto): string
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Merchandise Kampus - JTI</title>
+    <meta name="description" content="Toko merchandise resmi Jurusan Teknologi Informasi Polinema: kaos, hoodie, tote bag, dan lainnya. Pesan online, bayar DP atau lunas, dan kirim ke alamatmu.">
     <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- Gambar LCP (banner): diunduh sedini mungkin, ukuran menyesuaikan lebar layar -->
+    <link rel="preload" as="image" type="image/webp" fetchpriority="high"
+          imagesrcset="/assets/img/beranda/banner-diskon-800.webp 800w, /assets/img/beranda/banner-diskon-1200.webp 1200w, /assets/img/beranda/banner-diskon.webp 1672w"
+          imagesizes="(max-width: 1050px) 100vw, 1045px">
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/assets/css/style.css") ?>">
     <?php if (($_SESSION["role"] ?? "") === "Mahasiswa"): ?>
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/assets/css/navbar-mahasiswa.css") ?>">
@@ -86,8 +91,9 @@ if (($_SESSION["role"] ?? "") === "Mahasiswa") {
         <section class="promo" aria-label="Promo diskon 20% untuk semua produk JTI Merch">
             <div class="promo__frame">
                 <picture>
-                    <source srcset="/assets/img/beranda/banner-diskon.webp" type="image/webp">
-                    <img class="promo__img" src="/assets/img/beranda/banner-diskon.png" width="1672" height="693"
+                    <source type="image/webp" sizes="(max-width: 1050px) 100vw, 1045px"
+                            srcset="/assets/img/beranda/banner-diskon-800.webp 800w, /assets/img/beranda/banner-diskon-1200.webp 1200w, /assets/img/beranda/banner-diskon.webp 1672w">
+                    <img class="promo__img" src="/assets/img/beranda/banner-diskon.png" width="1672" height="693" fetchpriority="high" decoding="async"
                          alt="Diskon 20% untuk semua produk JTI Merch. Tampil keren dengan merchandise eksklusif JTI. Jangan lewatkan promo terbatas ini!">
                 </picture>
 

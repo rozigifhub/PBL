@@ -51,7 +51,7 @@
 .pcard:nth-child(3n+2) { animation-delay: .08s; }
 .pcard:nth-child(3n)   { animation-delay: .16s; }
 .pcard:hover { transform: translateY(-.5rem); }
-.pcard::before { content: ""; position: absolute; inset: 0; z-index: 0; background: url('../img/card-frame.png') 0 0 / 100% 100%;
+.pcard::before { content: ""; position: absolute; inset: 0; z-index: 0; background: url('../img/card-frame.webp') 0 0 / 100% 100%;
                  filter: drop-shadow(0 .6rem 1rem rgba(0, 0, 0, .22)); }
 .pcard > * { position: relative; z-index: 1; }
 

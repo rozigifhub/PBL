@@ -10,7 +10,7 @@ $navLinks = [
 ?>
 <header class="navbar">
     <a class="navbar__brand" href="/index.php">
-        <img src="/assets/img/logo-navbar.png" alt="JTI Merch - Technology for a Brighter Future">
+        <img src="/assets/img/logo-navbar.webp" alt="JTI Merch - Technology for a Brighter Future">
     </a>
     <nav class="navbar__menu" aria-label="Menu utama">
         <?php foreach ($navLinks as $text => $url): ?>

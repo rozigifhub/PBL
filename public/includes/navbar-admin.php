@@ -18,7 +18,7 @@ $adminLinks = [
 ?>
 <header class="navbar navbar--admin">
     <a class="navbar__brand" href="/admin/dashboard.php">
-        <img src="/assets/img/logo-navbar.png" alt="JTI Merch - Technology for a Brighter Future">
+        <img src="/assets/img/logo-navbar.webp" alt="JTI Merch - Technology for a Brighter Future">
     </a>
 
     <nav class="navbar__menu" aria-label="Menu admin">

@@ -29,9 +29,9 @@
    Jadi berapa pun tinggi halaman, tidak ada sambungan yang terlihat. */
 .home { position: relative; isolation: isolate; overflow-x: clip; padding: 3.6rem 0 7.5rem;
         min-height: calc(100vw * 1504 / 1903);   /* minimal setinggi gambar background utuh */
-        background: var(--c-bg-cream) url('../img/beranda/bg-beranda-atas.jpg') center top / 100% auto no-repeat; }
+        background: var(--c-bg-cream) url('../img/beranda/bg-beranda-atas.webp') center top / 100% auto no-repeat; }
 .home::after { content: ""; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; aspect-ratio: 1903 / 514;
-               background: url('../img/beranda/bg-beranda-bawah.jpg') center bottom / 100% 100% no-repeat; pointer-events: none; }
+               background: url('../img/beranda/bg-beranda-bawah.webp') center bottom / 100% 100% no-repeat; pointer-events: none; }
 .home__inner { width: min(102rem, 100% - 2rem); margin: 0 auto; }
 
 /* ---------- 3. BANNER DISKON ---------- */
@@ -115,7 +115,7 @@
 .fcard { position: relative; display: flex; flex-direction: column; flex: none; width: var(--pcard-w); height: var(--pcard-h);
          padding: 1.5rem 1.3rem .9rem; transition: transform .3s var(--ease);
          animation: rise .6s var(--ease) backwards; animation-delay: calc(.35s + var(--i, 0) * .1s); }
-.fcard::before { content: ""; position: absolute; inset: 0; z-index: 0; background: url('../img/card-frame.png') 0 0 / 100% 100% no-repeat;
+.fcard::before { content: ""; position: absolute; inset: 0; z-index: 0; background: url('../img/card-frame.webp') 0 0 / 100% 100% no-repeat;
                  filter: drop-shadow(0 .6rem 1rem rgba(0, 0, 0, .2)); transition: filter .3s; }
 .fcard > * { position: relative; z-index: 1; }
 .fcard:hover { transform: translateY(-.7rem); }
