@@ -18,6 +18,17 @@ require_once __DIR__ . "/../config/midtrans.php";
 
 // Identitas aktor untuk audit trail trigger
 $pdo->exec("SET app.aktor = 'midtrans'");
+// Koneksi database bersifat persisten: jangan biarkan identitas ini menempel ke request lain
+register_shutdown_function(static function () use ($pdo): void {
+    try {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $pdo->exec("RESET app.aktor");
+    } catch (Throwable $e) {
+        error_log("Webhook: gagal reset app.aktor: " . $e->getMessage());
+    }
+});
 
 $notif = json_decode(file_get_contents("php://input"), true);
 

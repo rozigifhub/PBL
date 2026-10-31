@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $stmt->bindValue(":id", $idAkun, PDO::PARAM_INT);
                     $stmt->bindValue(":label", $labelInput);
                     $stmt->bindValue(":alamat", $alamatInput);
-                    $stmt->bindValue(":default", $jumlah === 0, PDO::PARAM_BOOL);
+                    $stmt->bindValue(":default", $jumlah === 0 ? "true" : "false"); // teks: aman di mode asli & emulasi
                     $stmt->execute();
 
                     set_flash("sukses", "Alamat berhasil ditambahkan.");

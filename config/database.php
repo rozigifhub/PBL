@@ -43,13 +43,21 @@ try {
         PDO::ATTR_PERSISTENT         => true,
     ]);
 
-    // Koneksi dipakai bergantian antar request: bersihkan sisa request sebelumnya.
-    // Transaksi yang tertinggal dibatalkan; identitas aktor audit (app.aktor,
-    // app.admin_id) direset agar tidak menempel ke request lain.
+    // Koneksi dipakai bergantian antar request: transaksi yang tertinggal dibatalkan
+    // (pengecekan lokal, tanpa round trip ke database). Identitas aktor audit memakai
+    // set_config(..., true) yang otomatis hilang di akhir transaksi; satu-satunya
+    // pengaturan tingkat-sesi (webhook Midtrans) mereset dirinya sendiri di akhir request.
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    $pdo->exec("RESET app.aktor; RESET app.admin_id");
+
+    // Prepared statement asli = 2 round trip per query (Parse lalu Bind/Execute).
+    // Emulasi = 1 round trip. Nyalakan dengan DB_EMULATE_PREPARES=true di .env, lalu
+    // restart php-fpm. Default mati (perilaku lama) sampai diuji di server.
+    $pdo->setAttribute(
+        PDO::ATTR_EMULATE_PREPARES,
+        strtolower($_ENV['DB_EMULATE_PREPARES'] ?? 'false') === 'true'
+    );
 } catch (PDOException $e) {
     error_log('Koneksi database gagal: ' . $e->getMessage());
     http_response_code(500);
