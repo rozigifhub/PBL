@@ -5,8 +5,9 @@
 // seperti semula; yang baru: Flash Sale (produk acak dari database).
 
 require_once __DIR__ . "/../config/functions.php";
-app_session_start();
+app_session_opsional(); // tamu tanpa cookie: tanpa session (halaman bisa di-cache Nginx)
 require_once __DIR__ . "/../config/database.php";
+require_once __DIR__ . "/../config/gambar.php";
 
 // Tujuan tombol "Beli Sekarang" di banner dan tautan "Lihat Semua".
 // Ubah di sini jika alamat katalog berubah.
@@ -42,6 +43,15 @@ if (!function_exists("foto_url")) {
             : "";
     }
 }
+
+/** Foto kartu Flash Sale: thumbnail bila ada, jika tidak foto asli. */
+function foto_kartu_url(string $foto): string
+{
+    $thumb = thumb_nama($foto);
+    return is_file(__DIR__ . "/uploads/merchandise/" . $thumb)
+        ? "/uploads/merchandise/" . $thumb
+        : foto_url($foto);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -49,7 +59,7 @@ if (!function_exists("foto_url")) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Merchandise Kampus - JTI</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/assets/css/style.css") ?>">
     <?php if (($_SESSION["role"] ?? "") === "Mahasiswa"): ?>
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/assets/css/navbar-mahasiswa.css") ?>">
@@ -122,7 +132,7 @@ if (($_SESSION["role"] ?? "") === "Mahasiswa") {
                 <div class="flash__grid<?= count($flashSale) < 3 ? " flash__grid--few" : "" ?>">
                     <?php foreach ($flashSale as $i => $p): ?>
                         <?php
-                        $foto   = foto_url((string)$p["foto"]);
+                        $foto   = foto_kartu_url((string)$p["foto"]);
                         $detail = "/mahasiswa/produk.php?id=" . (int)$p["id_merchandise"];
                         $ukuran = trim((string)$p["ukuran"]);
                         $meta   = $p["nama_kategori"] . ($ukuran !== "" ? " • Ukuran " . $ukuran : "");
