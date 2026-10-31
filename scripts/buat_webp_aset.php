@@ -29,6 +29,12 @@ $tugas = [
     ["beranda/bg-beranda-bawah.jpg", "beranda/bg-beranda-bawah.webp",    null, 80],
     ["beranda/banner-diskon.png",    "beranda/banner-diskon-800.webp",   800,  82],
     ["beranda/banner-diskon.png",    "beranda/banner-diskon-1200.webp",  1200, 82],
+    ["bg-katalog.jpg",               "bg-katalog.webp",                  null, 80],
+    ["bg-dashboard.jpg",             "bg-dashboard.webp",                null, 80],
+    ["bg-keranjang.jpg",             "bg-keranjang.webp",                null, 80],
+    ["bg-login.jpg",                 "bg-login.webp",                    null, 80],
+    ["bg-register.jpg",              "bg-register.webp",                 null, 80],
+    ["logo-jti.png",                 "logo-jti.webp",                    null, 90],
 ];
 
 $finfo = new finfo(FILEINFO_MIME_TYPE);

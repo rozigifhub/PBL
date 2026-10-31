@@ -26,7 +26,7 @@
 .dash { position: relative; isolation: isolate; min-height: calc(100vh - var(--nav-h)); background: var(--c-cream); color: var(--d-title); }
 /* Latar dekoratif dibuat dari pseudo-element "fixed" (bukan background-attachment: fixed) agar tetap jalan di iOS */
 .dash::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-                background: var(--c-cream) url('../img/bg-dashboard.jpg') center top / cover no-repeat; }
+                background: var(--c-cream) url('../img/bg-dashboard.webp') center top / cover no-repeat; }
 .dash__inner { width: min(100rem, 100% - 2rem); margin: 0 auto; padding: 3.4rem 0 6rem; }
 
 .dash__title { margin: 0 0 2.2rem; color: var(--d-title); font-size: 2.6rem; line-height: 1.1; text-transform: uppercase; }

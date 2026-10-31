@@ -17,7 +17,7 @@
 
 /* ---------- 2. HERO: judul, search, filter ---------- */
 .catalog { min-height: calc(100vh - var(--nav-h)); padding: 3.4rem 0 6rem;
-           background: var(--c-cream) url('../img/bg-katalog.jpg') center top / cover no-repeat fixed; }
+           background: var(--c-cream) url('../img/bg-katalog.webp') center top / cover no-repeat fixed; }
 .catalog__inner { width: min(100rem, 100% - 2rem); margin: 0 auto; }
 
 .catalog__hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.6rem 3rem; }

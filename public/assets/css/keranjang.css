@@ -26,7 +26,7 @@
 /* Latar dekoratif lewat pseudo-element "fixed" (bukan background-attachment: fixed) agar tetap jalan di iOS.
    Dimulai tepat di bawah navbar seperti pada desain. */
 .cart::before { content: ""; position: fixed; z-index: -1; inset: var(--nav-h) 0 0 0; pointer-events: none;
-                background: var(--c-cream) url('../img/bg-keranjang.jpg') center top / cover no-repeat; }
+                background: var(--c-cream) url('../img/bg-keranjang.webp') center top / cover no-repeat; }
 .cart__inner { width: min(113rem, 100% - 4rem); margin: 0 auto; padding: 2.8rem 0 6rem; }
 
 .cart-panel { background: var(--k-card); border-radius: 1.5rem; box-shadow: var(--k-shadow); }

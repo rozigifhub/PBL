@@ -107,7 +107,7 @@ require_once __DIR__ . "/includes/components.php";
 
 <main class="auth">
     <section class="card">
-        <img class="card__logo" src="assets/img/logo-jti.png" alt="Logo JTI">
+        <img class="card__logo" src="assets/img/logo-jti.webp" alt="Logo JTI">
 
         <form class="form" method="POST" data-auth>
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
