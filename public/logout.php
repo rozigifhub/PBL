@@ -1,6 +1,7 @@
 <?php
 
-session_start();
+require_once __DIR__ . "/../config/functions.php";
+app_session_start();
 
 $_SESSION = [];
 

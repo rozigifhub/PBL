@@ -19,12 +19,21 @@ function app_session_start(): void
         return;
     }
 
+    // Tolak ID session yang tidak pernah dibuat server (cegah session fixation);
+    // ID hanya boleh lewat cookie, tidak lewat URL.
+    ini_set("session.use_strict_mode", "1");
+    ini_set("session.use_only_cookies", "1");
+
+    // Nginx meneruskan HTTPS=on ke PHP-FPM; di HTTP biasa (mis. pengembangan lokal) flag Secure
+    // dimatikan agar cookie tetap terkirim.
+    $https = !empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off";
+
     session_set_cookie_params([
         "lifetime" => 0,
         "path"     => "/",
+        "secure"   => $https, // cookie hanya dikirim lewat HTTPS
         "httponly" => true,   // cookie session tidak terbaca JavaScript
         "samesite" => "Lax",  // proteksi CSRF lintas situs
-        // "secure" => true,   // nyalakan setelah aplikasi memakai HTTPS
     ]);
 
     session_start();
