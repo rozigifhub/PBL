@@ -35,10 +35,21 @@ $dsn = sprintf(
 );
 
 try {
+    // Koneksi persisten: tiap worker PHP-FPM memakai ulang koneksinya
+    // (membuka koneksi Postgres baru ~25 ms per request di server 1 core).
     $pdo = new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_PERSISTENT         => true,
     ]);
+
+    // Koneksi dipakai bergantian antar request: bersihkan sisa request sebelumnya.
+    // Transaksi yang tertinggal dibatalkan; identitas aktor audit (app.aktor,
+    // app.admin_id) direset agar tidak menempel ke request lain.
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    $pdo->exec("RESET app.aktor; RESET app.admin_id");
 } catch (PDOException $e) {
     error_log('Koneksi database gagal: ' . $e->getMessage());
     http_response_code(500);
