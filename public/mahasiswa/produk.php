@@ -15,7 +15,7 @@ $loginNext = "/login.php?next=" . rawurlencode($_SERVER["REQUEST_URI"]);
 $id = (int)($_GET["id"] ?? 0);
 
 $stmt = $pdo->prepare("
-    SELECT m.id_merchandise, m.nama_merchandise, m.ukuran, m.harga, m.stok, m.foto,
+    SELECT m.id_merchandise, m.nama_merchandise, m.deskripsi, m.ukuran, m.harga, m.stok, m.foto,
            k.id_kategori, k.nama_kategori
     FROM merchandise m
     JOIN kategori_merchandise k ON k.id_kategori = m.id_kategori
@@ -67,6 +67,10 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                 <i>(tanpa foto)</i>
             <?php endif; ?>
         </p>
+
+        <?php if (trim((string)$produk["deskripsi"]) !== ""): ?>
+            <p style="white-space:pre-line;max-width:60ch;"><?= e($produk["deskripsi"]) ?></p>
+        <?php endif; ?>
 
         <table cellpadding="6">
             <tr>

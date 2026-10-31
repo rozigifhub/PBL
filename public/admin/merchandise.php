@@ -117,6 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $ukuran  = trim($_POST["ukuran"] ?? "");
         $harga   = $_POST["harga"] ?? "";
         $stok    = $_POST["stok"] ?? "";
+        $deskripsi = trim(str_replace("\r\n", "\n", (string)($_POST["deskripsi"] ?? "")));
 
         $hargaOk = preg_match("/^\d{1,10}(\.\d{1,2})?$/", (string)$harga) && (float)$harga > 0;
         $stokOk  = preg_match("/^\d{1,7}$/", (string)$stok);
@@ -140,6 +141,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $error = "Stok harus berupa angka bulat >= 0.";
             } elseif (strlen($ukuran) > 10) {
                 $error = "Ukuran maksimal 10 karakter (mis. S, M, L, XL, ALL).";
+            } elseif (mb_strlen($deskripsi) > 1000) {
+                $error = "Deskripsi maksimal 1000 karakter.";
             } elseif ($action === "create") {
 
                 $upload = proses_upload($_FILES["foto"] ?? []);
@@ -148,13 +151,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 } else {
                     $stmt = $pdo->prepare("
                         INSERT INTO merchandise
-                            (id_kategori, nama_merchandise, ukuran, harga, stok, foto)
+                            (id_kategori, nama_merchandise, deskripsi, ukuran, harga, stok, foto)
                         VALUES
-                            (:id_kategori, :nama, :ukuran, :harga, :stok, :foto)
+                            (:id_kategori, :nama, :deskripsi, :ukuran, :harga, :stok, :foto)
                     ");
                     $stmt->execute([
                         ":id_kategori" => $idKat,
                         ":nama"        => $nama,
+                        ":deskripsi"   => $deskripsi,
                         ":ukuran"      => $ukuran,
                         ":harga"       => $harga,
                         ":stok"        => $stok,
@@ -188,11 +192,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $stmt = $pdo->prepare("
                             UPDATE merchandise
                             SET id_kategori = :id_kategori, nama_merchandise = :nama,
+                                deskripsi = :deskripsi,
                                 ukuran = :ukuran, harga = :harga, stok = :stok, foto = :foto
                             WHERE id_merchandise = :id
                         ");
                         $stmt->execute([
                             ":id_kategori" => $idKat, ":nama" => $nama,
+                            ":deskripsi"   => $deskripsi,
                             ":ukuran"      => $ukuran, ":harga" => $harga,
                             ":stok"        => $stok,   ":foto"  => $fotoBaru,
                             ":id"          => $id,
@@ -298,6 +304,11 @@ $flash = take_flash();
             <label>Nama Merchandise</label><br>
             <input type="text" name="nama_merchandise" required maxlength="100"
                    value="<?= e($editRow["nama_merchandise"] ?? "") ?>">
+        </p>
+
+        <p>
+            <label>Deskripsi (opsional, maks 1000 karakter)</label><br>
+            <textarea name="deskripsi" rows="5" cols="50" maxlength="1000"><?= e($editRow["deskripsi"] ?? ($_POST["deskripsi"] ?? "")) ?></textarea>
         </p>
 
         <p>
