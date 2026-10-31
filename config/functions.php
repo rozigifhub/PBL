@@ -30,6 +30,21 @@ function app_session_start(): void
     session_start();
 }
 
+/**
+ * Mulai session HANYA bila pengunjung sudah punya cookie session.
+ * Untuk halaman publik (katalog, detail produk): tamu tanpa cookie tidak
+ * membuat file session dan tidak menerima Set-Cookie, sehingga respons
+ * halaman tamu bisa di-cache Nginx. Return: true bila session dimulai.
+ */
+function app_session_opsional(): bool
+{
+    if (!isset($_COOKIE[session_name()])) {
+        return false;
+    }
+    app_session_start();
+    return true;
+}
+
 // ---------- CSRF ----------
 
 function csrf_token(): string

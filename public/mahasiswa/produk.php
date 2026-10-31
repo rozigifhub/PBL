@@ -3,7 +3,7 @@
 // Detail produk: produk.php?id=ID
 
 require_once __DIR__ . "/../../config/functions.php";
-app_session_start();
+app_session_opsional(); // tamu tanpa cookie: tanpa session (halaman bisa di-cache)
 require_once __DIR__ . "/../../config/database.php";
 // Boleh dilihat tamu (belum login); akun non-mahasiswa tetap ditolak.
 $sudahLogin = !empty($_SESSION["id_akun"]);
