@@ -1,0 +1,169 @@
+/* =========================================================
+   KELOLA PESANAN ADMIN  (admin/pesanan.php)
+   Dimuat SETELAH style.css, dashboard.css, dan admin-dashboard.css:
+     - style.css            -> token dasar, .alert, animasi "rise"
+     - dashboard.css        -> token .dash (--d-*), .dash-empty
+     - admin-dashboard.css  -> gaya navbar admin (menu + ikon akun)
+   File ini hanya berisi tambahan khusus halaman ini, semua berawalan "po-"
+   (po = pesanan-order) supaya tidak bentrok dengan halaman lain.
+   Satuan rem (1rem = 16px di layar 1920), seperti file CSS lain.
+   ========================================================= */
+
+/* ---------- 1. TOKEN & LATAR HALAMAN ---------- */
+.dash-pesanan {
+  --po-tab-active-bg:   var(--d-orange);
+  --po-tab-active-text: var(--d-navy);   /* desain memakai putih; navy dipilih agar kontras di atas oranye cukup (isi #fff bila ingin persis desain) */
+  --po-line:            #000;            /* garis pemisah baris, hitam seperti di desain */
+  --po-ease:            cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Latar khusus halaman ini (dari tim desainer). Pseudo-element "fixed" dari dashboard.css
+   dipakai ulang, hanya gambarnya diganti. */
+.dash-pesanan::before {
+  background: var(--c-cream) url('../img/bg-kelola-pesanan.webp') center top / cover no-repeat;
+}
+
+.po { width: min(112rem, 100% - 4rem); margin: 0 auto; padding: 4.4rem 0 7rem; }
+
+/* Teks untuk pembaca layar saja */
+.po-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 2. KEPALA HALAMAN: breadcrumb + ikon + judul ---------- */
+.po-head { padding-left: 8.4rem; animation: rise .6s var(--po-ease) both; }
+
+.po-crumb { display: flex; align-items: center; gap: .9rem; margin: 0 0 1.6rem 1.6rem; color: var(--d-title); font-size: 1.6rem; font-weight: 500; text-transform: uppercase; }
+.po-crumb img { width: 2.7rem; height: 2.7rem; }
+.po-crumb a { color: inherit; text-underline-offset: .3rem; transition: color .2s; }
+.po-crumb a:hover { color: var(--d-orange); }
+
+.po-title { display: flex; align-items: center; gap: 2.8rem; }
+.po-title__icon { flex: none; display: grid; place-items: center; width: 8.6rem; height: 8.6rem; border-radius: 50%;
+                  background: var(--d-orange); box-shadow: 0 .5rem 1.2rem rgba(255, 159, 28, .35); }
+.po-title__icon img { width: 5.2rem; height: 5.2rem; }
+.po-title h1 { margin: 0; color: var(--d-title); font-size: 4rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; }
+.po-title p  { margin: .6rem 0 0; color: var(--d-muted); font-size: 1.4rem; font-weight: 700; }
+
+/* ---------- 3. KARTU UTAMA ---------- */
+.po-card { margin-top: 3.8rem; padding: 3.4rem 4rem 4.6rem; border-radius: 1.8rem; background: var(--d-card); box-shadow: var(--d-shadow);
+           animation: rise .6s var(--po-ease) .1s both; }
+
+/* Pesan flash dari backend (sukses / gagal) memakai .alert dari style.css */
+.po-card .alert { margin-bottom: 2.4rem; font-size: 1.5rem; }
+.po-card .dash-empty { margin-top: 2.6rem; }
+
+/* ---------- 4. TAB FILTER STATUS ----------
+   Bilah krem; tab aktif oranye; garis pembatas tipis di antara tab (disembunyikan di sekitar tab aktif). */
+.po-tabs { position: relative; display: flex; align-items: stretch; padding: .6rem; border-radius: 1.6rem; background: var(--d-head);
+           overflow-x: auto; scrollbar-width: none; }
+.po-tabs::-webkit-scrollbar { display: none; }
+
+.po-tab { position: relative; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 1.2rem 1.5rem;
+          border-radius: 1.2rem; color: var(--d-title); font-size: 1.6rem; font-weight: 500; line-height: 1.2; text-decoration: none; white-space: nowrap;
+          transition: transform .25s var(--po-ease), background .2s, color .2s, box-shadow .25s; }
+
+.po-tab + .po-tab::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: .15rem; background: var(--d-title); opacity: .9; transition: opacity .2s; }
+.po-tab.is-active::before,
+.po-tab.is-active + .po-tab::before { opacity: 0; }
+
+.po-tab:hover { z-index: 1; background: rgba(255, 159, 28, .22); color: var(--d-navy); transform: scale(1.06); }
+.po-tab:hover::before,
+.po-tab:hover + .po-tab::before { opacity: 0; }
+.po-tab:active { transform: scale(.96); }
+
+.po-tab.is-active { background: var(--po-tab-active-bg); color: var(--po-tab-active-text); font-weight: 700; box-shadow: 0 .15rem .4rem rgba(255, 159, 28, .45); }   /* bayangan kecil: bilah tab memotong yang melebihi padding-nya */
+.po-tab.is-active:hover { background: #FFAA3D; transform: scale(1.03); }
+.po-tab.is-active:active { transform: scale(.96); }
+
+/* ---------- 5. TABEL PESANAN ---------- */
+.po-table-wrap { margin-top: 2.6rem; overflow-x: auto; }
+
+.po-table { width: 100%; min-width: 96rem; table-layout: fixed; border-collapse: separate; border-spacing: 0; color: var(--d-title); font-size: 1.5rem; }
+.po-table col:nth-child(1) { width: 6%; }    /* No */
+.po-table col:nth-child(2) { width: 14%; }   /* Tanggal */
+.po-table col:nth-child(3) { width: 25%; }   /* Pembeli (nama panjang tetap satu baris) */
+.po-table col:nth-child(4) { width: 6%; }    /* Item */
+.po-table col:nth-child(5) { width: 20%; }   /* Status Pesanan */
+.po-table col:nth-child(6) { width: 13%; }   /* Pembayaran */
+.po-table col:nth-child(7) { width: 16%; }   /* Total Harga */
+
+.po-table th { padding: 1.6rem 1rem; background: var(--d-head); font-size: 1.5rem; font-weight: 500; text-align: center; white-space: nowrap; }
+.po-table th:first-child { border-radius: 1.4rem 0 0 1.4rem; }
+.po-table th:last-child  { border-radius: 0 1.4rem 1.4rem 0; }
+.po-table th.is-left  { text-align: left; }
+.po-table th.is-right { text-align: right; padding-right: 2.4rem; }
+
+.po-table td { padding: 2.2rem 1rem; border-bottom: .125rem solid var(--po-line); font-weight: 500; text-align: center; vertical-align: middle; }
+.po-table td.is-left  { text-align: left; }
+.po-table td.is-right { text-align: right; padding-right: 2.4rem; }
+.po-table .is-num { font-variant-numeric: tabular-nums; }
+
+/* Baris: muncul berurutan (hanya 12 baris pertama yang diberi jeda, sisanya langsung) lalu menyorot saat disentuh kursor */
+.po-table tbody tr { animation: rise .5s var(--po-ease) both; animation-delay: calc(min(var(--i, 0), 12) * .04s + .2s); transition: background .2s; }
+.po-table tbody tr:hover { background: rgba(255, 235, 188, .6); }
+.po-table.is-clickable tbody tr[data-href] { cursor: pointer; }
+
+/* Nomor pesanan = tautan ke detail */
+.po-no { font-weight: 700; text-underline-offset: .35rem; transition: color .2s, transform .2s var(--po-ease); display: inline-block; }
+.po-table tbody tr:hover .po-no { color: var(--d-navy); transform: scale(1.12); }
+
+.po-who { min-width: 0; }
+.po-buyer { display: block; overflow-wrap: anywhere; }
+.po-nim { display: block; margin-top: .4rem; color: var(--d-muted); font-size: 1.2rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.po-total { color: #111; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.po-none { color: var(--d-muted); }
+
+/* ---------- 6. BADGE STATUS (ikon + teks) ----------
+   Warna mengikuti desain; teks digelapkan agar kontras cukup (sama seperti .dash-status di dashboard). */
+.po-badge { display: inline-flex; align-items: center; gap: .6rem; padding: .45rem 1.2rem .45rem 1rem; border-radius: .9rem;
+            background: #E4E1DA; color: #4A4A4A; font-size: 1.4rem; font-weight: 500; line-height: 1.3; white-space: nowrap;
+            transition: transform .25s var(--po-ease), box-shadow .25s; }
+.po-badge svg { flex: none; width: 1.7rem; height: 1.7rem; }
+.po-badge--wait    { background: #FFD9A0; color: #7A3E00; }   /* Menunggu Pembayaran / DP / Pelunasan */
+.po-badge--process { background: #A7CBF7; color: #17418C; }   /* Diproses */
+.po-badge--ship    { background: #FFA79F; color: #8F1F1B; }   /* Dikirim */
+.po-badge--done    { background: #C4FDB2; color: #17602C; }   /* DP Lunas / Lunas / Selesai / Berhasil */
+.po-badge--fail    { background: #FFC9C4; color: #8F1F1B; }   /* Pembayaran gagal */
+.po-badge--off     { background: #E4E1DA; color: #4A4A4A; }   /* Dibatalkan / Kedaluwarsa */
+
+.po-table tbody tr:hover .po-badge { transform: scale(1.07); box-shadow: 0 .3rem .8rem rgba(20, 38, 77, .15); }
+
+/* ---------- 7. FOKUS KEYBOARD ---------- */
+.po-tab:focus-visible { outline: .25rem solid var(--d-navy); outline-offset: -.25rem; }
+
+/* ---------- 8. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .po-head { padding-left: 0; }
+  .po-crumb { margin-left: 0; }
+}
+
+@media (max-width: 900px) {
+  .po { width: calc(100% - 2rem); padding: 2.4rem 0 4rem; }
+  .po-crumb { font-size: 1.4rem; }
+  .po-title { gap: 1.6rem; }
+  .po-title__icon { width: 6rem; height: 6rem; }
+  .po-title__icon img { width: 3.6rem; height: 3.6rem; }
+  .po-title h1 { font-size: 2.6rem; }
+  .po-title p { font-size: 1.25rem; }
+  .po-card { margin-top: 2.4rem; padding: 2rem 1.6rem 2.6rem; }
+
+  /* Tab menjadi bilah yang bisa digeser ke samping */
+  .po-tab { flex: 0 0 auto; padding: 1.1rem 1.5rem; font-size: 1.4rem; }
+
+  /* Tabel menjadi kartu per pesanan (pola yang sama dengan dashboard) */
+  .po-table-wrap { overflow: visible; margin-top: 1.8rem; }
+  .po-table { min-width: 0; table-layout: auto; }
+  .po-table colgroup { display: none; }
+  .po-table thead, .po-table thead tr, .po-table thead th { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }   /* judul kolom disembunyikan secara visual, tetap terbaca pembaca layar */
+  .po-table, .po-table tbody, .po-table tr, .po-table td { display: block; }
+  .po-table tbody tr { padding: 1.2rem 0; border-bottom: .125rem solid var(--po-line); }
+  .po-table tbody tr:hover { background: none; }
+  .po-table td, .po-table td.is-left, .po-table td.is-right { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem;
+                                                                padding: .7rem 0; border: 0; text-align: right; }
+  .po-table td::before { content: attr(data-label); flex: none; color: var(--d-muted); font-size: 1.25rem; font-weight: 700; text-align: left; }
+  .po-who { text-align: right; }
+  .po-table tbody tr:hover .po-no { transform: none; }
+}
+
+@media (max-width: 560px) {
+  .po-title h1 { font-size: 2.2rem; }
+}

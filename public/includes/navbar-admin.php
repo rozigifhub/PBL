@@ -3,11 +3,13 @@
 //
 // Pemakaian di halaman admin:
 //   $adminActive = "dashboard";   // dashboard | pesanan | kategori | produk
+//   $adminNavRingkas = true;      // (opsional) hanya 4 menu + ikon akun, tanpa ikon Cari & Pesanan
 //   require __DIR__ . "/../includes/navbar-admin.php";
 //
 // Ubah teks / URL menu di array $adminLinks di bawah.
 // Path memakai awalan "/" (absolut dari root web), sama seperti includes/navbar.php.
-$adminActive = $adminActive ?? "";
+$adminActive     = $adminActive ?? "";
+$adminNavRingkas = $adminNavRingkas ?? false;   // desain Kelola Pesanan hanya memakai ikon akun
 
 $adminLinks = [
     "dashboard" => ["DASHBOARD",       "/admin/dashboard.php"],
@@ -28,12 +30,14 @@ $adminLinks = [
     </nav>
 
     <div class="navbar__tools">
+        <?php if (!$adminNavRingkas): ?>
         <!-- Cari: sama seperti navbar publik, masih placeholder (belum ada halaman pencarian). -->
         <a class="navbar__icon" href="#" aria-label="Cari"><img src="/assets/img/icon-search.png" alt=""></a>
 
         <!-- Keranjang pada desain diarahkan ke Kelola Pesanan: keranjang.php khusus mahasiswa
              (admin yang membukanya akan dilempar ke halaman login). -->
         <a class="navbar__icon" href="/admin/pesanan.php" aria-label="Pesanan"><img src="/assets/img/icon-cart.png" alt=""></a>
+        <?php endif; ?>
 
         <!-- Akun: menu kecil berisi nama admin + Logout (tanpa JS pun tetap bisa dibuka/ditutup). -->
         <details class="navbar__account">
