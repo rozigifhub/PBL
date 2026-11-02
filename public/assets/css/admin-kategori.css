@@ -1,0 +1,222 @@
+/* =========================================================
+   KELOLA KATEGORI ADMIN  (admin/kategori.php)
+   Dimuat SETELAH style.css, dashboard.css, dan admin-dashboard.css:
+     - style.css            -> token dasar, .alert, animasi "rise"
+     - dashboard.css        -> token .dash (--d-*), .dash-empty
+     - admin-dashboard.css  -> gaya navbar admin (menu + ikon akun)
+   File ini hanya berisi tambahan khusus halaman ini, semua berawalan "kt-"
+   (kt = kategori) supaya tidak bentrok dengan halaman lain.
+   Satuan rem (1rem = 16px di layar 1920), seperti file CSS lain.
+   ========================================================= */
+
+/* ---------- 1. TOKEN & LATAR HALAMAN ---------- */
+.dash-kategori {
+  --kt-add-text:  var(--d-navy);   /* desain memakai putih; navy dipilih agar kontras di atas oranye cukup (isi #fff bila ingin persis desain) */
+  --kt-edit-text: var(--d-navy);   /* idem, untuk tombol Edit */
+  --kt-hapus:     #A85400;         /* teks & ikon tombol Hapus: oranye lebih tua dari desain (#FF9F1C) supaya terbaca di atas krem; garis tepi tetap oranye desain */
+  --kt-danger:    #8F1F1B;         /* warna tombol Hapus saat disentuh kursor (merah tua yang sama dengan badge "Dikirim") */
+  --kt-danger-bg: #FBE3DD;
+  --kt-line:      #000;            /* garis pemisah baris, hitam seperti di desain */
+  --kt-ease:      cubic-bezier(.2, .7, .2, 1);
+  --kt-spring:    cubic-bezier(.34, 1.56, .64, 1);   /* sedikit "memantul" untuk gerak tutup tong & tanda + */
+}
+
+/* Latar khusus halaman ini (dari tim desainer). Pseudo-element "fixed" dari dashboard.css
+   dipakai ulang, hanya gambarnya diganti. */
+.dash-kategori::before {
+  background: var(--c-cream) url('../img/bg-kelola-kategori.webp') center top / cover no-repeat;
+}
+
+.kt { width: min(96.4rem, 100% - 4rem); margin: 0 auto; padding: 5.1rem 0 7rem; }
+
+/* Teks untuk pembaca layar saja */
+.kt-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 2. KEPALA HALAMAN: breadcrumb + ikon + judul ---------- */
+.kt-head { padding-left: 2.2rem; animation: rise .6s var(--kt-ease) both; }
+
+.kt-crumb { display: flex; align-items: center; gap: 1rem; margin: 0 0 2.3rem 1.3rem; color: var(--d-title); font-size: 1.5rem; font-weight: 500; text-transform: uppercase; }
+.kt-crumb img { width: 2.1rem; height: 2.1rem; }
+.kt-crumb a { color: inherit; text-underline-offset: .3rem; transition: color .2s; }
+.kt-crumb a:hover { color: var(--d-orange); }
+
+.kt-title { display: flex; align-items: center; gap: 2.7rem; }
+.kt-title__icon { flex: none; width: 8.4rem; height: 8.4rem; border-radius: 50%; box-shadow: 0 .5rem 1.2rem rgba(255, 159, 28, .35); }   /* Folder.png sudah berupa lingkaran oranye + folder putih */
+.kt-title h1 { margin: 0; color: var(--d-title); font-size: 4.4rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; }
+.kt-title p  { margin: .6rem 0 0; color: var(--d-muted); font-size: 1.4rem; font-weight: 700; }
+
+/* ---------- 3. KARTU UTAMA (form + tabel) ---------- */
+.kt-card { margin-top: 3.4rem; padding: 3.2rem 3.9rem 4.8rem; border-radius: 1.8rem; background: var(--d-card); box-shadow: var(--d-shadow);
+           animation: rise .6s var(--kt-ease) .1s both; }
+
+/* Pesan flash / error dari backend memakai .alert dari style.css */
+.kt-card .alert { margin-bottom: 2.4rem; font-size: 1.5rem; }
+
+/* ---------- 4. FORM: Nama Kategori + tombol tambah ---------- */
+.kt-form__label { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem 1.2rem; margin: 0 0 1rem .6rem; color: var(--d-title); font-size: 1.5rem; font-weight: 500; }
+
+/* Penanda "sedang mengubah" (hanya tampil di mode edit, ?edit=ID) */
+.kt-form__mode { padding: .2rem 1rem; border-radius: 99px; background: var(--d-head); color: var(--d-muted); font-size: 1.2rem; font-weight: 700; }
+
+.kt-form__row { display: flex; flex-wrap: wrap; align-items: stretch; gap: 1.6rem 2.9rem; }
+
+.kt-input { flex: 0 1 36.8rem; min-width: 0; height: 5.2rem; padding: 0 1.8rem; border: .1rem solid #8C93A8; border-radius: .7rem;
+            background: transparent; color: var(--d-title); font: 500 1.5rem var(--font);
+            transition: border-color .2s, box-shadow .2s, background .2s; }
+.kt-input::placeholder { color: #8F8F8F; font-weight: 400; opacity: 1; }
+.kt-input:hover { background: rgba(255, 255, 255, .45); }
+.kt-input:focus { outline: 0; border-color: var(--d-orange); background: #fff; box-shadow: 0 0 0 .35rem rgba(255, 159, 28, .22); }   /* sama dengan .input-box:focus-within di login */
+
+/* Tombol "+ Tambah Kategori" (di mode edit: "Simpan Perubahan").
+   Animasi: naik sedikit + bayangan menyala, tanda + berputar, kilap lewat sekali, ditekan mengecil. */
+.kt-add { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 1rem;
+          min-width: 22.2rem; height: 5.2rem; padding: 0 1.6rem; border: 0; border-radius: .8rem; background: var(--d-orange); color: var(--kt-add-text);
+          font: 500 2.1rem/1 var(--font); white-space: nowrap; cursor: pointer; box-shadow: 0 .2rem .6rem rgba(255, 159, 28, .3);
+          transition: transform .25s var(--kt-ease), box-shadow .25s, background .2s; }
+.kt-add::after { content: ""; position: absolute; inset: 0; pointer-events: none; transform: translateX(-120%);
+                 background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .5) 50%, transparent 65%); }
+.kt-add__plus { display: inline-block; transition: transform .4s var(--kt-spring); }
+
+.kt-add:hover,
+.kt-add:focus-visible { background: #FFAA3D; box-shadow: 0 .6rem 1.5rem rgba(255, 159, 28, .5); transform: translateY(-.2rem); }
+.kt-add:hover::after,
+.kt-add:focus-visible::after { transform: translateX(120%); transition: transform .7s var(--kt-ease); }
+.kt-add:hover .kt-add__plus,
+.kt-add:focus-visible .kt-add__plus { transform: rotate(90deg) scale(1.2); }
+.kt-add:active { transform: scale(.97); box-shadow: none; }
+
+/* Tautan "Batal edit" (hanya di mode edit) */
+.kt-cancel { display: inline-flex; align-items: center; justify-content: center; height: 5.2rem; padding: 0 2.4rem; border: .2rem solid var(--d-title); border-radius: .8rem;
+             color: var(--d-title); font-size: 1.6rem; font-weight: 500; text-decoration: none; white-space: nowrap;
+             transition: background .2s, transform .2s var(--kt-ease); }
+.kt-cancel:hover { background: rgba(42, 69, 128, .09); transform: translateY(-.15rem); }
+.kt-cancel:active { transform: scale(.97); }
+
+/* ---------- 5. TABEL KATEGORI ---------- */
+.kt-table-wrap { margin-top: 1.6rem; overflow-x: auto; }
+
+.kt-table { width: 100%; min-width: 76rem; table-layout: fixed; border-collapse: separate; border-spacing: 0; color: var(--d-title); font-size: 1.5rem; }
+.kt-table col:nth-child(1) { width: 9%; }    /* ID */
+.kt-table col:nth-child(2) { width: 25%; }   /* Nama Kategori (nama panjang boleh turun ke baris berikutnya) */
+.kt-table col:nth-child(3) { width: 26%; }   /* Jumlah Produk */
+.kt-table col:nth-child(4) { width: 40%; }   /* Aksi */
+
+.kt-table th { padding: 1.9rem 1rem; background: var(--d-head); font-size: 1.5rem; font-weight: 500; text-align: center; white-space: nowrap; }
+.kt-table th:first-child { border-radius: 1.6rem 0 0 1.6rem; }
+.kt-table th:last-child  { border-radius: 0 1.6rem 1.6rem 0; }
+
+.kt-table td { padding: 2rem 1rem; border-bottom: .125rem solid var(--kt-line); font-weight: 500; text-align: center; vertical-align: middle; }
+.kt-table .is-num { font-variant-numeric: tabular-nums; }
+.kt-table .kt-name { overflow-wrap: anywhere; }
+
+/* Kolom Aksi: judul & tombol rata kiri pada garis yang sama (seperti di desain) */
+.kt-table th.kt-col-aksi,
+.kt-table td.kt-aksi { text-align: left; padding-left: 7rem; }
+
+/* Baris: muncul berurutan (hanya 12 baris pertama yang diberi jeda) lalu menyorot saat disentuh kursor */
+.kt-table tbody tr { animation: rise .5s var(--kt-ease) both; animation-delay: calc(min(var(--i, 0), 12) * .04s + .2s); transition: background .2s; }
+.kt-table tbody tr:hover { background: rgba(255, 235, 188, .6); }
+
+/* Baris yang sedang diubah (mode ?edit=ID) */
+.kt-table tbody tr.is-editing { background: rgba(255, 159, 28, .14); }
+.kt-table tbody tr.is-editing td:first-child { box-shadow: inset .4rem 0 0 var(--d-orange); }
+
+/* ---------- 6. TOMBOL AKSI: Edit & Hapus ---------- */
+.kt-actions { display: flex; align-items: center; gap: 3.2rem; }
+.kt-del { margin: 0; }
+
+.kt-btn { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-width: 9.2rem; height: 3.1rem; padding: 0 .6rem;
+          border: .2rem solid var(--d-orange); border-radius: .8rem; background: transparent; font: 500 1.5rem/1 var(--font); text-decoration: none; white-space: nowrap; cursor: pointer;
+          transition: transform .28s var(--kt-ease), background .2s, color .2s, border-color .2s, box-shadow .25s; }
+.kt-btn svg { flex: none; width: 2.3rem; height: 2.3rem; overflow: visible; }
+.kt-btn:active { transform: scale(.95); box-shadow: none; }
+
+/* -- Edit: oranye penuh. Pensil miring & membesar, lalu "menulis" (bergoyang kecil) sekali. -- */
+.kt-btn--edit { background: var(--d-orange); color: var(--kt-edit-text); }
+.kt-btn--edit .kt-pencil { transition: transform .3s var(--kt-spring); }
+
+.kt-btn--edit:hover,
+.kt-btn--edit:focus-visible { background: #FFAA3D; border-color: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); transform: translateY(-.15rem) scale(1.05); }
+.kt-btn--edit:hover .kt-pencil,
+.kt-btn--edit:focus-visible .kt-pencil { transform: rotate(-12deg) scale(1.15); animation: kt-write .65s ease-in-out; }
+
+@keyframes kt-write {
+  0%   { transform: rotate(-12deg) scale(1.15) translate(0, 0); }
+  20%  { transform: rotate(-16deg) scale(1.15) translate(-.18rem, .12rem); }
+  40%  { transform: rotate(-8deg)  scale(1.15) translate(.2rem, -.08rem); }
+  60%  { transform: rotate(-16deg) scale(1.15) translate(-.18rem, .12rem); }
+  80%  { transform: rotate(-9deg)  scale(1.15) translate(.12rem, -.04rem); }
+  100% { transform: rotate(-12deg) scale(1.15) translate(0, 0); }
+}
+
+/* -- Hapus: garis tepi oranye. Saat kursor di dalam kotak tombol: tutup tong terangkat & miring (terbuka),
+      isi tong naik sedikit, seluruh ikon bergoyang sekali, dan warna tombol bergeser ke merah tua. -- */
+.kt-btn--hapus { color: var(--kt-hapus); }
+.kt-btn--hapus .kt-trash { transition: transform .3s var(--kt-ease); }
+.kt-trash__lid  { transform-box: view-box; transform-origin: 4px 6.2px; transition: transform .38s var(--kt-spring); }   /* engsel di ujung kiri tutup */
+.kt-trash__body { transition: transform .38s var(--kt-spring); }
+
+.kt-btn--hapus:hover,
+.kt-btn--hapus:focus-visible { border-color: var(--kt-danger); background: var(--kt-danger-bg); color: var(--kt-danger); transform: translateY(-.15rem) scale(1.05); }
+.kt-btn--hapus:hover .kt-trash__lid,
+.kt-btn--hapus:focus-visible .kt-trash__lid { transform: translate(-.4px, -.9px) rotate(-22deg); }
+.kt-btn--hapus:hover .kt-trash__body,
+.kt-btn--hapus:focus-visible .kt-trash__body { transform: translateY(.5px); }
+.kt-btn--hapus:hover .kt-trash,
+.kt-btn--hapus:focus-visible .kt-trash { animation: kt-nudge .5s ease-in-out .15s; }
+
+@keyframes kt-nudge {
+  0%, 100% { transform: rotate(0); }
+  30%      { transform: rotate(-7deg); }
+  65%      { transform: rotate(5deg); }
+}
+
+/* ---------- 7. FOKUS KEYBOARD ---------- */
+.kt-btn:focus-visible,
+.kt-add:focus-visible,
+.kt-cancel:focus-visible { outline: .25rem solid var(--d-navy); outline-offset: .25rem; }
+
+/* Kondisi kosong (belum ada kategori) */
+.kt-card .dash-empty { margin-top: 2.6rem; }
+
+/* ---------- 8. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .kt-head { padding-left: 0; }
+  .kt-crumb { margin-left: 0; }
+}
+
+@media (max-width: 900px) {
+  .kt { width: calc(100% - 2rem); padding: 2.4rem 0 4rem; }
+  .kt-crumb { font-size: 1.4rem; }
+  .kt-title { gap: 1.6rem; }
+  .kt-title__icon { width: 6rem; height: 6rem; }
+  .kt-title h1 { font-size: 2.6rem; }
+  .kt-title p { font-size: 1.25rem; }
+  .kt-card { margin-top: 2.4rem; padding: 2.2rem 1.6rem 2.6rem; }
+
+  /* Form: kolom input dan tombol bertumpuk, selebar kartu */
+  .kt-form__row { flex-direction: column; }
+  .kt-input { flex: 1 1 auto; width: 100%; }
+  .kt-add, .kt-cancel { width: 100%; min-width: 0; }
+
+  /* Tabel menjadi kartu per kategori (pola yang sama dengan Kelola Pesanan) */
+  .kt-table-wrap { overflow: visible; margin-top: 1.8rem; }
+  .kt-table { min-width: 0; table-layout: auto; }
+  .kt-table colgroup { display: none; }
+  .kt-table thead, .kt-table thead tr, .kt-table thead th { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }   /* judul kolom disembunyikan secara visual, tetap terbaca pembaca layar */
+  .kt-table, .kt-table tbody, .kt-table tr, .kt-table td { display: block; }
+  .kt-table tbody tr { padding: 1.2rem 0; border-bottom: .125rem solid var(--kt-line); }
+  .kt-table tbody tr:hover { background: none; }
+  .kt-table tbody tr.is-editing { background: rgba(255, 159, 28, .14); }
+  .kt-table tbody tr.is-editing td:first-child { box-shadow: none; }
+  .kt-table tbody tr.is-editing { padding-left: 1rem; padding-right: 1rem; border-radius: 1rem; }
+  .kt-table td, .kt-table td.kt-aksi { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; padding: .7rem 0; border: 0; text-align: right; }
+  .kt-table td::before { content: attr(data-label); flex: none; color: var(--d-muted); font-size: 1.25rem; font-weight: 700; text-align: left; }
+  .kt-actions { gap: 1.4rem; }
+}
+
+@media (max-width: 560px) {
+  .kt-title h1 { font-size: 2.2rem; }
+  .kt-actions { gap: 1rem; }
+  .kt-btn { min-width: 8.2rem; padding: 0 .6rem; }
+}
