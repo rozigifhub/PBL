@@ -149,16 +149,19 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                                 <span class="pcard__nofoto">(tanpa foto)</span>
                             <?php endif; ?>
                             <span class="badge badge--kat"><?= e($p["nama_kategori"]) ?></span>
-                            <?php if ($ada): ?>
-                                <span class="badge badge--ok">Tersedia (<?= (int)$p["stok"] ?>)</span>
-                            <?php else: ?>
-                                <span class="badge badge--out">Habis</span>
-                            <?php endif; ?>
                         </a>
 
                         <h2 class="pcard__name" title="<?= e($p["nama_merchandise"]) ?>"><?= e($p["nama_merchandise"]) ?></h2>
-                        <p class="pcard__meta"><?= $ukuran !== "" ? "Ukuran " . e($ukuran) : "&nbsp;" ?></p>
-                        <p class="pcard__price">Rp. <?= number_format((float)$p["harga"], 0, ",", ".") ?></p>
+                        <div class="pcard__info">
+                            <div class="pcard__text">
+                                <p class="pcard__meta"><?= $ukuran !== "" ? "Ukuran " . e($ukuran) : "&nbsp;" ?></p>
+                                <p class="pcard__price">Rp. <?= number_format((float)$p["harga"], 0, ",", ".") ?></p>
+                            </div>
+                            <?php if ($ada): ?>
+                                <!-- Label stok: di sebelah kanan ukuran & harga (hanya untuk produk yang stoknya ada) -->
+                                <span class="pcard__stok">Tersedia (<?= (int)$p["stok"] ?>)</span>
+                            <?php endif; ?>
+                        </div>
 
                         <div class="pcard__actions">
                             <a class="pbtn pbtn--ghost" href="<?= $detail ?>">Detail Produk</a>
