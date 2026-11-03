@@ -1,0 +1,335 @@
+/* =========================================================
+   KELOLA PRODUK MERCHANDISE ADMIN  (admin/merchandise.php)
+   Dimuat SETELAH style.css, dashboard.css, dan admin-dashboard.css:
+     - style.css            -> token dasar, .alert, animasi "rise" / "shake" / "spin"
+     - dashboard.css        -> token .dash (--d-*), .dash-empty
+     - admin-dashboard.css  -> gaya navbar admin (menu + ikon akun)
+   File ini hanya berisi tambahan khusus halaman ini, semua berawalan "mp-"
+   (mp = merchandise produk) supaya tidak bentrok dengan halaman lain
+   (kategori memakai "kt-", pesanan memakai prefiks sendiri).
+   Satuan rem (1rem = 16px di layar 1920), seperti file CSS lain.
+   Ukuran diambil dari Desktop.png (desain 1920 px): kartu 101,6rem, kolom form 39rem,
+   kotak input 4,3rem, tombol 22,2 x 5,2rem, tombol aksi 8,4 x 3,2rem.
+   ========================================================= */
+
+/* ---------- 1. TOKEN & LATAR HALAMAN ---------- */
+.dash-merch {
+  --mp-add-text:  var(--d-navy);   /* desain memakai putih; navy dipilih agar kontras di atas oranye cukup (sama seperti halaman Kelola Kategori) */
+  --mp-edit-text: var(--d-navy);   /* idem, untuk tombol Edit */
+  --mp-hapus:     #A85400;         /* teks & ikon tombol Hapus: oranye lebih tua dari desain supaya terbaca di atas krem; garis tepi tetap oranye desain */
+  --mp-danger:    #8F1F1B;         /* warna tombol Hapus saat disentuh kursor (merah tua yang sama dengan halaman Kategori) */
+  --mp-danger-bg: #FBE3DD;
+  --mp-line:      #000;            /* garis pemisah baris tabel, hitam seperti di desain */
+  --mp-field:     #A8A8A8;         /* garis tepi kotak input (abu-abu desain) */
+  --mp-tile:      #F3E8D4;         /* latar kotak foto produk di tabel */
+  --mp-ease:      cubic-bezier(.2, .7, .2, 1);
+  --mp-spring:    cubic-bezier(.34, 1.56, .64, 1);   /* sedikit "memantul" untuk gerak tutup tong, tanda +, dan tombol upload */
+}
+
+/* Latar khusus halaman ini (dari tim desainer: bakcground.png -> bg-kelola-produk.webp).
+   Pseudo-element "fixed" dari dashboard.css dipakai ulang, hanya gambarnya diganti. */
+.dash-merch::before {
+  background: var(--c-cream) url('../img/bg-kelola-produk.webp') center top / cover no-repeat;
+}
+
+.mp { width: min(101.6rem, 100% - 4rem); margin: 0 auto; padding: 5.1rem 0 7rem; }
+
+/* Teks untuk pembaca layar saja */
+.mp-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 2. KEPALA HALAMAN: breadcrumb + ikon + judul ---------- */
+.mp-head { padding-left: 2.2rem; animation: rise .6s var(--mp-ease) both; }
+
+.mp-crumb { display: flex; align-items: center; gap: 1rem; margin: 0 0 2.3rem 1.3rem; color: var(--d-title); font-size: 1.5rem; font-weight: 500; text-transform: uppercase; }
+.mp-crumb img { width: 2.1rem; height: 2.1rem; }
+.mp-crumb a { color: inherit; text-underline-offset: .3rem; transition: color .2s; }
+.mp-crumb a:hover { color: var(--d-orange); }
+
+.mp-title { display: flex; align-items: center; gap: 2.7rem; }
+.mp-title__icon { flex: none; width: 8.4rem; height: 8.4rem; border-radius: 50%; box-shadow: 0 .5rem 1.2rem rgba(255, 159, 28, .35); }   /* icon-folder.png sudah berupa lingkaran oranye + folder putih */
+.mp-title h1 { margin: 0; color: var(--d-title); font-size: 4.4rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; }
+.mp-title p  { margin: .6rem 0 0; color: var(--d-muted); font-size: 1.4rem; font-weight: 700; }
+
+/* ---------- 3. KARTU (form & daftar produk) ---------- */
+.mp-card { border-radius: 1.8rem; background: var(--d-card); box-shadow: var(--d-shadow); animation: rise .6s var(--mp-ease) .1s both; }
+.mp-card--form { margin-top: 2rem; padding: 3.7rem 5.8rem 2.3rem; }
+.mp-card--list { margin-top: 5.4rem; padding: 3.4rem 4.4rem 4.5rem; animation-delay: .2s; }
+
+/* Pesan flash / error dari backend memakai .alert dari style.css */
+.mp-card .alert { margin-bottom: 2.4rem; font-size: 1.5rem; }
+
+/* ---------- 4. FORM TAMBAH / EDIT PRODUK ---------- */
+/* Dua kolom (39rem + 39rem, jarak 12rem = lebar isi 90rem); Deskripsi dan tombol selebar penuh */
+.mp-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12rem; row-gap: 1.3rem; }
+.mp-field { display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }   /* rata bawah: kotak isian tetap sejajar walau satu label terlipat 2 baris di layar sempit */
+.mp-field--full { grid-column: 1 / -1; }
+
+.mp-label { display: block; margin: 0 0 .8rem .1rem; color: var(--d-title); font-size: 1.5rem; font-weight: 700; line-height: 1.25; text-transform: uppercase; }
+.mp-opt { margin-left: .8rem; color: var(--d-muted); font-size: 1.25rem; font-weight: 500; text-transform: none; }
+
+/* Penanda "sedang mengubah" (hanya tampil di mode edit, ?edit=ID) */
+.mp-mode { grid-column: 1 / -1; justify-self: start; margin: 0 0 .4rem; padding: .3rem 1.2rem; border-radius: 99px; background: var(--d-head); color: var(--d-muted); font-size: 1.3rem; font-weight: 700; }
+
+/* Kotak isian (input, select, textarea) */
+.mp-control { display: block; width: 100%; height: 4.3rem; padding: 0 1.5rem; border: .0625rem solid var(--mp-field); border-radius: .7rem; background: #fff; color: var(--d-navy);
+              font: 500 1.5rem var(--font); transition: border-color .2s, box-shadow .2s; }
+.mp-control::placeholder { color: #8F8F8F; font-weight: 400; opacity: 1; }
+.mp-control:hover { border-color: #7E8AA8; }
+.mp-control:focus { outline: 0; border-color: var(--d-orange); box-shadow: 0 0 0 .35rem rgba(255, 159, 28, .22); }   /* sama dengan fokus input di login & Kelola Kategori */
+
+/* Kategori: panah bawaan diganti ikon chevron desain (abu-abu, oranye saat fokus); teks "-- Pilih --" berwarna placeholder */
+.mp-select { padding-right: 5.2rem; cursor: pointer; -webkit-appearance: none; appearance: none;
+             background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238F8F8F' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 8.5 7.5 7.5 7.5-7.5'/%3E%3C/svg%3E") no-repeat right 1.6rem center / 2.6rem; }
+.mp-select:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF9F1C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 8.5 7.5 7.5 7.5-7.5'/%3E%3C/svg%3E"); }
+.mp-select:invalid { color: #8F8F8F; font-weight: 400; }   /* belum memilih (opsi pertama bernilai kosong) */
+.mp-select option { color: var(--d-navy); font-weight: 500; }
+
+/* Deskripsi: tanpa handle resize; tingginya dibesarkan otomatis oleh admin-merchandise.js mengikuti isi.
+   Tanpa JS tetap bisa digulir (overflow-y: auto). */
+.mp-textarea { height: auto; min-height: 12.3rem; padding: 1.4rem 1.5rem; line-height: 1.5; resize: none; overflow-y: auto; }
+.mp-textarea.is-auto { overflow-y: hidden; }
+
+/* ---- Upload foto: kotak + tombol "Choose File" + nama file ----
+   Input file asli menutupi seluruh kotak (transparan) sehingga klik, drag & drop, fokus keyboard, dan validasi "required" tetap bawaan browser.
+   Tombol, nama file, dan thumbnail hanya tampilan. */
+.mp-file { position: relative; display: flex; align-items: center; gap: 1.2rem; height: 4.3rem; padding: 0 .55rem; border: .0625rem solid var(--mp-field); border-radius: .7rem; background: #fff;
+           transition: border-color .2s, box-shadow .2s, background .2s; }
+.mp-file__input { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+
+.mp-file__btn { flex: none; display: inline-flex; align-items: center; gap: .7rem; height: 3.2rem; padding: 0 1.3rem 0 1rem; border-radius: .6rem; background: #DCDCDC; color: var(--d-title);
+                font: 700 1.5rem/1 var(--font); white-space: nowrap; transition: background .25s, transform .3s var(--mp-spring), box-shadow .25s; }
+.mp-file__btn svg { flex: none; width: 2.2rem; height: 2.2rem; overflow: visible; }
+.mp-up__arrow { transition: transform .3s var(--mp-spring); }
+.mp-check { display: none; }
+.mp-check path { stroke-dasharray: 1; stroke-dashoffset: 0; }
+
+.mp-file__thumb { display: none; flex: none; order: 3; width: 3.2rem; height: 3.2rem; margin-left: auto; border-radius: .5rem; background: var(--mp-tile); object-fit: cover; }
+.mp-file__name { flex: 1; min-width: 0; overflow: hidden; color: #8F8F8F; font: 400 1.5rem var(--font); text-overflow: ellipsis; white-space: nowrap; }
+
+/* Disentuh kursor: garis tepi oranye, tombol sedikit membesar, panah upload naik-turun pelan */
+.mp-file:hover { border-color: var(--d-orange); }
+.mp-file:hover .mp-file__btn { background: #FFD58A; transform: scale(1.04); }
+.mp-file:hover .mp-up__arrow { animation: mp-float .9s ease-in-out infinite; }
+.mp-file:focus-within { border-color: var(--d-orange); box-shadow: 0 0 0 .35rem rgba(255, 159, 28, .22); }
+
+/* File diseret ke atas kotak */
+.mp-file.is-drag { border-style: dashed; border-color: var(--d-orange); background: #FFF9EC; }
+.mp-file.is-drag .mp-file__btn { background: #FFD58A; transform: scale(1.08); }
+
+/* Ada thumbnail (foto saat ini di mode edit, atau pratinjau file yang baru dipilih) */
+.mp-file.has-thumb .mp-file__thumb { display: block; }
+
+/* File berhasil dipilih: tombol jadi oranye dengan tanda centang yang "tergambar", kotak berdenyut sekali, thumbnail muncul membal */
+.mp-file.is-selected { border-color: var(--d-orange); background: #FFFBF0; }
+.mp-file.is-selected .mp-file__btn { background: var(--d-orange); color: var(--d-navy); }
+.mp-file.is-selected .mp-up { display: none; }
+.mp-file.is-selected .mp-check { display: block; }
+.mp-file.is-selected .mp-file__name { color: var(--d-title); font-weight: 500; }
+.mp-file.is-just-chosen { animation: mp-chosen .7s var(--mp-ease); }
+.mp-file.is-just-chosen .mp-file__btn { animation: mp-pop .5s var(--mp-spring); }
+.mp-file.is-just-chosen .mp-check path { animation: mp-draw .45s ease-out .1s both; }
+.mp-file.is-just-chosen .mp-file__thumb { animation: mp-pop .5s var(--mp-spring) .1s both; }
+
+/* File ditolak di sisi klien (format / ukuran): pesan di tempat nama file, kotak bergetar sekali.
+   Server tetap memeriksa ulang isi file seperti dari tim backend. */
+.mp-file.is-invalid { border-color: var(--c-maroon); background: #FFF5F4; animation: shake .4s; }
+.mp-file.is-invalid .mp-file__name { color: var(--c-maroon); font-weight: 500; }
+
+@keyframes mp-float  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-.28rem); } }
+@keyframes mp-pop    { 0% { transform: scale(.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes mp-draw   { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes mp-chosen { 0% { box-shadow: 0 0 0 0 rgba(255, 159, 28, .55); } 100% { box-shadow: 0 0 0 1.2rem rgba(255, 159, 28, 0); } }
+
+/* Baris tombol di bawah form */
+.mp-form__foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: stretch; gap: 1.6rem 2.9rem; margin-top: .95rem; }
+
+/* Tombol "+ Tambah Produk" (di mode edit: "Simpan Perubahan").
+   Animasi: naik sedikit + bayangan menyala, tanda + berputar, kilap lewat sekali, ditekan mengecil. */
+.mp-add { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 1rem;
+          min-width: 22.2rem; height: 5.2rem; padding: 0 1.6rem; border: 0; border-radius: .8rem; background: var(--d-orange); color: var(--mp-add-text);
+          font: 500 2.1rem/1 var(--font); white-space: nowrap; cursor: pointer; box-shadow: 0 .2rem .6rem rgba(255, 159, 28, .3);
+          transition: transform .25s var(--mp-ease), box-shadow .25s, background .2s, opacity .2s; }
+.mp-add::after { content: ""; position: absolute; inset: 0; pointer-events: none; transform: translateX(-120%);
+                 background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .5) 50%, transparent 65%); }
+.mp-add__plus { display: inline-block; transition: transform .4s var(--mp-spring); }
+
+.mp-add:hover,
+.mp-add:focus-visible { background: #FFAA3D; box-shadow: 0 .6rem 1.5rem rgba(255, 159, 28, .5); transform: translateY(-.2rem); }
+.mp-add:hover::after,
+.mp-add:focus-visible::after { transform: translateX(120%); transition: transform .7s var(--mp-ease); }
+.mp-add:hover .mp-add__plus,
+.mp-add:focus-visible .mp-add__plus { transform: rotate(90deg) scale(1.2); }
+.mp-add:active { transform: scale(.97); box-shadow: none; }
+
+/* Sedang mengirim (admin-merchandise.js): tombol dikunci supaya upload tidak terkirim dua kali, tampil spinner kecil */
+.mp-add.is-busy { opacity: .8; pointer-events: none; }
+.mp-add.is-busy::before { content: ""; width: 1.8rem; height: 1.8rem; border: .25rem solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+
+/* Tautan "Batal edit" (hanya di mode edit) */
+.mp-cancel { display: inline-flex; align-items: center; justify-content: center; height: 5.2rem; padding: 0 2.4rem; border: .2rem solid var(--d-title); border-radius: .8rem;
+             color: var(--d-title); font-size: 1.6rem; font-weight: 500; text-decoration: none; white-space: nowrap;
+             transition: background .2s, transform .2s var(--mp-ease); }
+.mp-cancel:hover { background: rgba(42, 69, 128, .09); transform: translateY(-.15rem); }
+.mp-cancel:active { transform: scale(.97); }
+
+/* ---------- 5. DAFTAR PRODUK: kepala kartu ---------- */
+.mp-list-head { display: flex; align-items: center; gap: 1.6rem; margin: 0 0 2.1rem; }
+.mp-list-icon { flex: none; display: grid; place-items: center; width: 7.6rem; height: 7.6rem; border-radius: 50%; background: var(--d-head); }
+.mp-list-icon svg { width: 4.4rem; height: 4.4rem; }
+.mp-list-head h2 { margin: 0; color: var(--d-title); font-size: 2.6rem; font-weight: 700; line-height: 1.15; text-transform: uppercase; }
+.mp-list-head p  { margin: .5rem 0 0; color: var(--d-title); font-size: 1.25rem; font-weight: 700; text-transform: uppercase; }
+
+/* ---------- 6. TABEL PRODUK ---------- */
+.mp-table-wrap { overflow-x: auto; }
+
+.mp-table { width: 100%; min-width: 86rem; table-layout: fixed; border-collapse: separate; border-spacing: 0; color: var(--d-title); font-size: 1.5rem; }
+.mp-table col:nth-child(1) { width: 9%; }    /* Foto */
+.mp-table col:nth-child(2) { width: 16%; }   /* Nama Produk (nama panjang boleh turun ke baris berikutnya) */
+.mp-table col:nth-child(3) { width: 14%; }   /* Kategori (pil nama kategori) */
+.mp-table col:nth-child(4) { width: 13%; }   /* Harga */
+.mp-table col:nth-child(5) { width: 8%; }    /* Stock */
+.mp-table col:nth-child(6) { width: 14%; }   /* Ukuran */
+.mp-table col:nth-child(7) { width: 26%; }   /* Aksi (Edit + Hapus) */
+
+.mp-table th { padding: 1.9rem 1rem; background: var(--d-head); font-size: 1.5rem; font-weight: 500; text-align: center; white-space: nowrap; }
+.mp-table th:first-child { border-radius: 1.6rem 0 0 1.6rem; }
+.mp-table th:last-child  { border-radius: 0 1.6rem 1.6rem 0; }
+
+.mp-table td { padding: 1rem; border-bottom: .1875rem solid var(--mp-line); font-weight: 500; text-align: center; vertical-align: middle; }
+.mp-table .is-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Nama produk rata kiri (judul kolomnya juga) */
+.mp-table th.mp-col-nama,
+.mp-table td.mp-name { padding-left: 1.2rem; text-align: left; overflow-wrap: anywhere; }
+
+/* Kolom Aksi: judul & tombol rata kiri pada garis yang sama (seperti di desain) */
+.mp-table th.mp-col-aksi,
+.mp-table td.mp-aksi { padding-left: 1.6rem; text-align: left; }
+
+/* Baris: muncul berurutan (hanya 12 baris pertama yang diberi jeda) lalu menyorot saat disentuh kursor */
+.mp-table tbody tr { animation: rise .5s var(--mp-ease) both; animation-delay: calc(min(var(--i, 0), 12) * .04s + .3s); transition: background .2s; }
+.mp-table tbody tr:hover { background: rgba(255, 235, 188, .6); }
+
+/* Baris yang sedang diubah (mode ?edit=ID) */
+.mp-table tbody tr.is-editing { background: rgba(255, 159, 28, .14); }
+.mp-table tbody tr.is-editing td:first-child { box-shadow: inset .4rem 0 0 var(--d-orange); }
+
+/* Foto produk: kotak krem-beige membulat, foto sedikit membesar saat baris disentuh kursor */
+.mp-thumb { display: block; width: 6.2rem; height: 7.1rem; margin: 0 auto; overflow: hidden; border-radius: 1.2rem; background: var(--mp-tile); }
+.mp-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .35s var(--mp-ease); }
+.mp-table tbody tr:hover .mp-thumb img { transform: scale(1.08); }
+
+/* Pil kategori: 6 warna bergilir (ditentukan dari ID kategori di PHP, jadi kategori yang sama selalu berwarna sama).
+   Warna latar dari desain; warna teks sedikit dipertua supaya kontrasnya cukup. */
+.mp-pill { display: inline-block; max-width: 100%; padding: .3rem 1.3rem; border-radius: 1.6rem; font-size: 1.35rem; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+.mp-pill--0 { background: #B6CAF7; color: #1B4BB5; }   /* biru   (Kaos di desain)  */
+.mp-pill--1 { background: #B9A3F7; color: #3F2494; }   /* ungu   (Jaket di desain) */
+.mp-pill--2 { background: #FFB7AD; color: #8F2016; }   /* merah  (Topi di desain)  */
+.mp-pill--3 { background: #FFD995; color: #7A4B00; }   /* amber  (Tas di desain)   */
+.mp-pill--4 { background: #BFE5C4; color: #1F6B2E; }   /* hijau */
+.mp-pill--5 { background: #F6C1E3; color: #8A1E64; }   /* merah muda */
+
+/* ---------- 7. TOMBOL AKSI: Edit & Hapus ---------- */
+.mp-actions { display: flex; align-items: center; gap: 3.8rem; }
+.mp-del { margin: 0; }
+
+.mp-btn { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-width: 8.4rem; height: 3.2rem; padding: 0 .6rem;
+          border: .2rem solid var(--d-orange); border-radius: .8rem; background: transparent; font: 700 1.3rem/1 var(--font); text-decoration: none; text-transform: uppercase; white-space: nowrap; cursor: pointer;
+          transition: transform .28s var(--mp-ease), background .2s, color .2s, border-color .2s, box-shadow .25s; }
+.mp-btn svg { flex: none; width: 2.2rem; height: 2.2rem; overflow: visible; }
+.mp-btn:active { transform: scale(.95); box-shadow: none; }
+
+/* -- Edit: oranye penuh. Pensil miring & membesar, lalu "menulis" (bergoyang kecil) sekali. -- */
+.mp-btn--edit { background: var(--d-orange); color: var(--mp-edit-text); }
+.mp-btn--edit .mp-pencil { transition: transform .3s var(--mp-spring); }
+
+.mp-btn--edit:hover,
+.mp-btn--edit:focus-visible { background: #FFAA3D; border-color: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); transform: translateY(-.15rem) scale(1.05); }
+.mp-btn--edit:hover .mp-pencil,
+.mp-btn--edit:focus-visible .mp-pencil { transform: rotate(-12deg) scale(1.15); animation: mp-write .65s ease-in-out; }
+
+@keyframes mp-write {
+  0%   { transform: rotate(-12deg) scale(1.15) translate(0, 0); }
+  20%  { transform: rotate(-16deg) scale(1.15) translate(-.18rem, .12rem); }
+  40%  { transform: rotate(-8deg)  scale(1.15) translate(.2rem, -.08rem); }
+  60%  { transform: rotate(-16deg) scale(1.15) translate(-.18rem, .12rem); }
+  80%  { transform: rotate(-9deg)  scale(1.15) translate(.12rem, -.04rem); }
+  100% { transform: rotate(-12deg) scale(1.15) translate(0, 0); }
+}
+
+/* -- Hapus: garis tepi oranye. Saat kursor di dalam kotak tombol: tutup tong terangkat & miring (terbuka),
+      isi tong naik sedikit, seluruh ikon bergoyang sekali, dan warna tombol bergeser ke merah tua. -- */
+.mp-btn--hapus { color: var(--mp-hapus); }
+.mp-btn--hapus .mp-trash { transition: transform .3s var(--mp-ease); }
+.mp-trash__lid  { transform-box: view-box; transform-origin: 4px 6.2px; transition: transform .38s var(--mp-spring); }   /* engsel di ujung kiri tutup */
+.mp-trash__body { transition: transform .38s var(--mp-spring); }
+
+.mp-btn--hapus:hover,
+.mp-btn--hapus:focus-visible { border-color: var(--mp-danger); background: var(--mp-danger-bg); color: var(--mp-danger); transform: translateY(-.15rem) scale(1.05); }
+.mp-btn--hapus:hover .mp-trash__lid,
+.mp-btn--hapus:focus-visible .mp-trash__lid { transform: translate(-.4px, -.9px) rotate(-22deg); }
+.mp-btn--hapus:hover .mp-trash__body,
+.mp-btn--hapus:focus-visible .mp-trash__body { transform: translateY(.5px); }
+.mp-btn--hapus:hover .mp-trash,
+.mp-btn--hapus:focus-visible .mp-trash { animation: mp-nudge .5s ease-in-out .15s; }
+
+@keyframes mp-nudge {
+  0%, 100% { transform: rotate(0); }
+  30%      { transform: rotate(-7deg); }
+  65%      { transform: rotate(5deg); }
+}
+
+/* ---------- 8. FOKUS KEYBOARD ---------- */
+.mp-btn:focus-visible,
+.mp-add:focus-visible,
+.mp-cancel:focus-visible { outline: .25rem solid var(--d-navy); outline-offset: .25rem; }
+
+/* Kondisi kosong (belum ada produk) */
+.mp-card--list .dash-empty { margin-top: .6rem; }
+
+/* ---------- 9. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .mp-head { padding-left: 0; }
+  .mp-crumb { margin-left: 0; }
+}
+
+@media (max-width: 900px) {
+  .mp { width: calc(100% - 2rem); padding: 2.4rem 0 4rem; }
+  .mp-crumb { font-size: 1.4rem; }
+  .mp-title { gap: 1.6rem; }
+  .mp-title__icon { width: 6rem; height: 6rem; }
+  .mp-title h1 { font-size: 2.6rem; }
+  .mp-title p { font-size: 1.25rem; }
+  .mp-card--form { margin-top: 2.4rem; padding: 2.4rem 1.6rem 2.2rem; }
+  .mp-card--list { margin-top: 3rem; padding: 2.4rem 1.6rem 2.6rem; }
+
+  /* Form: satu kolom, tombol selebar kartu */
+  .mp-form { grid-template-columns: minmax(0, 1fr); }
+  .mp-form__foot { flex-direction: column; }
+  .mp-add, .mp-cancel { width: 100%; min-width: 0; }
+
+  .mp-list-icon { width: 5.6rem; height: 5.6rem; }
+  .mp-list-icon svg { width: 3.2rem; height: 3.2rem; }
+  .mp-list-head h2 { font-size: 2.2rem; }
+
+  /* Tabel menjadi kartu per produk (pola yang sama dengan Kelola Kategori & Kelola Pesanan) */
+  .mp-table-wrap { overflow: visible; }
+  .mp-table { min-width: 0; table-layout: auto; }
+  .mp-table colgroup { display: none; }
+  .mp-table thead, .mp-table thead tr, .mp-table thead th { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }   /* judul kolom disembunyikan secara visual, tetap terbaca pembaca layar */
+  .mp-table, .mp-table tbody, .mp-table tr, .mp-table td { display: block; }
+  .mp-table tbody tr { padding: 1.2rem 0; border-bottom: .1875rem solid var(--mp-line); }
+  .mp-table tbody tr:hover { background: none; }
+  .mp-table tbody tr.is-editing { padding-left: 1rem; padding-right: 1rem; border-radius: 1rem; background: rgba(255, 159, 28, .14); }
+  .mp-table tbody tr.is-editing td:first-child { box-shadow: none; }
+  .mp-table td, .mp-table td.mp-name, .mp-table td.mp-aksi { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; padding: .7rem 0; border: 0; text-align: right; }
+  .mp-table td::before { content: attr(data-label); flex: none; color: var(--d-muted); font-size: 1.25rem; font-weight: 700; text-align: left; }
+  .mp-thumb { margin: 0; }
+  .mp-actions { gap: 1.4rem; }
+}
+
+@media (max-width: 560px) {
+  .mp-title h1 { font-size: 2.2rem; }
+  .mp-actions { gap: 1rem; }
+  .mp-btn { min-width: 7.8rem; padding: 0 .6rem; }
+}
