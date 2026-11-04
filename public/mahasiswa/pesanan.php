@@ -152,6 +152,7 @@ if ($pesanan !== false) {
     <title>Pesanan #<?= $id ?> - Merchandise Kampus</title>
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
+    <link rel="stylesheet" href="/assets/css/menu-cepat.css?v=<?= @filemtime(__DIR__ . "/../assets/css/menu-cepat.css") ?>">
 </head>
 <body>
 <?php
@@ -289,6 +290,14 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
         <?php endif; ?>
 
     <?php endif; ?>
+
+    <!-- Menu cepat (paling bawah): sama dengan dashboard -->
+    <nav class="menu-cepat" aria-label="Menu cepat">
+        <a class="menu-cepat__main" href="/mahasiswa/katalog.php">Lihat Katalog</a>
+        <a href="/mahasiswa/dashboard.php">Lihat Dashboard</a>
+        <a href="/mahasiswa/profil.php">Kelola Profil</a>
+        <a class="menu-cepat__out" href="/logout.php">Logout</a>
+    </nav>
 
 </main>
 

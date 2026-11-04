@@ -1,0 +1,32 @@
+/* =========================================================
+   MENU CEPAT (baris tombol di paling bawah halaman)
+   Dipakai: mahasiswa/produk.php dan mahasiswa/pesanan.php
+   Tampilannya sama persis dengan menu cepat di dashboard.php (.dash-quick di dashboard.css),
+   tetapi berdiri sendiri (warna ditulis di sini) supaya tidak perlu memuat dashboard.css.
+   Dimuat SETELAH style.css (memakai --c-maroon dari sana).
+   ========================================================= */
+
+.menu-cepat {
+  --mc-navy:   #14264D;   /* teks di atas tombol oranye */
+  --mc-title:  #2A4580;   /* teks tombol biasa */
+  --mc-orange: #FF9F1C;   /* tombol utama */
+  --mc-chip:   #E3D3AE;   /* garis tepi tombol */
+  display: flex; flex-wrap: wrap; gap: 1.2rem;
+  width: min(100rem, 100% - 2rem); margin: 3rem auto 4rem;
+}
+.menu-cepat a { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2.4rem; border: 1px solid var(--mc-chip); border-radius: 99px;
+                background: rgba(255, 255, 255, .75); color: var(--mc-title); font-size: 1.4rem; font-weight: 700; text-decoration: none;
+                transition: transform .15s, background .2s, box-shadow .2s; }
+.menu-cepat a:hover { background: #fff; transform: translateY(-.15rem); }
+.menu-cepat a:active { transform: scale(.96); }
+.menu-cepat a.menu-cepat__main { background: var(--mc-orange); border-color: var(--mc-orange); color: var(--mc-navy); }
+.menu-cepat a.menu-cepat__main:hover { background: #FFAA3D; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); }
+.menu-cepat a.menu-cepat__out { margin-left: auto; color: var(--c-maroon); }   /* Logout dipisah ke kanan */
+.menu-cepat a:focus-visible { outline: .25rem solid var(--mc-navy); outline-offset: .25rem; }
+
+@media (max-width: 900px) {
+  .menu-cepat a.menu-cepat__out { margin-left: 0; }
+}
+@media (max-width: 560px) {
+  .menu-cepat a { flex: 1 1 calc(50% - .6rem); padding: 1.1rem .8rem; font-size: 1.3rem; text-align: center; line-height: 1.25; }
+}
