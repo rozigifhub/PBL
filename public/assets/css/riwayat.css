@@ -1,0 +1,187 @@
+/* =========================================================
+   RIWAYAT PESANAN MAHASISWA  (mahasiswa/riwayat.php)
+   Dimuat SETELAH style.css, navbar-mahasiswa.css, dan dashboard.css:
+     - style.css             -> token dasar, animasi "rise"
+     - navbar-mahasiswa.css  -> gaya navbar mahasiswa
+     - dashboard.css         -> token .dash (--d-*), .dash-empty, latar fixed
+   File ini hanya berisi tambahan khusus halaman ini, semua berawalan "rw-"
+   (rw = riwayat) supaya tidak bentrok dengan halaman lain.
+   Satuan rem (1rem = 16px di layar 1920), seperti file CSS lain.
+   ========================================================= */
+
+/* ---------- 1. TOKEN & LATAR HALAMAN ---------- */
+.dash-riwayat {
+  --rw-tab-text:        var(--d-title);
+  --rw-tab-active-text: #fff;           /* sesuai desain; kontras di atas oranye rendah, ganti ke var(--d-navy) bila ingin lebih terbaca */
+  --rw-btn-text:        #fff;           /* teks tombol Detail, sama seperti desain */
+  --rw-line:            #000;           /* garis pemisah baris */
+  --rw-ease:            cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Latar khusus halaman ini (dari tim desainer). Pseudo-element "fixed" dari dashboard.css dipakai ulang, hanya gambarnya diganti. */
+.dash-riwayat::before {
+  background: var(--c-cream) url('../img/bg-riwayat-pesanan.webp') center top / cover no-repeat;
+}
+
+.rw { width: min(108rem, 100% - 4rem); margin: 0 auto; padding: 3.4rem 0 7rem; }
+
+/* Teks untuk pembaca layar saja */
+.rw-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 2. KEPALA HALAMAN: breadcrumb + ikon toga + judul ---------- */
+.rw-head { padding-left: 2.8rem; animation: rise .6s var(--rw-ease) both; }
+
+.rw-crumb { display: flex; align-items: center; gap: .9rem; margin: 0 0 1.4rem; color: var(--d-title); font-size: 1.5rem; font-weight: 500; text-transform: uppercase; }
+.rw-crumb img { width: 2.7rem; height: 2.7rem; }
+.rw-crumb a { color: inherit; text-underline-offset: .3rem; transition: color .2s; }
+.rw-crumb a:hover { color: var(--d-orange); }
+
+.rw-title { display: flex; align-items: center; gap: 2.4rem; }
+.rw-title__icon { flex: none; display: grid; place-items: center; width: 7.4rem; height: 7.4rem; border-radius: 50%; background: var(--d-orange); color: #fff;
+                  box-shadow: 0 .5rem 1.2rem rgba(255, 159, 28, .35); }
+.rw-title__icon svg { width: 4.6rem; height: 4.6rem; }
+.rw-title h1 { margin: 0; color: var(--d-title); font-size: 2.6rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; }
+.rw-title p  { margin: .6rem 0 0; color: var(--d-title); font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
+
+/* ---------- 3. KARTU UTAMA ---------- */
+.rw-card { margin-top: 3rem; padding: 2.6rem 2.6rem 4.6rem; border-radius: 1.6rem; background: var(--d-card); box-shadow: var(--d-shadow);
+           animation: rise .6s var(--rw-ease) .1s both; }
+
+/* ---------- 4. TAB FILTER STATUS + SHAPE ORANYE YANG BERGESER ----------
+   Bilah krem; .rw-tabs__slider = bentuk oranye yang digeser JS (translateX + lebar) ke tab aktif.
+   Garis pembatas tipis di antara tab, disembunyikan di sekitar tab aktif. */
+.rw-tabs { position: relative; isolation: isolate; display: flex; align-items: stretch; border-radius: 1.8rem; background: var(--d-head);
+           overflow-x: auto; scrollbar-width: none; }
+.rw-tabs::-webkit-scrollbar { display: none; }
+
+.rw-tabs__slider { position: absolute; z-index: 0; top: 0; left: 0; width: 0; height: 100%; border-radius: 1.8rem; background: var(--d-orange);
+                   opacity: 0; transform: translateX(0); pointer-events: none; }
+.rw-tabs.is-ready .rw-tabs__slider { opacity: 1; transition: transform .3s ease-in-out, width .3s ease-in-out; }
+.rw-tabs.is-resizing .rw-tabs__slider { transition: none; }   /* ukuran layar berubah: langsung pindah, tanpa animasi */
+
+.rw-tab { position: relative; z-index: 1; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 5.6rem; padding: 0 2.6rem;
+          border: 0; border-radius: 1.8rem; background: transparent; color: var(--rw-tab-text); font: 500 2rem/1.2 var(--font); white-space: nowrap; cursor: pointer;
+          transition: color .3s ease-in-out, transform .2s var(--rw-ease); }
+
+.rw-tab + .rw-tab::before { content: ""; position: absolute; left: 0; top: 20%; bottom: 20%; width: .2rem; background: var(--rw-tab-text); opacity: .85; transition: opacity .2s; }
+.rw-tab.is-active::before,
+.rw-tab.is-active + .rw-tab::before { opacity: 0; }
+
+.rw-tab.is-active { color: var(--rw-tab-active-text); }
+.rw-tab:not(.is-active):hover { color: var(--d-navy); }
+.rw-tab:active { transform: scale(.96); }
+.rw-tab:focus-visible { outline: .25rem solid var(--d-navy); outline-offset: -.5rem; }
+
+/* Sebelum JS menempatkan shape (atau bila JS mati): tab aktif tetap oranye, jadi tidak ada kedipan */
+.rw-tabs:not(.is-ready) .rw-tab.is-active { background: var(--d-orange); }
+
+/* ---------- 5. TABEL PESANAN ---------- */
+.rw-table-wrap { margin: 3.6rem 5.4rem 0; overflow-x: auto; }
+
+.rw-table { width: 100%; min-width: 84rem; table-layout: fixed; border-collapse: separate; border-spacing: 0; color: var(--d-title); font-size: 1.5rem; }
+.rw-table col:nth-child(1) { width: 11%; }   /* No. Pesanan */
+.rw-table col:nth-child(2) { width: 18%; }   /* Tanggal */
+.rw-table col:nth-child(3) { width: 22%; }   /* Nama Produk */
+.rw-table col:nth-child(4) { width: 15%; }   /* Harga */
+.rw-table col:nth-child(5) { width: 21%; }   /* Status */
+.rw-table col:nth-child(6) { width: 13%; }   /* Aksi */
+
+.rw-table th { padding: 1.7rem 1rem; background: var(--d-head); font-size: 1.6rem; font-weight: 500; text-align: center; white-space: nowrap; }
+.rw-table th:first-child { border-radius: 1.4rem 0 0 1.4rem; }
+.rw-table th:last-child  { border-radius: 0 1.4rem 1.4rem 0; }
+
+/* Tanpa garis vertikal; hanya garis horizontal tebal di bawah tiap baris */
+.rw-table td { padding: 3.2rem 1rem; border-bottom: .2rem solid var(--rw-line); font-weight: 500; text-align: center; vertical-align: middle; }
+.rw-table .is-num { font-variant-numeric: tabular-nums; }
+
+/* Baris: menyorot + naik sedikit saat disentuh kursor */
+.rw-table tbody tr { transition: background .2s ease, transform .2s ease; }
+.rw-table tbody tr:hover { background: rgba(255, 235, 188, .65); transform: translateY(-.2rem); }
+.rw-table.is-clickable tbody tr[data-href] { cursor: pointer; }
+.rw-table tr[hidden] { display: none !important; }   /* baris yang disaring tab (juga di tampilan kartu mobile) */
+
+/* Muncul berurutan (maks. 10 baris pertama yang diberi jeda). Kelas .is-enter dipasang JS; fill-mode "backwards" supaya efek hover tetap jalan setelahnya */
+.rw-table tbody tr.is-enter { animation: rwRow .45s var(--rw-ease) backwards; animation-delay: calc(min(var(--i, 0), 10) * .04s); }
+@keyframes rwRow { from { opacity: 0; transform: translateY(1.2rem); } }
+
+/* Nomor pesanan = tautan ke detail */
+.rw-no { font-weight: 700; text-underline-offset: .35rem; display: inline-block; transition: color .2s, transform .2s var(--rw-ease); }
+.rw-table tbody tr:hover .rw-no { color: var(--d-navy); transform: scale(1.1); }
+
+.rw-prod { display: block; overflow-wrap: anywhere; line-height: 1.35; }
+.rw-prod .rw-more { color: var(--d-muted); font-size: 1.3rem; white-space: nowrap; }
+.rw-prod small { display: block; margin-top: .5rem; color: var(--d-muted); font-size: 1.2rem; font-weight: 500; }
+.rw-price { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- 6. BADGE STATUS (pil + dot) ----------
+   Warna mengikuti desain; teks digelapkan agar kontras cukup. */
+.rw-state { display: flex; flex-direction: column; align-items: center; gap: .7rem; min-width: 0; }
+.rw-pay { color: var(--d-muted); font-size: 1.15rem; font-weight: 500; }
+
+.rw-badge { display: inline-flex; align-items: center; gap: .8rem; padding: .5rem 1.6rem .5rem 1.3rem; border-radius: 99rem; background: #E4E1DA; color: #4A4A4A;
+            font-size: 1.45rem; font-weight: 500; line-height: 1.3; white-space: nowrap; transition: transform .25s var(--rw-ease), box-shadow .25s; }
+.rw-badge::before { content: ""; flex: none; width: .9rem; height: .9rem; border-radius: 50%; background: currentColor; }
+.rw-badge--done    { background: #C4FDB2; color: #17602C; }   /* Selesai / Lunas / DP Lunas */
+.rw-badge--ship    { background: #FFA79F; color: #8F1F1B; }   /* Dikirim */
+.rw-badge--wait    { background: #FFC9C4; color: #8F1F1B; }   /* Menunggu Pembayaran / DP / Pelunasan (keluarga merah/pink yang sama, sedikit lebih muda) */
+.rw-badge--process { background: #A7CBF7; color: #17418C; }   /* Diproses */
+.rw-badge--off     { background: #E4E1DA; color: #4A4A4A; }   /* Dibatalkan / status lain */
+
+.rw-table tbody tr:hover .rw-badge { transform: scale(1.06); box-shadow: 0 .3rem .8rem rgba(20, 38, 77, .15); }
+
+/* ---------- 7. TOMBOL DETAIL ---------- */
+.rw-btn { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; padding: .6rem 1.5rem; border-radius: .8rem; background: var(--d-orange);
+          color: var(--rw-btn-text); font-size: 1.5rem; font-weight: 600; line-height: 1.3; text-decoration: none; white-space: nowrap;
+          transition: transform .2s var(--rw-ease), filter .2s, box-shadow .2s; }
+.rw-btn svg { flex: none; width: 1.9rem; height: 1.9rem; }
+.rw-btn:hover { transform: scale(1.05); filter: saturate(1.4) brightness(1.04); box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .45); }
+.rw-btn:active { transform: scale(.97); box-shadow: none; }
+.rw-btn:focus-visible { outline: .25rem solid var(--d-navy); outline-offset: .25rem; }
+
+/* ---------- 8. KOSONG (belum ada pesanan / tab tanpa hasil) ---------- */
+.rw-empty { margin: 3.6rem 5.4rem 0; }
+.rw-empty .rw-link { padding: 0; border: 0; background: none; color: var(--d-title); font: 700 1.5rem var(--font); text-decoration: underline; text-underline-offset: .3rem; cursor: pointer; }
+.rw-empty .rw-link:hover { color: var(--d-orange); }
+.rw-empty--first { margin-top: 0; }
+
+/* ---------- 9. RESPONSIF ---------- */
+@media (max-width: 1280px) {
+  .rw-tab { font-size: 1.7rem; padding: 0 2rem; }
+}
+
+@media (max-width: 1100px) {
+  .rw-head { padding-left: 0; }
+  .rw-table-wrap, .rw-empty { margin-left: 0; margin-right: 0; }
+}
+
+@media (max-width: 900px) {
+  .rw { width: calc(100% - 2rem); padding: 2.4rem 0 4rem; }
+  .rw-crumb { font-size: 1.4rem; }
+  .rw-title { gap: 1.6rem; }
+  .rw-title__icon { width: 6rem; height: 6rem; }
+  .rw-title__icon svg { width: 3.6rem; height: 3.6rem; }
+  .rw-title h1 { font-size: 2.2rem; }
+  .rw-card { margin-top: 2.4rem; padding: 1.6rem 1.4rem 2.6rem; }
+
+  /* Tab menjadi bilah yang bisa digeser ke samping */
+  .rw-tab { flex: 0 0 auto; min-height: 4.6rem; padding: 0 1.8rem; font-size: 1.5rem; }
+
+  /* Tabel menjadi kartu per pesanan (pola yang sama dengan dashboard) */
+  .rw-table-wrap { overflow: visible; margin-top: 1.8rem; }
+  .rw-table { min-width: 0; table-layout: auto; }
+  .rw-table colgroup { display: none; }
+  .rw-table thead, .rw-table thead tr, .rw-table thead th { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }   /* judul kolom disembunyikan secara visual, tetap terbaca pembaca layar */
+  .rw-table, .rw-table tbody, .rw-table tr, .rw-table td { display: block; }
+  .rw-table tbody tr { padding: 1.2rem 0; border-bottom: .2rem solid var(--rw-line); }
+  .rw-table tbody tr:hover { background: none; transform: none; }
+  .rw-table td { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; padding: .7rem 0; border: 0; text-align: right; }
+  .rw-table td::before { content: attr(data-label); flex: none; color: var(--d-muted); font-size: 1.25rem; font-weight: 700; text-align: left; }
+  .rw-state { align-items: flex-end; }
+  .rw-prod { text-align: right; }
+  .rw-table tbody tr:hover .rw-no { transform: none; }
+  .rw-empty { margin-top: 1.8rem; }
+}
+
+@media (max-width: 560px) {
+  .rw-title h1 { font-size: 1.9rem; }
+}
