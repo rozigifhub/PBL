@@ -236,6 +236,14 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
             <?php endif; ?>
 
         </section>
+
+        <!-- Menu cepat (paling bawah): sama dengan dashboard -->
+        <nav class="dash-quick" aria-label="Menu cepat">
+            <a class="dash-quick__main" href="katalog.php">Lihat Katalog</a>
+            <a href="dashboard.php">Lihat Dashboard</a>
+            <a href="profil.php">Kelola Profil</a>
+            <a class="dash-quick__out" href="/logout.php">Logout</a>
+        </nav>
     </div>
 </main>
 
