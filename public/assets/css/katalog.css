@@ -73,7 +73,7 @@
 .pcard__info  { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
 .pcard__text  { min-width: 0; }
 .pcard__stok  { flex: none; padding: .35rem .9rem; border-radius: 99px; background: #E4F5EA; color: #1B7A3A;
-                font-size: .95rem; font-weight: 700; letter-spacing: .03em; line-height: 1.2; text-transform: uppercase; white-space: nowrap; }
+                font-size: 1.05rem; font-weight: 700; letter-spacing: .03em; line-height: 1.2; text-transform: uppercase; white-space: nowrap; }
 
 .pcard__actions { display: flex; gap: .6rem; margin-top: auto; }
 .pcard__actions form { display: flex; flex: 1; min-width: 0; margin: 0; }
