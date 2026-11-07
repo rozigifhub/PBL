@@ -243,7 +243,7 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                     <!-- Pilih Ukuran (radio bergaya kotak; bisa dipakai tanpa JS).
                          CATATAN: keranjang.php saat ini hanya menyimpan id + jumlah, jadi field "ukuran" ikut terkirim
                          tapi diabaikan backend. Siap dipakai bila tim backend nanti menyimpan ukuran per item. -->
-                    <div class="pd-row">
+                    <div class="pd-row pd-row--ukuran">
                         <span class="pd-row__icon"><img src="/assets/img/produk-shirt.png" alt=""></span>
                         <div class="pd-row__body">
                             <p class="pd-row__label" id="lbl-ukuran">Pilih Ukuran</p>
@@ -258,17 +258,20 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                         </div>
                     </div>
 
-                    <!-- Jumlah: kotak dengan tombol - dan + (diatur produk-detail.js) -->
-                    <div class="pd-row">
-                        <span class="pd-row__icon pd-row__icon--sm"><img src="/assets/img/produk-basket.png" alt=""></span>
-                        <div class="pd-row__body">
-                            <label class="pd-row__label pd-row__label--sm" for="jumlah">Jumlah <span class="pd-row__max">(maks <?= (int)$produk["stok"] ?>)</span></label>
-                            <div class="pd-qty" data-qty>
-                                <button class="pd-qty__btn" type="button" data-qty-minus aria-label="Kurangi jumlah">&minus;</button>
-                                <!-- PHP: max = $produk["stok"]. name="jumlah" sama seperti kode asli -->
-                                <input class="pd-qty__input" id="jumlah" type="number" name="jumlah" value="1" min="1" max="<?= (int)$produk["stok"] ?>" required inputmode="numeric"<?= $formAttr ?>>
-                                <button class="pd-qty__btn" type="button" data-qty-plus aria-label="Tambah jumlah">+</button>
-                            </div>
+                    <!-- Jumlah: ikon keranjang + label dalam SATU baris, kotak [ - ][ 1 ][ + ] di bawahnya (diatur produk-detail.js).
+                         "(maks N)" = batas jumlah yang bisa dipesan = stok produk. -->
+                    <div class="pd-qtyrow">
+                        <label class="pd-qtyrow__label" for="jumlah">
+                            <img class="pd-qtyrow__icon" src="/assets/img/produk-basket.png" alt="">
+                            <span>Jumlah</span>
+                            <!-- PHP: $produk["stok"] -->
+                            <span class="pd-qtyrow__max">(maks <?= (int)$produk["stok"] ?>)</span>
+                        </label>
+                        <div class="pd-qty" data-qty>
+                            <button class="pd-qty__btn" type="button" data-qty-minus aria-label="Kurangi jumlah">-</button>
+                            <!-- PHP: max = $produk["stok"]. name="jumlah" sama seperti kode asli -->
+                            <input class="pd-qty__input" id="jumlah" type="number" name="jumlah" value="1" min="1" max="<?= (int)$produk["stok"] ?>" required inputmode="numeric"<?= $formAttr ?>>
+                            <button class="pd-qty__btn" type="button" data-qty-plus aria-label="Tambah jumlah">+</button>
                         </div>
                     </div>
 

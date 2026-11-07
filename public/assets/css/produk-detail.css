@@ -44,7 +44,7 @@
 .pd::after  { bottom: 0; aspect-ratio: 1920 / 1181; background-image: url('../img/bg-detail-produk-bawah.webp');
               -webkit-mask-image: linear-gradient(transparent, #000 20%); mask-image: linear-gradient(transparent, #000 20%); }
 
-.pd__inner { width: min(108rem, 100% - 4rem); margin: 0 auto; }
+.pd__inner { width: min(116rem, 100% - 4rem); margin: 0 auto; }   /* 116rem = lebar konten pada desain Figma */
 
 /* Dasar interaksi: semua tombol, tautan, dan kartu bertransisi lembut */
 .pd a, .pd button, .pd-card, .pd-btn { transition: all var(--pd-ease); }
@@ -57,7 +57,7 @@
 .pd-back a:hover { background: #fff; transform: translateX(-.3rem); box-shadow: 0 .4rem 1rem rgba(20, 38, 77, .12); }
 
 /* ---------- 3. AREA ATAS: 2 KOLOM ---------- */
-.pd-top { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4rem; align-items: stretch; }
+.pd-top { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4.8rem; align-items: stretch; }
 
 /* --- Kolom kiri: 1 foto utama mengisi penuh kartu --- */
 .pd-gallery { position: relative; display: flex; min-height: 50rem; max-height: 66rem; padding: 2rem;   /* ikut tinggi kolom kanan, tapi dibatasi agar foto tidak terpotong berlebihan */
@@ -76,7 +76,7 @@
 .pd-photo__none svg { width: 8rem; height: 8rem; }
 
 /* --- Kolom kanan: info produk --- */
-.pd-info { padding: 3.2rem 3.6rem 4rem; border-radius: 2.4rem; background: var(--pd-card); animation: rise .6s ease-out .08s both; }
+.pd-info { padding: 3.2rem 1.7rem 2.7rem; border-radius: 2.4rem; background: var(--pd-card); animation: rise .6s ease-out .08s both; }
 
 .pd-name  { margin: 0; color: var(--pd-name); font-size: 5.4rem; font-weight: 800; line-height: 1.05; letter-spacing: -.01em; text-transform: uppercase; overflow-wrap: anywhere; }
 /* Nama panjang: ukuran huruf mengecil (kelas dipilih produk.php berdasarkan panjang nama) */
@@ -100,52 +100,61 @@
 .pd-count svg { flex: none; width: 2.6rem; height: 2.6rem; }
 .pd-count b { color: #000; font-size: 2.2rem; font-weight: 700; line-height: 1.2; }
 
-.pd-sep { margin: 2.6rem 0 0; border: 0; border-top: .2rem solid #B6B1A6; }
+.pd-sep { margin: 2.8rem 0 0; border: 0; border-top: .15rem solid #9D9D9D; }
 
-/* Baris: ikon + label (Kategori, Pilih Ukuran, Jumlah) */
-.pd-row { display: flex; align-items: flex-start; gap: 2.2rem; margin-top: 2.6rem; }
-.pd-row__icon { flex: none; display: grid; place-items: center; width: 6rem; height: 4.8rem; }
-.pd-row__icon img { max-width: 4.8rem; max-height: 4.8rem; object-fit: contain; }
-.pd-row__icon--sm img { max-width: 3rem; max-height: 3rem; filter: brightness(0); }   /* ikon keranjang putih -> hitam */
+/* ===== Bagian bawah panel kanan: ukuran mengikuti desain Figma (angka px = layar 1920, 16px = 1rem) ===== */
+
+/* Baris ikon + label (Kategori, Pilih Ukuran). Ikon 76px di kolom kiri, label 28px dengan jarak 24px */
+.pd-row { display: flex; align-items: center; gap: 2.4rem; margin-top: 1rem; padding-left: 2.4rem; }
+.pd-row + .pd-row { margin-top: 1.3rem; }
+.pd-row__icon { flex: none; display: grid; place-items: center; width: 4.75rem; height: 4.75rem; }
+.pd-row__icon img { width: 100%; height: 100%; object-fit: contain; }
+.pd-row--ukuran .pd-row__icon { margin-top: .8rem; }   /* ikon kaos sedikit lebih rendah dari label, seperti di desain */
 .pd-row__body { min-width: 0; }
-.pd-row__label { display: block; margin: 0; color: var(--pd-indigo); font-size: 2.4rem; font-weight: 700; line-height: 1.2; }
-.pd-row__label--sm { font-size: 1.9rem; font-weight: 600; }
-.pd-row__max { color: #7A7A7A; font-size: 1.3rem; font-weight: 500; }
-.pd-row__sub { display: inline-block; margin-top: .4rem; color: #5A5D66; font-size: 1.3rem; font-weight: 500; text-underline-offset: .25rem; }
-.pd-row__sub:hover { color: var(--pd-orange); }
+.pd-row__label { display: block; margin: 0; color: var(--pd-indigo); font-size: 1.85rem; font-weight: 600; letter-spacing: .02em; line-height: 1.2; }   /* Roboto lebih sempit dari Poppins (desain), jadi sedikit diperbesar */
+.pd-row__sub { display: block; margin-top: .1rem; color: #9B9B9B; font-size: 1.05rem; font-weight: 600; letter-spacing: .02em; line-height: 1.2; text-decoration: none; }
+.pd-row__sub:hover, .pd-row__sub:focus-visible { color: var(--pd-orange); text-decoration: underline; text-underline-offset: .25rem; }
 
-/* Pilihan ukuran: radio disembunyikan, tampil sebagai kotak (rounded) yang bisa diklik */
-.pd-sizes { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: 1.1rem; }
+/* Pilihan ukuran: radio disembunyikan, tampil sebagai kotak 60x45px (rounded) yang bisa diklik */
+.pd-sizes { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: .7rem 0 0 -.3rem; }
 .pd-size { position: relative; cursor: pointer; }
 .pd-size input { position: absolute; width: 1px; height: 1px; margin: -1px; opacity: 0; }
-.pd-size span { display: grid; place-items: center; min-width: 5.4rem; height: 4.4rem; padding: 0 1.2rem; border: .15rem solid #1b1b1b; border-radius: 1rem;
-                background: var(--pd-card); color: #000; font-size: 1.6rem; font-weight: 500; transition: all var(--pd-ease); }
-.pd-size:hover span { background: #FFE9C2; transform: translateY(-.2rem); }
-.pd-size input:checked + span { background: var(--pd-orange); border-color: var(--pd-orange); font-weight: 700; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .4); }
+.pd-size span { display: grid; place-items: center; min-width: 3.75rem; height: 2.8rem; padding: 0 .9rem; border: .1rem solid rgba(0, 0, 0, .7); border-radius: .7rem;
+                background: var(--pd-card); color: #000; font-size: 1.15rem; font-weight: 500; transition: all var(--pd-ease); }
+.pd-size:hover span { background: #FFE9C2; transform: translateY(-.15rem); }
+.pd-size input:checked + span { background: var(--pd-orange); border-color: var(--pd-orange); }
 .pd-size input:focus-visible + span { outline: .3rem solid var(--pd-navy); outline-offset: .3rem; }
 
-/* Jumlah: [ - ] [ 1 ] [ + ] */
-.pd-qty { display: inline-flex; margin-top: 1.1rem; overflow: hidden; border: .1rem solid #AFAFAF; border-radius: 1rem; background: #fff; }
-.pd-qty__btn { display: grid; place-items: center; width: 4.6rem; height: 4.6rem; padding: 0; border: 0; background: #D9D9D9; color: #000;
-               font: 700 2.6rem/1 var(--font); cursor: pointer; }
+/* Jumlah: ikon keranjang di SAMPING label (satu baris), kotak [ - ][ 1 ][ + ] tepat di bawahnya.
+   Ikon dan kotak sama-sama mulai di kolom ikon (2.4rem dari tepi isi panel), seperti di desain. */
+.pd-qtyrow { margin-top: 2.3rem; padding-left: 2.4rem; }
+.pd-qtyrow__label { display: flex; align-items: center; gap: 1rem; margin: 0; color: var(--pd-indigo); font-size: 1.5rem; font-weight: 500; letter-spacing: .02em; line-height: 1.2; }
+.pd-qtyrow__icon { flex: none; width: 3rem; height: auto; filter: brightness(0); }   /* PNG keranjang putih -> hitam; 3rem -> glyph ±34px */
+.pd-qtyrow__max { color: #7A7A7A; font-size: 1.1rem; font-weight: 500; }
+
+/* Kotak jumlah 209x59px: tombol 53px, kolom angka 101px */
+.pd-qty { display: inline-flex; margin-top: .3rem; overflow: hidden; border: .1rem solid #AFAFAF; border-radius: 1rem; background: #fff; }
+.pd-qty__btn { display: grid; place-items: center; width: 3.3rem; height: 3.6rem; padding: 0; border: 0; background: #D9D9D9; color: #000;
+               font: 700 2.7rem/1 var(--font); cursor: pointer; }
 .pd-qty__btn:hover:not(:disabled) { background: var(--pd-orange); color: #fff; }
 .pd-qty__btn:active:not(:disabled) { transform: scale(.9); }
-.pd-qty__btn:disabled { opacity: .45; cursor: not-allowed; }
-.pd-qty__input { width: 7.4rem; height: 4.6rem; padding: 0; border: 0; border-radius: 0; background: #fff; color: #000; font: 700 2.2rem var(--font); text-align: center; -moz-appearance: textfield; appearance: textfield; }
+.pd-qty__btn:disabled { cursor: not-allowed; }   /* batas min/maks: tampilan tetap sama seperti desain */
+.pd-qty__input { width: 6.3rem; height: 3.6rem; padding: 0; border: 0; border-radius: 0; background: #fff; color: #000; font: 700 2rem var(--font); text-align: center; -moz-appearance: textfield; appearance: textfield; }
 .pd-qty__input::-webkit-outer-spin-button, .pd-qty__input::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }
 .pd-qty__input:focus { outline: .3rem solid rgba(255, 159, 28, .45); outline-offset: -.3rem; }
 
 /* ---------- 4. TOMBOL AKSI ---------- */
-.pd-actions { display: grid; gap: 1.4rem; max-width: 42rem; margin: 3rem 0 0 8.2rem; }   /* 8.2rem = kolom ikon + jarak, sejajar dengan label */
+.pd-actions { display: grid; gap: 1.1rem; width: 39.25rem; max-width: calc(100% - 5.8rem); margin: 1.8rem 0 0 5.8rem; }   /* 628px lebar; tombol bergeser 5.8rem dari kiri isi panel, seperti desain */
 .pd-actions__note { margin: 0; color: #5A5D66; font-size: 1.3rem; }
 
-.pd-btn { display: flex; align-items: center; justify-content: center; gap: 1.2rem; width: 100%; height: 6.2rem; padding: 0 2rem; border: .2rem solid transparent; border-radius: 99rem;
-          font: 700 2rem var(--font); letter-spacing: .04em; text-decoration: none; text-transform: uppercase; white-space: nowrap; cursor: pointer; }
+.pd-btn { display: flex; align-items: center; justify-content: center; gap: 1.2rem; width: 100%; height: 5.6rem; padding: 0 2rem; border: .15rem solid transparent; border-radius: 99rem;
+          font: 700 1.95rem var(--font); letter-spacing: .04em; text-decoration: none; text-transform: uppercase; white-space: nowrap; cursor: pointer; }
 .pd-btn:active { transform: scale(.97); }
-.pd-btn__icon { flex: none; width: 3.6rem; height: auto; transition: transform .45s cubic-bezier(.34, 1.56, .64, 1); }   /* sedikit "memantul" saat melaju */
+.pd-btn__icon { flex: none; width: 4.4rem; height: auto;   /* ukuran asli PNG (71px): glyph keranjang ±51px, sama dengan desain */
+                transition: transform .45s cubic-bezier(.34, 1.56, .64, 1); }   /* sedikit "memantul" saat melaju */
 
 /* TAMBAH KE KERANJANG: oranye solid */
-.pd-btn--cta { background: var(--pd-orange); border-color: var(--pd-orange); color: #fff; box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .3); }
+.pd-btn--cta { padding-right: 3.2rem; background: var(--pd-orange); border-color: var(--pd-orange); color: #fff; }   /* tanpa bayangan saat diam (desain polos); padding kanan menggeser isi ±6px ke kiri seperti desain */
 .pd-btn--cta:hover { background: var(--pd-orange-2); border-color: var(--pd-orange-2); transform: translateY(-.25rem);   /* naik sedikit (±4px) */
                      box-shadow: 0 1rem 2rem rgba(255, 159, 28, .5); }
 .pd-btn--cta:hover .pd-btn__icon { transform: translateX(.3rem) rotate(5deg); }   /* ikon keranjang "melaju" maju (±5px) */
@@ -215,7 +224,7 @@
 .pd-empty__text  { margin: 0 0 2.4rem; color: var(--pd-text); font-size: 1.7rem; line-height: 1.6; }
 
 /* ---------- 8. MENU CEPAT: lebarnya disamakan dengan isi halaman ---------- */
-.pd .menu-cepat { width: min(108rem, 100% - 4rem); margin: 2rem auto 0; }
+.pd .menu-cepat { width: min(116rem, 100% - 4rem); margin: 2rem auto 0; }
 
 /* ---------- 9. RESPONSIF ---------- */
 @media (max-width: 1200px) {
@@ -223,7 +232,7 @@
   .pd-name--sm { font-size: 3.6rem; }
   .pd-name--xs { font-size: 3rem; }
   .pd-stock__title { font-size: 3rem; }
-  .pd-info { padding: 2.6rem 2.4rem 3.2rem; }
+  .pd-info { padding: 2.6rem 1.7rem 2.7rem; }
 }
 @media (max-width: 900px) {
   .pd { padding-top: 2rem; }
@@ -236,11 +245,12 @@
   .pd-stock__title { font-size: 2.4rem; }
   .pd-stock__title img { width: 4rem; height: 4rem; }
   .pd-stock__row { gap: 1.6rem; flex-wrap: wrap; }
-  .pd-actions { margin-left: 0; max-width: none; }
+  .pd-actions { width: 100%; max-width: none; margin-left: 0; }
   .pd-btn { height: auto; min-height: 5.6rem; padding: 1rem 1.6rem; font-size: 1.7rem; line-height: 1.15; text-align: center; white-space: normal; }
   .pd-btn__icon { width: 3.2rem; }
-  .pd-row { gap: 1.4rem; }
-  .pd-row__icon { width: 4.8rem; }
+  .pd-row { gap: 1.4rem; padding-left: .6rem; }
+  .pd-row__icon { width: 4.2rem; height: 4.2rem; }
+  .pd-qtyrow { padding-left: .6rem; }
   .pd-desc__title { font-size: 2.6rem; }
   .pd-desc__text { font-size: 1.6rem; }
   .pd-more__grid { justify-content: center; gap: 4rem 2rem; }
@@ -249,7 +259,7 @@
 @media (max-width: 560px) {
   .pd__inner { width: calc(100% - 3rem); }
   .pd .menu-cepat { width: calc(100% - 3rem); }
-  .pd-info { padding: 2.2rem 1.8rem 2.8rem; }
+  .pd-info { padding: 2.2rem 1.4rem 2.6rem; }
   .pd-stock { padding: 1.6rem 1.2rem 1.8rem; }
   .pd-stock__title { font-size: 2.1rem; gap: 1.2rem; }
   .pd-badge { font-size: 1.5rem; padding: .7rem 1.4rem; }
