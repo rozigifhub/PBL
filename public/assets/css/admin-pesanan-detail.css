@@ -1,0 +1,287 @@
+/* =========================================================
+   DETAIL PESANAN ADMIN  (admin/pesanan-detail.php)
+   Dimuat SETELAH style.css, dashboard.css, dan admin-dashboard.css:
+     - style.css            -> token dasar, .alert, animasi "rise"
+     - dashboard.css        -> token .dash (--d-*), warna kartu & judul
+     - admin-dashboard.css  -> gaya navbar admin (menu + ikon akun)
+   File ini hanya berisi tambahan khusus halaman ini, semua berawalan "pd-"
+   (pd = pesanan-detail) supaya tidak bentrok dengan halaman lain.
+   Satuan rem (1rem = 16px di layar 1920), sama seperti file CSS lain,
+   jadi seluruh tata letak ikut mengecil proporsional di layar yang lebih kecil.
+
+   Daftar isi:
+     1. Token & latar halaman
+     2. Kepala halaman (breadcrumb, ikon, judul)
+     3. Grid & kartu dasar
+     4. Kartu Informasi Pesanan & Pembeli (daftar label : isi)
+     5. Badge status
+     6. Kartu Item Pesanan & Riwayat Pembayaran (tabel -> grid)
+     7. Kartu form: Ubah Status & Pengiriman
+     8. Fokus keyboard & gerak
+     9. Responsif
+   ========================================================= */
+
+/* ---------- 1. TOKEN & LATAR HALAMAN ---------- */
+.pd-page {
+  --pd-ease:      cubic-bezier(.2, .7, .2, 1);
+  --pd-sub:       #6E6E6E;   /* sub-judul; desain #969696, digelapkan sedikit agar kontras terbaca */
+  --pd-total-bg:  #FFEEC7;   /* latar baris TOTAL */
+  --pd-tile:      #F3E8D4;   /* latar kotak foto produk */
+  --pd-field-line:#BCBCBC;   /* garis tepi input */
+  --pd-field-text:#2A4580;   /* teks isi input / select */
+  --pd-placeholder:#9A9A9A;
+  --pd-orange:    #FF9F1C;   /* tombol aksi + warna fokus input */
+  --pd-orange-dk: #E8890A;   /* tombol saat disentuh kursor (lebih gelap) */
+  --pd-btn-text:  #fff;      /* sesuai desain; isi #14264D bila ingin kontras lebih tinggi di atas oranye */
+}
+
+/* Latar dekoratif desain (bentuk di sudut-sudut). Berbeda dari halaman lain yang memakai latar "fixed",
+   di sini latar ikut menggulir bersama halaman supaya komposisi bentuknya sama seperti di Figma
+   (blob navy di bawah navbar, lingkaran garis di kanan, lengkung di bawah). */
+.dash.pd-page::before {
+  position: absolute;
+  inset: calc(-1 * var(--nav-h)) 0 0;   /* mulai dari puncak halaman (di balik navbar), seperti di desain */
+  background: #FBF4E2 url('../img/bg-kelola-pesanan.webp') center top / 100% auto no-repeat;   /* #FBF4E2 = warna dasar gambar, supaya tidak ada sambungan bila halaman lebih tinggi dari gambar */
+}
+
+.pd { width: min(115rem, 100% - 4rem); margin: 0 auto; padding: 4.65rem 0 3.6rem; }
+
+/* Teks untuk pembaca layar saja */
+.pd-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 2. KEPALA HALAMAN: breadcrumb + ikon + judul ---------- */
+.pd-head { margin-bottom: 2.1rem; padding-left: 10.7rem; animation: rise .6s var(--pd-ease) both; }
+
+.pd-crumb { display: flex; align-items: center; gap: .9rem; margin: 0 0 2.15rem 1rem; color: var(--d-title); font-size: 1.5rem; font-weight: 500; text-transform: uppercase; }
+.pd-crumb img { flex: none; width: 2.7rem; height: 2.7rem; }
+.pd-crumb a { color: inherit; text-underline-offset: .3rem; transition: color .2s; }
+.pd-crumb a:hover { color: var(--d-orange); }
+
+.pd-title { display: flex; align-items: center; gap: 2.7rem; }
+.pd-title > div { padding-top: .4rem; }
+.pd-title__icon { flex: none; display: grid; place-items: center; width: 8.4rem; height: 8.4rem; border-radius: 50%;
+                  background: var(--d-orange); box-shadow: 0 .5rem 1.2rem rgba(255, 159, 28, .35); }
+.pd-title__icon img { width: 5.2rem; height: 5.2rem; }
+.pd-title h1 { margin: 0; color: var(--d-title); font-size: 4.4rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; }
+.pd-title p  { margin: .6rem 0 0; color: var(--pd-sub); font-size: 1.25rem; font-weight: 700; line-height: 1.3; }
+
+/* Pesan flash / error dari backend memakai .alert dari style.css */
+.pd .alert { margin: 0 0 2.4rem; font-size: 1.5rem; }
+
+/* ---------- 3. GRID & KARTU DASAR ----------
+   Baris 1: Informasi + Pembeli (2 kolom)      Baris 2: Item Pesanan (penuh)
+   Baris 3: Riwayat Pembayaran (penuh)         Baris 4: Ubah Status + Pengiriman (2 kolom) */
+.pd-grid { display: grid; gap: 2.7rem 3rem; }
+.pd-grid--info  { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pd-grid--forms { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; gap: 2.7rem; margin-top: 4rem; }   /* tinggi kartu mengikuti isinya, seperti di desain */
+
+.pd-card { position: relative; min-width: 0; padding: 2.25rem 2.25rem 2.4rem; border-radius: 1.3rem; background: var(--d-card); box-shadow: var(--d-shadow);
+           animation: rise .6s var(--pd-ease) both; }
+.pd-grid--info .pd-card:nth-child(2) { animation-delay: .06s; }
+.pd-card--item  { margin-top: 2.7rem; animation-delay: .12s; }
+.pd-card--bayar { margin-top: 4rem;   animation-delay: .18s; }
+.pd-grid--forms .pd-card:nth-child(1) { animation-delay: .24s; }
+.pd-grid--forms .pd-card:nth-child(2) { animation-delay: .3s; }
+
+/* Judul kartu: ikon + teks. Ikon sedikit menjorok ke dalam seperti di desain. */
+.pd-card__title { display: flex; align-items: center; gap: 2rem; margin: 0; padding-left: 1.5rem; color: var(--d-title);
+                  font-size: 2.25rem; font-weight: 700; line-height: 1.2; }
+.pd-card__head .pd-card__title { gap: 1.5rem; }   /* ikon file/orang lebih dekat ke teks, seperti di desain */
+.pd-card__title img { flex: none; width: auto; }
+.pd-card__title .pd-ic--info    { height: 3.1rem; }
+.pd-card__title .pd-ic--pembeli { height: 3.1rem; }
+.pd-card__title .pd-ic--item    { height: 3.3rem; }
+.pd-card__title .pd-ic--bayar   { width: 3.25rem; height: auto; }
+.pd-card__title .pd-ic--status  { width: 3.4rem;  height: auto; }
+.pd-card__title .pd-ic--kirim   { width: 2.9rem;  height: auto; }
+
+/* Kepala kartu dengan garis pemisah (kartu Informasi & Pembeli) */
+.pd-card__head { padding-bottom: 1rem; border-bottom: .125rem solid var(--d-title); }
+.pd-grid--info .pd-card { display: flex; flex-direction: column; padding-bottom: .6rem; }
+
+/* ---------- 4. KARTU INFORMASI PESANAN & PEMBELI ----------
+   <dl> berbentuk grid 3 kolom: label | titik dua | isi. Lebar kolom label tetap,
+   jadi titik dua dan isi selalu sejajar rapi walau panjang label berbeda. */
+.pd-list { flex: 1; display: flex; flex-direction: column; justify-content: center; margin: 0; }
+.pd-grid--info .pd-card:first-child .pd-list { padding-bottom: .75rem; }   /* baris kartu Informasi sedikit lebih tinggi, seperti di desain */
+.pd-list__row { display: grid; grid-template-columns: 11.8rem 1.4rem minmax(0, 1fr); align-items: center; min-height: 3.75rem; margin: 0; padding: .1rem 0;
+                color: var(--d-title); font-size: 1.6rem; line-height: 1.35; }
+.pd-list dt { position: relative; font-weight: 500; }
+/* Titik dua digambar di tepi kanan kolom label, di tengah kolom sempit 1.4rem -> selalu lurus vertikal antar baris */
+.pd-list dt::after { content: ":"; position: absolute; left: 100%; width: 1.4rem; text-align: center; }
+.pd-list dd { grid-column: 3; margin: 0; font-weight: 400; overflow-wrap: anywhere; }
+.pd-list dd b { font-weight: 500; }
+
+/* ---------- 5. BADGE STATUS (pil berwarna, ikon + teks) ----------
+   Warna dipilih lewat class modifier yang dibuat PHP (html_badge): --wait, --process, --ship, --done, --fail, --off.
+   "done" mengikuti desain (hijau muda); warna lain sama dengan halaman Kelola Pesanan. */
+.pd-badge { display: inline-flex; align-items: center; gap: .7rem; padding: .3rem 1.1rem .3rem .9rem; border-radius: 1rem;
+            background: #E4E1DA; color: #4A4A4A; font-size: 1.45rem; font-weight: 400; line-height: 1.15; white-space: nowrap;
+            transition: transform .25s var(--pd-ease), box-shadow .25s; }
+.pd-badge svg { flex: none; width: 1.5rem; height: 1.5rem; }
+.pd-badge--wait    { background: #FFD9A0; color: #7A3E00; }   /* Menunggu Pembayaran / DP / Pelunasan */
+.pd-badge--process { background: #A7CBF7; color: #17418C; }   /* Diproses */
+.pd-badge--ship    { background: #FFA79F; color: #8F1F1B; }   /* Dikirim */
+.pd-badge--done    { background: #ACFAC4; color: #14702F; }   /* DP Lunas / Lunas / Selesai / Berhasil */
+.pd-badge--fail    { background: #FFC9C4; color: #8F1F1B; }   /* Pembayaran gagal */
+.pd-badge--off     { background: #E4E1DA; color: #4A4A4A; }   /* Dibatalkan / Kedaluwarsa */
+.pd-none { color: var(--d-muted); }
+
+/* ---------- 6. ITEM PESANAN & RIWAYAT PEMBAYARAN ----------
+   <table> diganti grid: tiap baris = satu grid dengan kolom yang sama persis dengan baris judul.
+   Tanpa garis vertikal; judul = pil krem kekuningan bersudut membulat. */
+.pd-card--item, .pd-card--bayar { padding: 1.4rem 2.2rem 2.4rem; }
+.pd-card--item { padding-bottom: 2.95rem; }
+.pd-card--item .pd-card__title  { margin-bottom: 1.55rem; }
+.pd-card--bayar { padding-bottom: 1.25rem; }
+.pd-card--bayar .pd-card__title { margin-bottom: .65rem; }
+
+.pd-table { color: var(--d-title); }
+
+/* Baris judul kolom */
+.pd-table__head { display: grid; align-items: center; min-height: 5.5rem; border-radius: 1.4rem; background: var(--d-head);
+                  font-size: 1.6rem; font-weight: 500; text-align: center; }
+.pd-table__head > * { min-width: 0; }
+
+/* Kolom Item Pesanan: Produk | Harga Satuan | Jumlah | Subtotal | (ruang kosong di kanan, sesuai desain) */
+.pd-cols--item { grid-template-columns: minmax(0, 6.3fr) minmax(0, 4.6fr) minmax(0, 2.1fr) minmax(0, 3.6fr) minmax(0, 1.5fr); }
+/* Kolom Riwayat Pembayaran: Waktu | Jenis | Metode | Jumlah | Status | Order ID */
+.pd-cols--bayar { grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.35fr) minmax(0, 3.4fr) minmax(0, 1.6fr) minmax(0, 4.3fr) minmax(0, 3.1fr); padding: 0 4.6rem; }
+
+/* Baris data */
+.pd-row { display: grid; align-items: center; color: var(--d-title); font-weight: 500; text-align: center; border-radius: 1.4rem;
+          transition: background .25s ease, transform .25s var(--pd-ease); }
+.pd-row > * { min-width: 0; }
+.pd-row:hover { background: rgba(255, 235, 188, .38); transform: scale(1.01); }   /* sangat tipis: warna nyaris tak terlihat + membesar 1% */
+
+/* -- Item Pesanan -- */
+.pd-card--item .pd-table__head { padding-left: 0; }
+.pd-card--item .pd-table__head > :first-child { padding-left: 11.6rem; text-align: left; }
+.pd-row--item { min-height: 7rem; margin: 2rem 0; font-size: 1.5rem; }
+.pd-prod { display: flex; align-items: center; gap: 3.6rem; padding-left: 1.9rem; text-align: left; }
+.pd-prod__img { flex: none; display: grid; place-items: center; width: 6.1rem; height: 7rem; overflow: hidden; border-radius: 1.2rem; background: var(--pd-tile); }
+.pd-prod__img img { width: 100%; height: 100%; object-fit: cover; }
+.pd-prod__img svg { width: 3.2rem; height: 3.2rem; color: #B9A988; }
+.pd-prod__name { min-width: 0; overflow-wrap: anywhere; }
+.pd-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Baris TOTAL: pil krem, label di kiri garis, nilai di kanan garis */
+.pd-total { display: flex; align-items: center; justify-content: flex-end; min-height: 5.5rem; padding-right: 15.75rem; border-radius: 1.4rem; background: var(--pd-total-bg);
+            color: var(--d-title); font-size: 1.5rem; }
+.pd-total__label { padding-right: 2.8rem; font-weight: 500; text-transform: uppercase; }
+.pd-total__sep { align-self: center; width: .125rem; height: 3.7rem; background: var(--d-title); }
+.pd-total__value { flex: 0 0 auto; padding: 0 0 0 2.25rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: left; }   /* nilai TOTAL tepat di bawah kolom Subtotal */
+
+/* -- Riwayat Pembayaran -- */
+.pd-card--bayar .pd-table__head { padding: 0 4.6rem; }
+.pd-card--bayar .pd-table__head > :first-child { text-align: left; }
+.pd-row--bayar { min-height: 6.4rem; margin-top: .3rem; font-size: 1.5rem; }
+.pd-row--bayar > :first-child { text-align: left; }
+.pd-orderid { overflow-wrap: anywhere; }
+.pd-empty { margin: 1.4rem 0 .4rem; padding: 1.8rem 4.6rem; color: var(--d-muted); font-size: 1.5rem; font-weight: 500; }
+
+/* ---------- 7. KARTU FORM: UBAH STATUS & PENGIRIMAN ---------- */
+.pd-card--form { padding: 1.7rem 3.2rem 2.1rem; }
+.pd-card--form .pd-card__title { margin-bottom: 1.4rem; padding-left: 0; }
+
+.pd-label { display: block; margin: 0 0 .7rem; color: var(--d-title); font-size: 1.5rem; font-weight: 500; line-height: 1.2; }
+
+/* Input / select / tanggal: border tipis, sudut membulat */
+.pd-field { display: block; width: 100%; height: 2.75rem; padding: 0 1.4rem; border: .125rem solid var(--pd-field-line); border-radius: .8rem;
+            background: transparent; color: var(--pd-field-text); font: inherit; font-size: 1.4rem; line-height: 1.2;
+            transition: border-color .3s ease, box-shadow .3s ease, background-color .3s ease; }
+.pd-field::placeholder { color: var(--pd-placeholder); opacity: 1; }
+.pd-field:hover { border-color: #A9A9A9; }
+.pd-field:focus { outline: none; border-color: var(--pd-orange); background-color: rgba(255, 255, 255, .55); box-shadow: 0 0 0 .3rem rgba(255, 159, 28, .22); }
+
+select.pd-field { appearance: none; -webkit-appearance: none; padding-right: 3.6rem; cursor: pointer;
+                  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%232A4580' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m5 7.5 5 5 5-5'/></svg>");
+                  background-repeat: no-repeat; background-position: right 1.2rem center; background-size: 1.6rem; }
+input[type="datetime-local"].pd-field { color-scheme: light; font-variant-numeric: tabular-nums; }
+input[type="datetime-local"].pd-field.is-empty { color: var(--pd-placeholder); }   /* kolom tanggal kosong tampil abu-abu seperti placeholder (kelas dipasang JS) */
+
+/* Tombol aksi */
+.pd-btn { display: inline-flex; align-items: center; justify-content: center; gap: 1rem; height: 2.9rem; padding: 0 1.6rem; border: 0; border-radius: .8rem;
+          background: var(--pd-orange); color: var(--pd-btn-text); font: inherit; font-size: 1.4rem; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer;
+          box-shadow: 0 .2rem .5rem rgba(255, 159, 28, .35);
+          transition: all .3s ease; }
+.pd-btn img { flex: none; width: 1.75rem; height: auto; }
+.pd-btn:hover  { background: var(--pd-orange-dk); transform: translateY(-2px); box-shadow: 0 .6rem 1.2rem rgba(232, 137, 10, .4); }
+.pd-btn:active { transform: translateY(0); box-shadow: 0 .1rem .3rem rgba(232, 137, 10, .4); }
+
+/* Ubah Status: select + tombol sebaris */
+.pd-inline { display: flex; align-items: flex-end; gap: 2.4rem; }
+.pd-inline__field { flex: 1 1 auto; min-width: 0; }
+.pd-note { margin: 1.2rem 0 0; color: var(--d-muted); font-size: 1.3rem; line-height: 1.4; }
+.pd-note b { color: var(--d-title); }
+.pd-final { margin: .6rem 0 0; color: var(--d-title); font-size: 1.5rem; line-height: 1.5; }
+.pd-final b { font-weight: 700; }
+
+/* Pengiriman: Status + Tanggal sejajar, lalu Bukti/Resi + tombol */
+.pd-ship { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem 2.2rem; }
+.pd-ship__resi { grid-column: 1 / -1; display: flex; align-items: flex-end; gap: 1.5rem; }
+.pd-ship__resi .pd-inline__field { flex: 1 1 auto; }
+
+/* ---------- 8. FOKUS KEYBOARD & GERAK ---------- */
+.pd-btn:focus-visible,
+.pd-crumb a:focus-visible { outline: .25rem solid var(--d-navy); outline-offset: .3rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-head, .pd-card { animation: none; }
+  .pd-row, .pd-btn, .pd-field, .pd-badge { transition: none; }
+  .pd-row:hover, .pd-btn:hover { transform: none; }
+}
+
+/* ---------- 9. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .pd-head { padding-left: 0; }
+  .pd-crumb { margin-left: 0; }
+}
+
+@media (max-width: 900px) {
+  .pd { width: calc(100% - 2rem); padding: 2.4rem 0 4rem; }
+  .pd-crumb { font-size: 1.4rem; margin-bottom: 1.6rem; }
+  .pd-title { gap: 1.6rem; }
+  .pd-title__icon { width: 6rem; height: 6rem; }
+  .pd-title__icon img { width: 3.6rem; height: 3.6rem; }
+  .pd-title h1 { font-size: 2.6rem; }
+  .pd-title p { font-size: 1.25rem; }
+
+  .pd-grid { gap: 2rem; }
+  .pd-grid--info, .pd-grid--forms { grid-template-columns: minmax(0, 1fr); }
+  .pd-grid--forms { margin-top: 2rem; }
+  .pd-card--item, .pd-card--bayar { margin-top: 2rem; }
+  .pd-card, .pd-card--item, .pd-card--bayar, .pd-card--form { padding: 1.8rem 1.6rem 2.2rem; }
+  .pd-card__title { padding-left: 0; font-size: 2rem; gap: 1.4rem; }
+  .pd-list__row { grid-template-columns: 11.6rem 1.2rem minmax(0, 1fr); font-size: 1.5rem; }
+
+  /* Judul kolom disembunyikan secara visual (tetap terbaca pembaca layar); tiap baris jadi kartu kecil berlabel */
+  .pd-table__head { position: absolute; width: 1px; height: 1px; min-height: 0; padding: 0; overflow: hidden; clip-path: inset(50%); }
+  .pd-card--item .pd-table__head > :first-child { padding-left: 0; }
+
+  .pd-row, .pd-row--item, .pd-row--bayar { display: block; min-height: 0; margin: 1rem 0 0; padding: 1.2rem 1.2rem; border-radius: 1.2rem; background: rgba(255, 235, 188, .45); text-align: right; font-size: 1.5rem; }
+  .pd-row:hover { transform: none; background: rgba(255, 235, 188, .65); }
+  .pd-row > [data-label] { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; padding: .5rem 0; text-align: right; }
+  .pd-row > [data-label]::before { content: attr(data-label); flex: none; color: var(--d-muted); font-size: 1.25rem; font-weight: 700; text-align: left; }
+  .pd-row > .pd-prod { padding: 0 0 .8rem; margin-bottom: .6rem; border-bottom: .125rem solid var(--d-line); gap: 1.4rem; }
+  .pd-row--bayar > :first-child { text-align: right; }
+  .pd-cols--bayar { padding: 0; }
+  .pd-card--bayar .pd-table__head { padding: 0; }
+  .pd-empty { padding: 1.2rem; }
+
+  .pd-total { justify-content: space-between; padding: 0 1.4rem; min-height: 5rem; margin-top: 1rem; }
+  .pd-total__label { padding-right: 0; }
+  .pd-total__sep { display: none; }
+  .pd-total__value { padding: 0; font-weight: 700; }
+
+  .pd-inline { flex-direction: column; align-items: stretch; gap: 1.2rem; }
+  .pd-ship { grid-template-columns: minmax(0, 1fr); }
+  .pd-ship__resi { flex-direction: column; align-items: stretch; }
+  .pd-field, .pd-btn { height: 4rem; }
+  .pd-field { font-size: 1.6rem; }
+  .pd-btn { font-size: 1.6rem; }
+}
+
+@media (max-width: 560px) {
+  .pd-title h1 { font-size: 2.2rem; }
+}
