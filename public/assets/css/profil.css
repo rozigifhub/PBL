@@ -1,0 +1,237 @@
+/* =========================================================
+   KELOLA PROFIL MAHASISWA  (mahasiswa/profil.php)
+   Dimuat SETELAH style.css dan navbar-mahasiswa.css:
+     - style.css             -> token dasar (--font, --nav-h), animasi "rise"
+     - navbar-mahasiswa.css  -> gaya navbar mahasiswa
+   Semua class berawalan "pf-" (pf = profil) supaya tidak bentrok dengan halaman lain.
+   Satuan rem (1rem = 16px di layar 1920), seperti file CSS lain, jadi tampilan
+   mengecil proporsional di layar yang lebih kecil.
+   ========================================================= */
+
+/* ---------- 1. TOKEN & LATAR HALAMAN ---------- */
+.pf {
+  --pf-bg:        #FBF4E2;   /* dasar halaman (sama dengan warna latar dari desainer) */
+  --pf-card:      #FFF6E0;   /* semua kartu */
+  --pf-head:      #FFEBBC;   /* baris judul kolom daftar alamat */
+  --pf-ink:       #2A4580;   /* judul & teks utama (biru tua) */
+  --pf-navy:      #14264D;   /* teks yang diketik pengguna, outline fokus */
+  --pf-sub:       #747474;   /* sub-judul halaman */
+  --pf-orange:    #FF9F1C;
+  --pf-orange-dk: #E88A00;   /* oranye yang sedikit lebih gelap untuk hover */
+  --pf-pink:      #FFE1E4;   /* latar tombol Hapus saat hover (merah muda pucat) */
+  --pf-border:    #A9A9A9;   /* garis tepi input */
+  --pf-hint:      #9B9B9B;   /* placeholder */
+  --pf-eye:       #B5B5B5;   /* ikon mata */
+  --pf-line:      #000;      /* garis pemisah baris alamat */
+  --pf-shadow:    0 .5rem 1.6rem rgba(90, 62, 12, .16);
+  --pf-ease:      cubic-bezier(.2, .7, .2, 1);
+
+  position: relative; isolation: isolate; overflow-x: clip;
+  min-height: calc(100vh - var(--nav-h)); padding: 5.2rem 0 4rem;
+  background: var(--pf-bg); color: var(--pf-ink); font-family: var(--font);
+}
+
+/* Latar dekoratif dari desainer, dipotong 2 (atas & bawah) agar halaman boleh sepanjang apa pun.
+   Sambungan dihaluskan dengan mask (memudar) supaya tidak terlihat garis potong. */
+.pf::before,
+.pf::after { content: ""; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none; background-repeat: no-repeat; background-size: 100% 100%; }
+.pf::before { top: 0; aspect-ratio: 1920 / 922; background-image: url('../img/bg-kelola-profil-atas.webp');
+              -webkit-mask-image: linear-gradient(#000 80%, transparent); mask-image: linear-gradient(#000 80%, transparent); }
+.pf::after  { bottom: 0; aspect-ratio: 1920 / 928; background-image: url('../img/bg-kelola-profil-bawah.webp');
+              -webkit-mask-image: linear-gradient(transparent, #000 20%); mask-image: linear-gradient(transparent, #000 20%); }
+
+.pf__inner { width: min(117rem, 100% - 3rem); margin: 0 auto; }   /* 117rem = lebar kartu atas pada desain Figma */
+
+/* Teks untuk pembaca layar saja */
+.pf-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 2. KEPALA HALAMAN: breadcrumb + avatar + judul ---------- */
+.pf-head { padding-left: 11.7rem; animation: rise .6s var(--pf-ease) both; }
+
+.pf-crumb { display: flex; align-items: center; gap: 1rem; margin: 0 0 2.2rem 1.4rem; font-size: 1.5rem; font-weight: 400; text-transform: uppercase; }
+.pf-crumb img { width: 2rem; height: 2rem; }
+.pf-crumb a { color: inherit; text-underline-offset: .3rem; transition: color .2s; }
+.pf-crumb a:hover { color: var(--pf-orange-dk); }
+
+.pf-title { display: flex; align-items: center; gap: 2.7rem; }
+.pf-title__icon { flex: none; display: grid; place-items: center; width: 8.4rem; height: 8.4rem; border-radius: 50%; background: var(--pf-orange); }
+.pf-title__icon img { width: auto; height: 5.4rem; }
+.pf-title h1 { margin: 0; font-size: 4.4rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; }
+.pf-title p  { margin: .5rem 0 0; color: var(--pf-sub); font-size: 1.2rem; font-weight: 700; line-height: 1.3; }
+
+/* ---------- 3. NOTIFIKASI (flash & pesan error dari backend) ---------- */
+.pf-alert { margin: 0; padding: 1.2rem 1.8rem; border: .1rem solid; border-radius: 1rem; font-size: 1.5rem; font-weight: 700; line-height: 1.4; }
+.pf-alert--ok  { background: #E6F6E8; border-color: #A9DDB0; color: #0A6A2A; }
+.pf-alert--err { background: #FDEBEA; border-color: #F2B8B5; color: #A3141D; }
+.pf-flash { margin-top: 2rem; animation: rise .5s var(--pf-ease) both; }
+
+/* ---------- 4. KERANGKA: grid + kartu ---------- */
+.pf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.4rem; align-items: stretch; margin-top: 1.6rem; }
+
+.pf-card { position: relative; border-radius: 1.2rem; background: var(--pf-card); box-shadow: var(--pf-shadow); animation: rise .6s var(--pf-ease) .1s both; }
+.pf-grid .pf-card:nth-child(2) { animation-delay: .18s; }
+.pf-card--alamat { margin: 3.3rem 1.3rem 0; padding: 0 0 2.6rem; animation-delay: .26s; }
+
+/* Judul kartu: ikon + teks, garis biru tipis di bawahnya */
+.pf-card__head { display: flex; align-items: center; gap: 1.3rem; margin: 0 4.4rem 0 3.4rem; padding: 2.4rem 0 .9rem .5rem; border-bottom: .15rem solid var(--pf-ink); }
+.pf-card__head h2 { margin: 0; font-size: 2.2rem; font-weight: 700; line-height: 1.2; }
+.pf-card__icon { flex: none; width: auto; height: 3.6rem; }
+/* ikon orang biru: siluet putih dari desainer diwarnai lewat mask */
+.pf-card__icon--user { width: 3.2rem; background: var(--pf-ink); -webkit-mask: url('../img/icon-profil-user.png') center / contain no-repeat; mask: url('../img/icon-profil-user.png') center / contain no-repeat; }
+
+/* ---------- 5. KARTU "DATA DIRI" ---------- */
+/* dl berkolom 2: label | nilai. Lebar kolom label = label terpanjang, dan titik dua (::after) ditempel di tepi kanan kolom,
+   jadi titik dua semua baris otomatis sejajar lurus. */
+.pf-data { display: grid; grid-template-columns: max-content minmax(0, 1fr); row-gap: 3rem; margin: 0; padding: 3.8rem 1.4rem 4.6rem 1.7rem; font-size: 2.4rem; line-height: 1.2; }
+.pf-data__row { display: contents; }
+.pf-data dt { display: flex; font-weight: 500; }
+.pf-data dt::after { content: ":"; margin-left: auto; padding-left: .8rem; }
+.pf-data dd { margin: 0 0 0 1.2rem; min-width: 0; font-weight: 400; overflow-wrap: anywhere; }
+
+/* ---------- 6. FORM & INPUT (dipakai Ubah Password dan Tambah Alamat) ---------- */
+.pf-field { display: block; }
+.pf-label { display: block; margin: 0 0 .3rem; font-size: 1.4rem; font-weight: 700; line-height: 1.2; text-transform: uppercase; }
+
+.pf-input { display: block; width: 100%; height: 4.4rem; padding: 0 2.2rem; border: .1rem solid var(--pf-border); border-radius: .7rem; background: #fff;
+            color: var(--pf-navy); font: 400 1.4rem/1.3 var(--font); transition: border-color .25s ease, box-shadow .25s ease; }
+.pf-input::placeholder { color: var(--pf-hint); opacity: 1; }
+.pf-input:hover { border-color: #8F8F8F; }
+/* Fokus: garis tepi jadi oranye halus + lingkar tipis */
+.pf-input:focus { outline: 0; border-color: var(--pf-orange); box-shadow: 0 0 0 .3rem rgba(255, 159, 28, .2); }
+textarea.pf-input { height: 8rem; min-height: 8rem; padding: 2.7rem 2.2rem; resize: vertical; }
+
+/* Kolom password + ikon mata di kanan */
+.pf-pass { position: relative; }
+.pf-pass .pf-input { padding-right: 6rem; }
+.pf-eye { position: absolute; top: 50%; right: 1.1rem; display: grid; place-items: center; width: 3.4rem; height: 3.4rem; padding: 0; border: 0; border-radius: .8rem; background: transparent;
+          color: var(--pf-eye); cursor: pointer; transform: translateY(-50%); transition: color .2s ease, background .2s ease; }
+.pf-eye svg { width: 2.4rem; height: 2.4rem; }
+.pf-eye:hover { color: var(--pf-orange); background: rgba(255, 159, 28, .12); }
+.pf-eye:focus-visible { outline: .25rem solid var(--pf-navy); outline-offset: .1rem; }
+.pf-eye__slash { transition: opacity .2s ease; }
+.pf-eye[aria-pressed="true"] .pf-eye__slash { opacity: 0; }   /* password terlihat -> coretan hilang */
+
+/* ---------- 7. KARTU "UBAH PASSWORD" ---------- */
+.pf-card--pass .pf-card__head { margin-left: 2.4rem; margin-right: 4.5rem; }
+.pf-passform { padding: 1.55rem 3.8rem 2.2rem 2.4rem; }
+.pf-passform .pf-alert { margin-bottom: 1.6rem; }
+.pf-passform .pf-field + .pf-field { margin-top: 1.3rem; }
+.pf-passform .pf-btn { margin: 2.4rem 0 0 auto; }
+
+/* ---------- 8. TOMBOL UTAMA (+ TAMBAH ALAMAT, UBAH PASSWORD) ---------- */
+.pf-btn { display: flex; align-items: center; justify-content: center; gap: .5rem; height: 3.75rem; padding: 0 1.3rem; border: 0; border-radius: .8rem; background: var(--pf-orange); color: #fff;
+          font: 700 1.4rem/1 var(--font); text-transform: uppercase; white-space: nowrap; cursor: pointer;
+          transition: transform .25s ease, background-color .25s ease, box-shadow .25s ease; }
+.pf-btn svg { flex: none; width: 1.6rem; height: 1.6rem; }
+.pf-btn:hover { background: var(--pf-orange-dk); transform: translateY(-2px); box-shadow: 0 .6rem 1.2rem rgba(232, 138, 0, .35); }
+.pf-btn:active { transform: translateY(0); box-shadow: none; }
+.pf-btn:focus-visible { outline: .25rem solid var(--pf-navy); outline-offset: .25rem; }
+
+/* ---------- 9. KARTU "ALAMAT PENGIRIMAN" ---------- */
+.pf-card--alamat .pf-card__head { gap: 2rem; margin: 0 0 0 3.9rem; padding: 1.3rem 0 1.6rem 0; border-bottom: 0; }
+.pf-card--pass .pf-card__icon { height: 3.9rem; }
+.pf-card--alamat .pf-card__icon { height: 3.2rem; }
+.pf-card--alamat > .pf-alert { margin: 0 2.8rem 1.4rem 3.25rem; }
+
+/* Form tambah alamat: kolom isian (kiri) + tombol di pojok kanan bawah */
+.pf-addform { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 4.7rem; align-items: end; padding: 0 2.8rem 0 3.25rem; }
+.pf-addform .pf-field + .pf-field { margin-top: 1.9rem; }
+.pf-addform .pf-btn { height: 3.75rem; }
+.pf-full { margin: 0 2.8rem 0 3.25rem; padding: 1.2rem 0 0; font-size: 1.5rem; font-style: italic; }
+
+/* Daftar alamat (menggantikan <table>) */
+.pf-list { margin: 2.6rem 2.2rem 0; color: var(--pf-ink); font-size: 1.4rem; font-weight: 500; }
+.pf-list__head,
+.pf-row { display: grid; grid-template-columns: 25% 48% 27%; align-items: center; }
+.pf-list__head { min-height: 5.5rem; border-radius: 1.6rem; background: var(--pf-head); font-size: 1.5rem; text-align: center; }
+.pf-cell { min-width: 0; padding: 0 1rem; text-align: center; overflow-wrap: anywhere; line-height: 1.4; }
+
+/* Tiap baris dipisah garis horizontal tebal gelap (baris terakhir tanpa garis) */
+.pf-row { padding: 3rem 0; border-bottom: .2rem solid var(--pf-line); }
+.pf-row:last-child { border-bottom: 0; }
+.pf-list__head + .pf-row { margin-top: .6rem; }
+.pf-cell--aksi { display: flex; align-items: center; justify-content: flex-end; gap: 1.9rem; padding-right: 1.5rem; }
+.pf-actform { display: flex; margin: 0; }
+.pf-empty { margin: 4rem 0 2rem; font-size: 1.6rem; font-weight: 500; text-align: center; }
+
+/* ---------- 10. TOMBOL AKSI: HAPUS & SET DEFAULT ---------- */
+.pf-act { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: .1rem; height: 3.1rem; padding: 0 .6rem 0 .3rem;
+          border: .2rem solid var(--pf-orange); border-radius: .8rem; font: 700 1.45rem/1 var(--font); text-transform: uppercase; white-space: nowrap; cursor: pointer; }
+.pf-act:focus-visible { outline: .25rem solid var(--pf-navy); outline-offset: .25rem; }
+
+/* HAPUS: transparan + outline oranye. Hover: latar merah muda pucat, tutup tempat sampah terbuka & ikon bergoyang */
+.pf-act--del { background: transparent; color: var(--pf-orange); transition: background-color .25s ease, color .25s ease, transform .2s ease; }
+.pf-act--del:hover { background: var(--pf-pink); color: #E07400; }
+.pf-act--del:active { transform: scale(.96); }
+.pf-trash { flex: none; width: 2.3rem; height: 2.3rem; }
+.pf-trash__lid { transform-origin: 5px 12px; transition: transform .3s var(--pf-ease); }
+.pf-act--del:hover .pf-trash { animation: pfWiggle .55s ease-in-out .15s; }
+.pf-act--del:hover .pf-trash__lid { transform: translate(-1px, -2.5px) rotate(-26deg); }
+@keyframes pfWiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-9deg); } 50% { transform: rotate(7deg); } 75% { transform: rotate(-4deg); } }
+
+/* SET DEFAULT: oranye solid + ikon pensil. Hover: membesar 1.05x pelan + cahaya menyapu */
+.pf-act--set { gap: .6rem; padding: 0 1.2rem; background: var(--pf-orange); color: #fff; transition: transform .6s cubic-bezier(.22, .61, .36, 1), box-shadow .6s ease; }
+.pf-act--set img { flex: none; width: 1.4rem; height: 1.4rem; transition: transform .6s cubic-bezier(.22, .61, .36, 1); }
+.pf-act--set::after { content: ""; position: absolute; top: 0; bottom: 0; left: -65%; width: 45%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .6), transparent); transform: skewX(-20deg); pointer-events: none; }
+.pf-act--set:hover { transform: scale(1.05); box-shadow: 0 .5rem 1.2rem rgba(232, 138, 0, .35); }
+.pf-act--set:hover::after { left: 135%; transition: left .9s ease; }   /* kembali ke kiri tanpa animasi saat kursor pergi */
+.pf-act--set:hover img { transform: rotate(-14deg); }
+.pf-act--set:active { transform: scale(1.01); }
+
+/* ---------- 11. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .pf { padding-top: 3.4rem; }
+  .pf__inner { width: min(100rem, 100% - 3rem); }
+  .pf-head { padding-left: 0; }
+  .pf-crumb { margin-left: 0; font-size: 1.6rem; }
+  .pf-grid { grid-template-columns: minmax(0, 1fr); }
+  .pf-card--alamat { margin-inline: 0; }
+}
+
+@media (max-width: 900px) {
+  .pf-title { gap: 1.8rem; }
+  .pf-title__icon { width: 7rem; height: 7rem; }
+  .pf-title__icon img { height: 4.4rem; }
+  .pf-title h1 { font-size: 3.2rem; }
+  .pf-title p { font-size: 1.4rem; }
+
+  .pf-card__head,
+  .pf-card--pass .pf-card__head { margin-inline: 2rem; }
+  .pf-card__head h2 { font-size: 2.2rem; }
+  .pf-card--alamat .pf-card__head { margin-left: 2rem; gap: 1.4rem; }
+
+  /* Data Diri di layar kecil: label di atas, nilai di bawahnya (kolom nilai terlalu sempit bila berdampingan) */
+  .pf-data { grid-template-columns: minmax(0, 1fr); row-gap: 2rem; padding: 2.6rem 2rem 3.2rem; font-size: 1.9rem; }
+  .pf-data__row { display: block; }
+  .pf-data dt { font-size: 1.5rem; color: var(--pf-sub); }
+  .pf-data dt::after { content: none; }
+  .pf-data dd { margin: .3rem 0 0; }
+  .pf-label { font-size: 1.5rem; }
+  .pf-input { height: 5rem; font-size: 1.6rem; }
+  textarea.pf-input { height: 9rem; min-height: 9rem; padding: 1.6rem 2.2rem; }
+  .pf-passform { padding: 2.2rem 2rem 2.6rem; }
+
+  .pf-addform { grid-template-columns: minmax(0, 1fr); row-gap: 2rem; padding-inline: 2rem; }
+  .pf-addform .pf-btn { justify-self: end; height: 4.4rem; font-size: 1.5rem; }
+  .pf-passform .pf-btn { height: 4.4rem; font-size: 1.5rem; }
+  .pf-card--alamat > .pf-alert { margin-inline: 2rem; }
+  .pf-full { margin-inline: 2rem; }
+
+  /* Daftar alamat jadi kartu per baris */
+  .pf-list { margin: 2.6rem 1.4rem 0; font-size: 1.6rem; }
+  .pf-list__head { display: none; }
+  .pf-row { grid-template-columns: minmax(0, 1fr); row-gap: 1rem; padding: 2.2rem .6rem; }
+  .pf-cell { padding: 0; text-align: left; }
+  .pf-cell::before { content: attr(data-label); display: block; margin-bottom: .2rem; color: var(--pf-sub); font-size: 1.3rem; font-weight: 700; text-transform: uppercase; }
+  .pf-cell--aksi { justify-content: flex-start; flex-wrap: wrap; gap: 1.2rem; padding: .6rem 0 0; }
+  .pf-cell--aksi::before { display: none; }
+  .pf-act { height: 4.2rem; font-size: 1.5rem; }
+  .pf-trash { width: 2.6rem; height: 2.6rem; }
+  .pf-act--set img { width: 1.7rem; height: 1.7rem; }
+}
+
+/* Pengguna yang meminta gerak minimal: matikan semua animasi & transisi gerak */
+@media (prefers-reduced-motion: reduce) {
+  .pf *, .pf *::before, .pf *::after { animation: none !important; transition: none !important; }
+  .pf-btn:hover, .pf-act--set:hover { transform: none; }
+}

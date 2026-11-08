@@ -209,8 +209,11 @@ $daftarAlamat = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Profil Saya - Merchandise Kampus</title>
+    <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
+    <link rel="stylesheet" href="/assets/css/profil.css?v=<?= @filemtime(__DIR__ . "/../assets/css/profil.css") ?>">
+    <script src="/assets/js/profil.js?v=<?= @filemtime(__DIR__ . "/../assets/js/profil.js") ?>" defer></script>
 </head>
 <body>
 <?php
@@ -218,138 +221,236 @@ $mhsActive = "";
 require __DIR__ . "/../includes/navbar-mahasiswa.php";
 ?>
 
-<main>
-    <h1>Profil Saya</h1>
-    <p>
-        <a href="/mahasiswa/dashboard.php">&larr; Dashboard</a> |
-        <a href="/mahasiswa/katalog.php">Katalog</a>
-    </p>
+<!-- Ikon dipakai berulang lewat <use>: mata (tampil/sembunyi password) dan coretan mata -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="pf-ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>
+        <circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="pf-ic-slash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <path d="M4 4l16 16"/>
+    </symbol>
+</svg>
 
-    <?php if ($flash): ?>
-        <p style="color:<?= $flash["type"] === "sukses" ? "#0a7d32" : "#b00020" ?>;">
-            <b><?= e($flash["msg"]) ?></b>
-        </p>
-    <?php endif; ?>
+<main class="pf">
+    <div class="pf__inner">
 
-    <h2>Data Diri</h2>
+        <!-- Kepala halaman: breadcrumb + avatar oranye + judul -->
+        <header class="pf-head">
+            <nav class="pf-crumb" aria-label="Breadcrumb">
+                <img src="/assets/img/icon-home.png" alt="" width="43" height="43">
+                <span><a href="/mahasiswa/dashboard.php">Dashboard</a> / <a href="/mahasiswa/profil.php" aria-current="page">Kelola Akun</a></span>
+            </nav>
+            <div class="pf-title">
+                <span class="pf-title__icon" aria-hidden="true"><img src="/assets/img/icon-profil-user.png" alt="" width="114" height="130"></span>
+                <div>
+                    <h1>Kelola Akun</h1>
+                    <p>Detail informasi akun dan dapat mengganti data yang diinginkan</p>
+                </div>
+            </div>
+        </header>
 
-    <table cellpadding="6">
-        <tr>
-            <td><b>NIM</b></td>
-            <td><?= e($profil["nim"]) ?></td>
-        </tr>
-        <tr>
-            <td><b>Nama</b></td>
-            <td><?= e($profil["nama"]) ?></td>
-        </tr>
-        <tr>
-            <td><b>Email</b></td>
-            <td><?= e($profil["email"]) ?></td>
-        </tr>
-        <tr>
-            <td><b>No. HP</b></td>
-            <td><?= e($profil["no_hp"]) ?></td>
-        </tr>
-    </table>
+        <!-- PHP (asli dari backend): pesan sukses / gagal setelah simpan. Tetap memakai $flash dari take_flash(). -->
+        <?php if ($flash): ?>
+            <p class="pf-alert pf-flash pf-alert--<?= $flash["type"] === "sukses" ? "ok" : "err" ?>" role="status"><?= e($flash["msg"]) ?></p>
+        <?php endif; ?>
 
-    <h2>Alamat Pengiriman</h2>
-    <p><i>Alamat default otomatis terisi saat checkout (tetap dapat diubah per pesanan).</i></p>
+        <!-- ===== BARIS 1: Data Diri (kiri) + Ubah Password (kanan) ===== -->
+        <div class="pf-grid">
 
-    <?php if ($errorAlamat !== ""): ?>
-        <p style="color:#b00020;"><b><?= e($errorAlamat) ?></b></p>
-    <?php endif; ?>
+            <!-- Card Data Diri -->
+            <section class="pf-card pf-card--data" aria-labelledby="pf-h-data">
+                <div class="pf-card__head">
+                    <span class="pf-card__icon pf-card__icon--user" aria-hidden="true"></span>
+                    <h2 id="pf-h-data">Data Diri</h2>
+                </div>
 
-    <?php if (!$daftarAlamat): ?>
-        <p>Belum ada alamat tersimpan.</p>
-    <?php else: ?>
-        <table border="1" cellpadding="8" cellspacing="0">
-            <tr>
-                <th>Label</th>
-                <th>Alamat</th>
-                <th>Aksi</th>
-            </tr>
-            <?php foreach ($daftarAlamat as $a): ?>
-                <tr>
-                    <td>
-                        <?= e($a["label"]) ?>
-                        <?php if ($a["is_default"]): ?><br><b>(Default)</b><?php endif; ?>
-                    </td>
-                    <td><?= nl2br(e($a["alamat"])) ?></td>
-                    <td>
-                        <?php if (!$a["is_default"]): ?>
-                            <form method="POST" style="display:inline">
-                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                                <input type="hidden" name="action" value="default">
-                                <input type="hidden" name="id_alamat" value="<?= (int)$a["id_alamat"] ?>">
-                                <button type="submit">Jadikan Default</button>
-                            </form>
-                        <?php endif; ?>
-                        <form method="POST" style="display:inline"
-                              onsubmit="return confirm('Hapus alamat ini?');">
-                            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                            <input type="hidden" name="action" value="hapus">
-                            <input type="hidden" name="id_alamat" value="<?= (int)$a["id_alamat"] ?>">
-                            <button type="submit">Hapus</button>
-                        </form>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php endif; ?>
+                <!-- PHP (asli dari backend): nilai diambil dari array $profil (query mahasiswa JOIN akun_login).
+                     Titik dua dibuat CSS (dt::after) sehingga otomatis sejajar; jangan ketik ":" manual di sini. -->
+                <dl class="pf-data">
+                    <div class="pf-data__row">
+                        <dt>Nama Lengkap</dt>
+                        <dd><?= e($profil["nama"]) ?></dd>
+                    </div>
+                    <div class="pf-data__row">
+                        <dt>NIM</dt>
+                        <dd><?= e($profil["nim"]) ?></dd>
+                    </div>
+                    <div class="pf-data__row">
+                        <dt>Email</dt>
+                        <dd><?= e($profil["email"]) ?></dd>
+                    </div>
+                    <div class="pf-data__row">
+                        <dt>No. HP</dt>
+                        <dd><?= e($profil["no_hp"]) ?></dd>
+                    </div>
+                </dl>
+            </section>
 
-    <?php if (count($daftarAlamat) < MAKS_ALAMAT): ?>
-        <h3>Tambah Alamat</h3>
+            <!-- Card Ubah Password -->
+            <section class="pf-card pf-card--pass" aria-labelledby="pf-h-pass">
+                <div class="pf-card__head">
+                    <img class="pf-card__icon" src="/assets/img/icon-profil-lock.png" alt="" width="116" height="130">
+                    <h2 id="pf-h-pass">Ubah Password</h2>
+                </div>
 
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-            <input type="hidden" name="action" value="tambah">
+                <!-- Form asli: method POST, hidden csrf_token + action="password", name input TIDAK diubah -->
+                <form class="pf-passform" method="POST" autocomplete="off">
+                    <!-- PHP (asli dari backend): pesan error password dari $errorPassword -->
+                    <?php if ($errorPassword !== ""): ?>
+                        <p class="pf-alert pf-alert--err" role="alert"><?= e($errorPassword) ?></p>
+                    <?php endif; ?>
 
-            <p>
-                <label>Label (mis. Rumah, Kos, Kampus)</label><br>
-                <input type="text" name="label" maxlength="50" required
-                       value="<?= e($labelInput) ?>">
-            </p>
-            <p>
-                <label>Alamat lengkap</label><br>
-                <textarea name="alamat" rows="4" cols="50" maxlength="500"
-                          placeholder="Contoh: Jl. Kenanga No. 10, RT 02/RW 03, Surabaya"
-                          required><?= e($alamatInput) ?></textarea>
-            </p>
-            <p>
-                <button type="submit"><b>Simpan Alamat</b></button>
-            </p>
-        </form>
-    <?php else: ?>
-        <p><i>Batas <?= MAKS_ALAMAT ?> alamat tercapai. Hapus salah satu untuk menambah yang baru.</i></p>
-    <?php endif; ?>
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <input type="hidden" name="action" value="password">
 
-    <h2>Ubah Password</h2>
+                    <div class="pf-field">
+                        <label class="pf-label" for="pf-pw-lama">Password saat ini</label>
+                        <div class="pf-pass">
+                            <input class="pf-input" type="password" id="pf-pw-lama" name="password_lama" required autocomplete="current-password">
+                            <button class="pf-eye" type="button" data-pf-eye aria-label="Tampilkan password" aria-pressed="false">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pf-ic-eye"/><use href="#pf-ic-slash" class="pf-eye__slash"/></svg>
+                            </button>
+                        </div>
+                    </div>
 
-    <?php if ($errorPassword !== ""): ?>
-        <p style="color:#b00020;"><b><?= e($errorPassword) ?></b></p>
-    <?php endif; ?>
+                    <div class="pf-field">
+                        <label class="pf-label" for="pf-pw-baru">Password baru</label>
+                        <div class="pf-pass">
+                            <input class="pf-input" type="password" id="pf-pw-baru" name="password_baru" minlength="8" required autocomplete="new-password" placeholder="Minimal 8 karakter">
+                            <button class="pf-eye" type="button" data-pf-eye aria-label="Tampilkan password" aria-pressed="false">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pf-ic-eye"/><use href="#pf-ic-slash" class="pf-eye__slash"/></svg>
+                            </button>
+                        </div>
+                    </div>
 
-    <form method="POST" autocomplete="off">
-        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="action" value="password">
+                    <div class="pf-field">
+                        <label class="pf-label" for="pf-pw-konfirmasi">Konfirmasi password</label>
+                        <div class="pf-pass">
+                            <input class="pf-input" type="password" id="pf-pw-konfirmasi" name="password_konfirmasi" minlength="8" required autocomplete="new-password">
+                            <button class="pf-eye" type="button" data-pf-eye aria-label="Tampilkan password" aria-pressed="false">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pf-ic-eye"/><use href="#pf-ic-slash" class="pf-eye__slash"/></svg>
+                            </button>
+                        </div>
+                    </div>
 
-        <p>
-            <label>Password saat ini</label><br>
-            <input type="password" name="password_lama" required autocomplete="current-password">
-        </p>
-        <p>
-            <label>Password baru (minimal 8 karakter)</label><br>
-            <input type="password" name="password_baru" minlength="8" required autocomplete="new-password">
-        </p>
-        <p>
-            <label>Konfirmasi password baru</label><br>
-            <input type="password" name="password_konfirmasi" minlength="8" required autocomplete="new-password">
-        </p>
-        <p>
-            <button type="submit"><b>Ubah Password</b></button>
-        </p>
-    </form>
+                    <button class="pf-btn" type="submit">Ubah Password</button>
+                </form>
+            </section>
+        </div>
 
+        <!-- ===== BARIS 2: Alamat Pengiriman (lebar penuh) ===== -->
+        <section class="pf-card pf-card--alamat" aria-labelledby="pf-h-alamat">
+            <div class="pf-card__head">
+                <img class="pf-card__icon" src="/assets/img/icon-profil-home.png" alt="" width="115" height="130">
+                <h2 id="pf-h-alamat">Alamat Pengiriman</h2>
+            </div>
+            <p class="pf-sr">Alamat default otomatis terisi saat checkout (tetap dapat diubah per pesanan).</p>
+
+            <!-- PHP (asli dari backend): pesan error alamat dari $errorAlamat -->
+            <?php if ($errorAlamat !== ""): ?>
+                <p class="pf-alert pf-alert--err" role="alert"><?= e($errorAlamat) ?></p>
+            <?php endif; ?>
+
+            <!-- PHP (asli dari backend): form tambah alamat hanya tampil selama jumlah alamat < MAKS_ALAMAT.
+                 Form di atas daftar (sesuai desain). name="label" & name="alamat", hidden action="tambah" TIDAK diubah.
+                 value/isi ulang dari $labelInput dan $alamatInput saat validasi gagal. -->
+            <?php if (count($daftarAlamat) < MAKS_ALAMAT): ?>
+                <form class="pf-addform" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <input type="hidden" name="action" value="tambah">
+
+                    <div>
+                        <div class="pf-field">
+                            <label class="pf-label" for="pf-label">Label</label>
+                            <input class="pf-input" type="text" id="pf-label" name="label" maxlength="50" required
+                                   placeholder="Contoh: Rumah, Kos, Kampus"
+                                   value="<?= e($labelInput) ?>">
+                        </div>
+                        <div class="pf-field">
+                            <label class="pf-label" for="pf-alamat">Alamat lengkap</label>
+                            <textarea class="pf-input" id="pf-alamat" name="alamat" rows="4" cols="50" maxlength="500" required
+                                      placeholder="Contoh: Jl. Soekarno Hatta"><?= e($alamatInput) ?></textarea>
+                        </div>
+                    </div>
+
+                    <button class="pf-btn" type="submit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5v17M3.5 12h17"/></svg>
+                        Tambah Alamat
+                    </button>
+                </form>
+            <?php else: ?>
+                <p class="pf-full">Batas <?= MAKS_ALAMAT ?> alamat tercapai. Hapus salah satu untuk menambah yang baru.</p>
+            <?php endif; ?>
+
+            <!-- PHP (asli dari backend): bila $daftarAlamat kosong tampilkan pesan, bila ada tampilkan daftar -->
+            <?php if (!$daftarAlamat): ?>
+                <p class="pf-empty">Belum ada alamat tersimpan.</p>
+            <?php else: ?>
+                <div class="pf-list" role="table" aria-label="Daftar alamat pengiriman">
+                    <div class="pf-list__head" role="row">
+                        <span class="pf-cell" role="columnheader">Label</span>
+                        <span class="pf-cell" role="columnheader">Alamat</span>
+                        <span class="pf-cell" role="columnheader">Aksi</span>
+                    </div>
+
+                    <!-- ============ MULAI LOOPING PHP ============
+                         Ini looping asli dari backend: foreach ($daftarAlamat as $a).
+                         Satu iterasi = satu <div class="pf-row"> (default sudah berada paling atas karena ORDER BY is_default DESC).
+                         Kalau looping-mu diganti (while / nama variabel lain), ganti baris foreach dan endforeach saja;
+                         isi di bawahnya memakai $a["..."] yang sama seperti kode lama (id_alamat, label, alamat, is_default). -->
+                    <?php foreach ($daftarAlamat as $a): ?>
+                        <div class="pf-row" role="row">
+
+                            <!-- Label: $a["label"], plus "(Default)" bila $a["is_default"] -->
+                            <div class="pf-cell" role="cell" data-label="Label">
+                                <?= e($a["label"]) ?>
+                                <?php if ($a["is_default"]): ?><span class="pf-default">(Default)</span><?php endif; ?>
+                            </div>
+
+                            <!-- Alamat: $a["alamat"] (nl2br agar baris baru tetap tampil) -->
+                            <div class="pf-cell" role="cell" data-label="Alamat"><?= nl2br(e($a["alamat"])) ?></div>
+
+                            <!-- Aksi: SET DEFAULT hanya untuk alamat yang belum default; HAPUS selalu ada.
+                                 Dua form ini sama seperti kode lama (hidden csrf_token, action, id_alamat). -->
+                            <div class="pf-cell pf-cell--aksi" role="cell">
+                                <?php if (!$a["is_default"]): ?>
+                                    <form class="pf-actform" method="POST">
+                                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                        <input type="hidden" name="action" value="default">
+                                        <input type="hidden" name="id_alamat" value="<?= (int)$a["id_alamat"] ?>">
+                                        <button class="pf-act pf-act--set" type="submit">
+                                            <img src="/assets/img/icon-profil-edit.png" alt="" width="27" height="27">
+                                            Set Default
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+
+                                <form class="pf-actform" method="POST" onsubmit="return confirm('Hapus alamat ini?');">
+                                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                    <input type="hidden" name="action" value="hapus">
+                                    <input type="hidden" name="id_alamat" value="<?= (int)$a["id_alamat"] ?>">
+                                    <button class="pf-act pf-act--del" type="submit">
+                                        <svg class="pf-trash" viewBox="0 0 41 41" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" aria-hidden="true">
+                                            <path d="M17.08 25.63V20.5M23.92 25.63V20.5"/>
+                                            <path d="M10.25 15.96V30.17C10.25 32.05 10.25 32.99 10.84 33.58 11.42 34.17 12.36 34.17 14.25 34.17H26.75C28.64 34.17 29.58 34.17 30.16 33.58 30.75 32.99 30.75 32.05 30.75 30.17V15.96"/>
+                                            <g class="pf-trash__lid">
+                                                <path d="M5.13 11.96H35.88"/>
+                                                <path d="M17.2 5.76C17.39 5.58 17.82 5.42 18.42 5.3 19.02 5.19 19.75 5.13 20.5 5.13 21.25 5.13 21.98 5.19 22.58 5.3 23.18 5.42 23.61 5.58 23.8 5.76"/>
+                                            </g>
+                                        </svg>
+                                        Hapus
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    <!-- ============ SELESAI LOOPING PHP ============ -->
+                </div>
+            <?php endif; ?>
+        </section>
+
+    </div>
 </main>
 
 </body>
