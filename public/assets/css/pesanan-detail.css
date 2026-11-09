@@ -1,0 +1,313 @@
+/* =========================================================
+   DETAIL PESANAN MAHASISWA  (mahasiswa/pesanan.php)
+   Dimuat SETELAH style.css, navbar-mahasiswa.css, dan menu-cepat.css:
+     - style.css             -> token dasar (--nav-h, --font), .alert
+     - navbar-mahasiswa.css  -> gaya navbar mahasiswa
+     - menu-cepat.css        -> 4 tombol navigasi di paling bawah
+   File ini berdiri sendiri (tidak butuh dashboard.css). Semua class berawalan "mp-"
+   (mp = mahasiswa pesanan) supaya tidak bentrok dengan halaman lain.
+   Satuan rem (1rem = 16px di layar 1920), sama seperti file CSS lain,
+   jadi seluruh tata letak ikut mengecil proporsional di layar yang lebih kecil.
+
+   Daftar isi:
+     1. Token & latar halaman
+     2. Kepala halaman (breadcrumb, ikon, judul)
+     3. Grid & kartu dasar
+     4. Kartu Informasi Pesanan (daftar label : isi) + badge status
+     5. Kartu Status Pesanan (timeline vertikal)
+     6. Kartu Item Pesanan (tabel -> grid)
+     7. Kartu Aksi Pesanan (tombol Bayar / Refund)
+     8. Fokus keyboard & gerak
+     9. Responsif
+   ========================================================= */
+
+/* ---------- 1. TOKEN & LATAR HALAMAN ---------- */
+.mp {
+  --mp-navy:   #14264D;   /* teks di atas tombol oranye, warna fokus */
+  --mp-title:  #2A4580;   /* judul & teks utama (biru desain) */
+  --mp-muted:  #50639A;   /* keterangan kecil */
+  --mp-sub:    #707070;   /* sub-judul halaman; desain #969696, digelapkan sedikit agar kontras terbaca */
+  --mp-card:   #FFF6E0;   /* latar kartu (krem sangat terang) */
+  --mp-head:   #FFEBBC;   /* baris judul kolom tabel (oranye pudar) */
+  --mp-total:  #FFEEC7;   /* latar baris TOTAL */
+  --mp-tile:   #F3E8D4;   /* latar kotak foto produk */
+  --mp-line:   rgba(42, 69, 128, .22);
+  --mp-orange: #FF9F1C;
+  --mp-green:  #46DE8F;   /* centang & garis timeline (warna dari Figma) */
+  --mp-rest:   #DCCDA6;   /* cincin & garis langkah yang belum tercapai */
+  --mp-pay:    #168A4B;   /* tombol Bayar (hijau) */
+  --mp-pay-dk: #0E6B38;   /* tombol Bayar saat kursor di atasnya (lebih pekat) */
+  --mp-red:    #C8372D;   /* tombol Refund (outline merah) */
+  --mp-red-dk: #A32219;
+  --mp-shadow: 0 .5rem 1.4rem rgba(20, 38, 77, .16);
+  --mp-ease:   cubic-bezier(.2, .7, .2, 1);
+
+  position: relative; isolation: isolate; overflow-x: clip; display: flow-root;
+  min-height: calc(100vh - var(--nav-h));
+  background: #FBF4E2;   /* warna dasar gambar latar, supaya tidak ada sambungan bila halaman lebih tinggi dari gambar */
+  color: var(--mp-title); font-family: var(--font);
+}
+
+/* Latar dekoratif dari desainer (Background.png 1920x1901), dipotong 2 (atas & bawah) agar halaman boleh
+   sepanjang apa pun: bentuk atas menempel di puncak halaman (di balik navbar, seperti di Figma),
+   bentuk bawah menempel di dasar halaman. Sambungannya memudar (mask) supaya tidak terlihat garis potong. */
+.mp::before,
+.mp::after { content: ""; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none; background-repeat: no-repeat; background-size: 100% 100%; }
+.mp::before { top: calc(-1 * var(--nav-h)); aspect-ratio: 1920 / 950; background-image: url('../img/bg-detail-pesanan-atas.webp');
+              -webkit-mask-image: linear-gradient(#000 80%, transparent); mask-image: linear-gradient(#000 80%, transparent); }
+.mp::after  { bottom: 0; aspect-ratio: 1920 / 951; background-image: url('../img/bg-detail-pesanan-bawah.webp');
+              -webkit-mask-image: linear-gradient(transparent, #000 20%); mask-image: linear-gradient(transparent, #000 20%); }
+
+.mp__inner { width: min(114.3rem, 100% - 4rem); margin: 0 auto; padding: 4.65rem 0 0; }   /* 114.3rem = lebar dua kartu + jarak pada desain Figma */
+
+/* Teks untuk pembaca layar saja */
+.mp-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Pesan flash / "pesanan berhasil dibuat" dari backend memakai .alert dari style.css */
+.mp .alert { margin: 0 0 2.4rem; font-size: 1.5rem; }
+
+/* ---------- 2. KEPALA HALAMAN: breadcrumb + ikon heksagon + judul ---------- */
+.mp-head { margin-bottom: 2.1rem; padding-left: 10.7rem; }
+
+.mp-crumb { display: flex; align-items: center; gap: .9rem; margin: 0 0 2.15rem 1rem; color: var(--mp-title); font-size: 1.5rem; font-weight: 500; text-transform: uppercase; }
+.mp-crumb img { flex: none; width: 2.7rem; height: 2.7rem; }
+.mp-crumb a { color: inherit; text-underline-offset: .3rem; transition: color .2s; }
+.mp-crumb a:hover { color: var(--mp-orange); }
+
+.mp-title { display: flex; align-items: center; gap: 2.7rem; }
+.mp-title > div { padding-top: .4rem; }
+.mp-title__icon { flex: none; display: grid; place-items: center; width: 8.5rem; height: 8.5rem; border-radius: 50%;
+                  background: var(--mp-orange); box-shadow: 0 .5rem 1.2rem rgba(255, 159, 28, .35); }
+.mp-title__icon img { width: 8rem; height: 8rem; }   /* icon-package.png (128 px) dipakai 1:1 seperti di Figma: kardus putih hampir memenuhi lingkaran */
+.mp-title h1 { margin: 0; color: var(--mp-title); font-size: 4.3rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; }
+.mp-title p  { margin: .6rem 0 0; color: var(--mp-sub); font-size: 1.15rem; font-weight: 700; line-height: 1.3; }
+
+/* ---------- 3. GRID & KARTU DASAR ----------
+   Baris 1: Informasi Pesanan + Status Pesanan (2 kolom)   Baris 2: Item Pesanan (penuh)
+   Baris 3: Aksi Pesanan (penuh)                           lalu menu cepat (menu-cepat.css) */
+.mp-grid { display: grid; grid-template-columns: minmax(0, 861fr) minmax(0, 882fr); gap: 5.25rem; }   /* perbandingan lebar kolom & jarak diukur dari Figma */
+
+.mp-card { position: relative; min-width: 0; border-radius: 1.3rem; background: var(--mp-card); box-shadow: var(--mp-shadow); }
+.mp-card--item { margin-top: 5.2rem; padding: 1.4rem 2.25rem 2.95rem; }
+.mp-card--aksi { margin-top: 3.4rem; padding: 2.3rem 3.2rem 2.6rem; }
+
+/* Judul kartu: ikon + teks */
+.mp-card__title { display: flex; align-items: center; gap: 1rem; margin: 0; color: var(--mp-title); font-size: 2.2rem; font-weight: 700; line-height: 1.2; }
+.mp-card__title img { flex: none; display: block; height: auto; }   /* ikon dipakai 1:1 seperti di Figma (px asli / 16 = rem) */
+.mp-ic--info   { width: 3.94rem; margin-left: .6rem; }   /* File_dock.png   63 px */
+.mp-ic--status { width: 5.19rem; margin: -1.4rem 0 0 .3rem; }   /* package_car.png 83 px; bagian truk ada di bawah tengah gambar, jadi digeser naik */
+.mp-ic--item   { width: 4.06rem; margin-left: 1.25rem; }   /* package hitam.png 65 px */
+.mp-card--item .mp-card__title { gap: 1.4rem; margin-bottom: 1rem; }
+
+/* Kepala kartu bergaris bawah (kartu Informasi & Status): tinggi sama persis, jadi garisnya sejajar */
+.mp-card--info,
+.mp-card--status { padding: 0 2.2rem 2.4rem; }
+.mp-card__head { display: flex; align-items: center; height: 6.44rem; padding: 1.7rem 0 0; border-bottom: .125rem solid var(--mp-title); }
+
+/* ---------- 4. KARTU INFORMASI PESANAN ----------
+   <dl> berbentuk grid 3 kolom: label | titik dua | isi. Lebar kolom label tetap,
+   jadi titik dua dan isi selalu sejajar rapi walau panjang label berbeda. */
+.mp-list { margin: 0; padding: 0 .45rem; }
+.mp-list--main { margin-top: 1.7rem; }
+.mp-list__row { display: grid; grid-template-columns: 22.7rem 2.4rem minmax(0, 1fr); align-items: center; min-height: 5.875rem; margin: 0;
+                color: var(--mp-title); font-size: 2.5rem; line-height: 1.3; }
+.mp-list dt { position: relative; font-weight: 500; }
+/* Titik dua digambar di tepi kanan kolom label, di tengah kolom sempit 2.4rem -> selalu lurus vertikal antar baris */
+.mp-list dt::after { content: ":"; position: absolute; left: 100%; width: 2.4rem; text-align: center; font-weight: 400; }
+.mp-list dd { grid-column: 3; margin: 0; padding-left: .3rem; font-weight: 400; overflow-wrap: anywhere; }
+.mp-dp { display: block; margin-top: .2rem; color: var(--mp-muted); font-size: 1.5rem; font-weight: 500; line-height: 1.3; }
+
+/* Baris tambahan dari backend (Sudah Dibayar, Sisa Tagihan, Status Pengiriman): lebih kecil & dipisah garis tipis,
+   kolom titik dua tetap lurus dengan baris di atasnya */
+.mp-list--extra { margin-top: 1.2rem; padding-top: 1.1rem; border-top: .0625rem dashed var(--mp-line); }
+.mp-list--extra .mp-list__row { min-height: 4.2rem; font-size: 1.9rem; }
+.mp-list--extra dd { font-weight: 500; }
+
+/* ---------- BADGE STATUS (pil berwarna, ikon + teks) ----------
+   Warna dipilih lewat class modifier yang dibuat PHP (html_badge): --wait, --process, --ship, --done, --fail, --off.
+   "done" mengikuti desain (hijau lembut + teks hijau tua); warna lain sama dengan halaman admin & riwayat. */
+.mp-badge { display: inline-flex; align-items: center; gap: .9rem; max-width: 100%; padding: .45rem 1.5rem .45rem 1.1rem; border-radius: 1.2rem;
+            background: #E4E1DA; color: #4A4A4A; font-size: 2.3rem; font-weight: 400; line-height: 1.15; }
+.mp-badge svg { flex: none; width: 2rem; height: 2rem; }
+.mp-badge--sm { font-size: 1.65rem; white-space: nowrap; }   /* teks panjang ("Menunggu Pembayaran") dikecilkan agar tetap satu baris */
+.mp-badge--wait    { background: #FFD9A0; color: #7A3E00; }   /* Menunggu Pembayaran / DP / Pelunasan */
+.mp-badge--process { background: #A7CBF7; color: #17418C; }   /* Diproses */
+.mp-badge--ship    { background: #FFA79F; color: #8F1F1B; }   /* Dikirim */
+.mp-badge--done    { background: #ACFAC4; color: #14702F; }   /* DP Lunas / Lunas / Selesai / Berhasil */
+.mp-badge--fail    { background: #FFC9C4; color: #8F1F1B; }   /* Pembayaran gagal */
+.mp-badge--off     { background: #E4E1DA; color: #4A4A4A; }   /* Dibatalkan / Kedaluwarsa / belum ada transaksi */
+
+/* ---------- 5. KARTU STATUS PESANAN (TIMELINE VERTIKAL) ----------
+   Tiap langkah = <li>: penanda bulat di kiri + judul & keterangan di kanan.
+   Garis penghubung = ::after milik <li> di atasnya; hijau bila langkah berikutnya sudah dilalui, krem bila belum.
+   <li> boleh memanjang (flex) mengikuti tinggi kartu Informasi, jadi garis ikut memanjang dan kartu tetap rata. */
+.mp-card--status { display: flex; flex-direction: column; }
+.mp-card--status .mp-card__head { flex: none; }
+
+.mp-steps { flex: 1; display: flex; flex-direction: column; margin: 0; padding: 1rem 0 3.3rem; list-style: none; }
+.mp-step { position: relative; flex: 1 1 8.47rem; display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); column-gap: .9rem; align-items: start; }
+.mp-step:last-child { flex: 0 0 auto; min-height: 4.6rem; }
+.mp-steps--ringkas .mp-step:not(:last-child) { flex: 0 0 8.47rem; }   /* pesanan dibatalkan: hanya 2 langkah, jangan dipanjangkan */
+
+.mp-step__mark { position: relative; z-index: 1; justify-self: center; width: 4.45rem; height: 4.45rem; transition: transform .25s var(--mp-ease); }
+.mp-step__mark svg { display: block; width: 100%; height: 100%; }
+
+/* Hover timeline: penanda (centang) sedikit membesar */
+.mp-step:hover .mp-step__mark { transform: scale(1.1); }
+
+.mp-step::after { content: ""; position: absolute; left: calc(3.2rem - .2rem); top: 4rem; bottom: -.4rem; width: .4rem; border-radius: .2rem; background: var(--mp-rest); }
+.mp-step--garis::after { background: var(--mp-green); }
+.mp-step:last-child::after { display: none; }
+
+.mp-step__body { min-width: 0; padding-right: 1rem; }
+.mp-step__title { margin: 0; color: var(--mp-title); font-size: 1.6rem; font-weight: 700; line-height: 1.8rem; }
+.mp-step__meta  { margin: 1.25rem 0 0; color: var(--mp-title); font-size: 1.25rem; font-weight: 500; line-height: 1.5rem; }
+.mp-step--now  .mp-step__title { color: #B25E00; }   /* langkah yang sedang ditunggu: oranye tua */
+.mp-step--now  .mp-step__meta  { color: #B25E00; }
+.mp-step--todo .mp-step__title { color: rgba(42, 69, 128, .55); }
+.mp-step--todo .mp-step__meta  { color: var(--mp-muted); opacity: .8; }
+.mp-step--off  .mp-step__title { color: var(--mp-red-dk); }
+.mp-step--off  .mp-step__meta  { color: var(--mp-red-dk); }
+
+/* ---------- 6. KARTU ITEM PESANAN ----------
+   <table> diganti grid: tiap baris = satu grid dengan kolom yang sama persis dengan baris judul.
+   Tanpa garis vertikal; judul = pil krem kekuningan bersudut membulat.
+   Lebar kolom diukur dari posisi teks pada desain Figma (Harga Satuan, Jumlah, Subtotal rata tengah kolomnya). */
+.mp-table { color: var(--mp-title); }
+.mp-cols { grid-template-columns: minmax(0, 4.04fr) minmax(0, 3.38fr) minmax(0, 5.46fr) minmax(0, 4.72fr); }
+
+/* Baris judul kolom */
+.mp-table__head { display: grid; align-items: center; min-height: 5.5rem; border-radius: 1.4rem; background: var(--mp-head);
+                  font-size: 1.6rem; font-weight: 500; text-align: center; }
+.mp-table__head > * { min-width: 0; }
+.mp-table__head > :first-child { padding-left: 11.6rem; text-align: left; }   /* "Produk" sejajar dengan nama produk, bukan dengan foto */
+
+/* Baris data */
+.mp-row { display: grid; align-items: center; min-height: 7rem; margin: 2rem 0; border-radius: 1.4rem; color: var(--mp-title);
+          font-size: 1.5rem; font-weight: 500; text-align: center; transition: background-color .25s ease; }
+.mp-row > * { min-width: 0; }
+.mp-row:hover { background: rgba(255, 214, 140, .3); }   /* hover tipis: latar krem sedikit menggelap */
+
+.mp-prod { display: flex; align-items: center; gap: 3.6rem; padding-left: 1.9rem; text-align: left; }
+.mp-prod__img { flex: none; display: grid; place-items: center; width: 6.1rem; height: 7rem; overflow: hidden; border-radius: 1.2rem; background: var(--mp-tile); }
+.mp-prod__img img { width: 100%; height: 100%; object-fit: cover; }
+.mp-prod__img svg { width: 3.2rem; height: 3.2rem; color: #B9A988; }
+.mp-prod__name { min-width: 0; overflow-wrap: anywhere; }
+.mp-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Baris TOTAL: pil krem, label di kiri garis, nilai di kanan garis */
+.mp-total { display: grid; grid-template-columns: minmax(0, 1fr) .125rem 22.8rem; align-items: center; min-height: 5.5rem; border-radius: 1.4rem; background: var(--mp-total);
+            color: var(--mp-title); font-size: 1.5rem; font-weight: 500; }
+.mp-total__label { justify-self: end; padding-right: 5.4rem; text-transform: uppercase; }
+.mp-total__sep { align-self: center; width: .125rem; height: 3.8rem; background: var(--mp-title); }
+.mp-total__value { padding-left: 4.7rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- 7. KARTU AKSI PESANAN ----------
+   Berisi tombol dari logika backend: Bayar Sekarang / Lanjutkan pembayaran (Midtrans) dan Batalkan & Refund.
+   Tiap blok (.mp-aksi__blok) = teks di kiri, tombol di kanan; antar blok dipisah garis putus-putus. */
+.mp-aksi__title { display: flex; align-items: center; gap: 1.2rem; margin: 0 0 .4rem; color: var(--mp-title); font-size: 2.2rem; font-weight: 700; line-height: 1.2; }
+.mp-aksi__title svg { flex: none; width: 3.2rem; height: 3.2rem; }
+
+.mp-aksi__blok { display: flex; align-items: center; justify-content: space-between; gap: 2.4rem 3.2rem; padding: 1.8rem 0 0; }
+.mp-aksi__blok + .mp-aksi__blok { margin-top: 1.8rem; border-top: .0625rem dashed var(--mp-line); }
+.mp-aksi__teks { flex: 1 1 36rem; min-width: 0; }
+.mp-aksi__lead { margin: 0; color: var(--mp-title); font-size: 1.7rem; font-weight: 500; line-height: 1.5; }
+.mp-aksi__lead b { font-weight: 700; }
+.mp-aksi__lead a { color: inherit; text-underline-offset: .25rem; }
+.mp-aksi__lead a:hover { color: var(--mp-orange); }
+.mp-aksi__judul { margin: 0 0 .5rem; color: var(--mp-title); font-size: 1.9rem; font-weight: 700; line-height: 1.3; }
+.mp-aksi__note { margin: .7rem 0 0; color: var(--mp-muted); font-size: 1.35rem; font-style: italic; line-height: 1.45; }
+.mp-aksi__tombol { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 1.4rem; margin: 0; }
+
+/* Tombol aksi (semua memakai transition: all .3s; hover = terangkat + warna lebih pekat) */
+.mp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 1rem; min-height: 4.8rem; padding: 0 2.8rem; border: .2rem solid transparent; border-radius: 1.1rem;
+          font: 700 1.7rem/1.2 var(--font); text-decoration: none; white-space: nowrap; cursor: pointer;
+          transition: all .3s ease; }
+.mp-btn:hover  { transform: translateY(-.3rem); }
+.mp-btn:active { transform: translateY(0); }
+
+/* Bayar Sekarang / Bayar DP / Bayar Pelunasan: tombol solid hijau */
+.mp-btn--bayar { background: var(--mp-pay); border-color: var(--mp-pay); color: #fff; box-shadow: 0 .4rem 1rem rgba(22, 138, 75, .32); }
+.mp-btn--bayar:hover { background: var(--mp-pay-dk); border-color: var(--mp-pay-dk); box-shadow: 0 .9rem 1.8rem rgba(14, 107, 56, .42); }
+
+/* Lanjutkan pembayaran sebelumnya / Kembali ke Katalog: outline biru desain */
+.mp-btn--lanjut { background: transparent; border-color: var(--mp-title); color: var(--mp-title); }
+.mp-btn--lanjut:hover { background: rgba(42, 69, 128, .1); border-color: var(--mp-navy); color: var(--mp-navy); box-shadow: 0 .7rem 1.4rem rgba(20, 38, 77, .18); }
+
+/* Batalkan & Refund: tombol outline merah, teks tebal */
+.mp-btn--refund { background: transparent; border-color: var(--mp-red); color: var(--mp-red); }
+.mp-btn--refund:hover { background: #FBE3E0; border-color: var(--mp-red-dk); color: var(--mp-red-dk); box-shadow: 0 .7rem 1.4rem rgba(163, 34, 25, .22); }
+
+/* Pesanan tidak ditemukan */
+.mp-kosong { padding: 3.2rem 3.4rem 3.4rem; }
+.mp-kosong h1 { margin: 0 0 1.6rem; color: var(--mp-title); font-size: 2.6rem; line-height: 1.2; }
+.mp-kosong p { margin: 0; }
+
+/* ---------- 8. FOKUS KEYBOARD & GERAK ---------- */
+.mp-btn:focus-visible,
+.mp-crumb a:focus-visible,
+.mp-aksi__lead a:focus-visible { outline: .25rem solid var(--mp-navy); outline-offset: .3rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-step__mark, .mp-row, .mp-btn, .mp-crumb a { transition: none; }
+  .mp-step:hover .mp-step__mark, .mp-btn:hover { transform: none; }
+}
+
+/* ---------- 9. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .mp-head { padding-left: 0; }
+  .mp-crumb { margin-left: 0; }
+  .mp-grid { gap: 3rem; }
+}
+
+@media (max-width: 900px) {
+  .mp__inner { width: calc(100% - 2rem); padding-top: 2.4rem; }
+  .mp-crumb { margin-bottom: 1.6rem; font-size: 1.4rem; }
+  .mp-title { gap: 1.6rem; }
+  .mp-title__icon { width: 6rem; height: 6rem; }
+  .mp-title__icon img { width: 5.6rem; height: 5.6rem; }
+  .mp-title h1 { font-size: 2.6rem; }
+  .mp-title p { font-size: 1.25rem; }
+
+  .mp-grid { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+  .mp-card--item { margin-top: 2rem; padding: 1.4rem 1.6rem 2.2rem; }
+  .mp-card--aksi { margin-top: 2rem; padding: 2rem 1.8rem 2.2rem; }
+  .mp-card--info, .mp-card--status { padding: 0 1.6rem 2rem; }
+  .mp-card__title { font-size: 2rem; }
+
+  .mp-list__row { grid-template-columns: 15.4rem 1.8rem minmax(0, 1fr); min-height: 4.6rem; font-size: 1.7rem; }
+  .mp-list dt::after { width: 1.8rem; }
+  .mp-list--extra .mp-list__row { min-height: 3.8rem; font-size: 1.5rem; }
+  .mp-dp { font-size: 1.3rem; }
+  .mp-badge { font-size: 1.6rem; }
+  .mp-badge--sm { font-size: 1.4rem; white-space: normal; }
+
+  .mp-step { flex-basis: 8rem; }
+
+  /* Judul kolom disembunyikan secara visual (tetap terbaca pembaca layar); tiap baris jadi kartu kecil berlabel */
+  .mp-table__head { position: absolute; width: 1px; height: 1px; min-height: 0; padding: 0; overflow: hidden; clip-path: inset(50%); }
+  .mp-row { display: block; min-height: 0; margin: 1rem 0 0; padding: 1.2rem; background: rgba(255, 235, 188, .45); text-align: right; }
+  .mp-row:hover { background: rgba(255, 214, 140, .4); }
+  .mp-row > [data-label] { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; padding: .5rem 0; text-align: right; }
+  .mp-row > [data-label]::before { content: attr(data-label); flex: none; color: var(--mp-muted); font-size: 1.25rem; font-weight: 700; text-align: left; }
+  .mp-row > .mp-prod { padding: 0 0 .8rem; margin-bottom: .6rem; border-bottom: .125rem solid var(--mp-line); gap: 1.4rem; }
+
+  .mp-total { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding: 0 1.4rem; min-height: 5rem; }
+  .mp-total__label { padding-right: 0; }
+  .mp-total__sep { display: none; }
+  .mp-total__value { padding-left: 0; font-weight: 700; }
+
+  .mp-aksi__blok { flex-direction: column; align-items: stretch; }
+  .mp-aksi__teks { flex-basis: auto; }
+  .mp-aksi__tombol { justify-content: stretch; }
+  .mp-aksi__tombol .mp-btn { flex: 1 1 100%; min-height: 5.2rem; padding: .8rem 1.6rem; white-space: normal; text-align: center; }   /* teks tombol boleh turun baris di layar sempit */
+}
+
+@media (max-width: 560px) {
+  .mp-title h1 { font-size: 2.2rem; }
+  /* Label di atas, isi di bawah (layar sangat sempit) */
+  .mp-list__row { grid-template-columns: minmax(0, 1fr); align-items: start; padding: .8rem 0; }
+  .mp-list dt::after { content: none; }
+  .mp-list dd { grid-column: 1; padding-left: 0; }
+  .mp-list dt { color: var(--mp-muted); font-size: 1.4rem; }
+}
