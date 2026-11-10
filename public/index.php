@@ -61,10 +61,9 @@ function foto_kartu_url(string $foto): string
     <title>Merchandise Kampus - JTI</title>
     <meta name="description" content="Toko merchandise resmi Jurusan Teknologi Informasi Polinema: kaos, hoodie, tote bag, dan lainnya. Pesan online, bayar DP atau lunas, dan kirim ke alamatmu.">
     <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <!-- Gambar LCP (banner): diunduh sedini mungkin, ukuran menyesuaikan lebar layar -->
-    <link rel="preload" as="image" type="image/webp" fetchpriority="high"
-          imagesrcset="/assets/img/beranda/banner-diskon-800.webp 800w, /assets/img/beranda/banner-diskon-1200.webp 1200w, /assets/img/beranda/banner-diskon.webp 1672w"
-          imagesizes="(max-width: 1050px) 100vw, 1045px">
+    <!-- Font judul banner (Poppins Bold, di-host sendiri) + gambar produk banner (LCP) -->
+    <link rel="preload" href="/assets/fonts/poppins-bold-latin.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" as="image" type="image/webp" href="/assets/img/beranda/promo-hoodie.webp" fetchpriority="high">
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/assets/css/style.css") ?>">
     <?php if (($_SESSION["role"] ?? "") === "Mahasiswa"): ?>
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/assets/css/navbar-mahasiswa.css") ?>">
@@ -88,20 +87,75 @@ if (($_SESSION["role"] ?? "") === "Mahasiswa") {
         <h1 class="sr-only">Merchandise Kampus</h1>
 
         <!-- 1. Banner diskon -->
+        <!-- Dibangun dari HTML + CSS + gambar produk terpisah (bukan satu gambar utuh) supaya teks, tombol,
+             badge, dan bentuk dekoratifnya bisa dianimasikan. Gaya & animasi: assets/css/beranda.css bagian 3. -->
         <section class="promo" aria-label="Promo diskon 20% untuk semua produk JTI Merch">
-            <div class="promo__frame">
-                <picture>
-                    <source type="image/webp" sizes="(max-width: 1050px) 100vw, 1045px"
-                            srcset="/assets/img/beranda/banner-diskon-800.webp 800w, /assets/img/beranda/banner-diskon-1200.webp 1200w, /assets/img/beranda/banner-diskon.webp 1672w">
-                    <img class="promo__img" src="/assets/img/beranda/banner-diskon.png" width="1672" height="693" fetchpriority="high" decoding="async"
-                         alt="Diskon 20% untuk semua produk JTI Merch. Tampil keren dengan merchandise eksklusif JTI. Jangan lewatkan promo terbatas ini!">
-                </picture>
+            <div class="promo__card">
 
-                <!-- Ikon megaphone (terpisah dari banner supaya bisa bergoyang) -->
-                <img class="promo__mega" src="/assets/img/beranda/megafon.png" width="121" height="96" alt="" aria-hidden="true">
+                <!-- Bentuk dekoratif latar: lingkaran sudut yang mengambang pelan -->
+                <div class="promo__deco" aria-hidden="true">
+                    <span class="promo__dot promo__dot--tl-orange"></span>
+                    <span class="promo__dot promo__dot--tl-yellow"></span>
+                    <span class="promo__dot promo__dot--tr-yellow"></span>
+                    <span class="promo__dot promo__dot--tr-orange"></span>
+                    <span class="promo__dot promo__dot--bl-yellow"></span>
+                    <span class="promo__dot promo__dot--bl-orange"></span>
+                    <span class="promo__dot promo__dot--br-navy-a"></span>
+                    <span class="promo__dot promo__dot--br-navy-b"></span>
+                </div>
 
-                <!-- Area klik transparan tepat di atas tombol "BELI SEKARANG" pada gambar banner -->
-                <a class="promo__cta" href="<?= e($urlKatalog) ?>" aria-label="Beli sekarang — lihat katalog produk"></a>
+                <div class="promo__grid">
+
+                    <!-- KIRI: teks promo + tombol -->
+                    <div class="promo__left">
+                        <img class="promo__gift" src="/assets/img/beranda/promo-gift.webp" width="664" height="664" alt="" aria-hidden="true">
+                        <p class="promo__pill"><span>Special Hari Ini</span></p>
+                        <h2 class="promo__headline">
+                            <span class="promo__diskon">Diskon</span>
+                            <span class="promo__persen">20%</span>
+                        </h2>
+                        <p class="promo__sub">Untuk Semua Produk JTI Merch!</p>
+                        <p class="promo__desc">Tampil keren dengan merchandise eksklusif JTI.<br>Jangan lewatkan promo Terbatas ini</p>
+
+                        <!-- Tombol menuju katalog: $urlKatalog = /mahasiswa/katalog.php (https://simer.my.id/mahasiswa/katalog.php) -->
+                        <a class="promo__cta" href="<?= e($urlKatalog) ?>">
+                            <img src="/assets/img/beranda/promo-ic-cart.webp" width="220" height="223" alt="" aria-hidden="true">
+                            <span>Beli Sekarang!</span>
+                        </a>
+                    </div>
+
+                    <!-- KANAN: produk (saling menimpa) + badge diskon -->
+                    <div class="promo__stage">
+                        <span class="promo__spark promo__spark--1" aria-hidden="true"><img src="/assets/img/beranda/promo-percik.webp" width="275" height="268" alt=""></span>
+                        <span class="promo__spark promo__spark--2" aria-hidden="true"><img src="/assets/img/beranda/promo-percik.webp" width="275" height="268" alt=""></span>
+                        <span class="promo__spark promo__spark--3" aria-hidden="true"><img src="/assets/img/beranda/promo-percik.webp" width="275" height="268" alt=""></span>
+
+                        <div class="promo__prod promo__prod--baju">
+                            <img src="/assets/img/beranda/promo-baju.webp" width="1483" height="1472" alt="Kaos putih berlogo JTI" fetchpriority="high" decoding="async">
+                        </div>
+                        <div class="promo__prod promo__prod--hoodie">
+                            <img src="/assets/img/beranda/promo-hoodie.webp" width="1533" height="1509" alt="Hoodie navy berlogo JTI" fetchpriority="high" decoding="async">
+                        </div>
+                        <div class="promo__prod promo__prod--tas">
+                            <img src="/assets/img/beranda/promo-tas.webp" width="1062" height="1050" alt="Tote bag krem berlogo JTI" decoding="async">
+                        </div>
+
+                        <div class="promo__badge" role="img" aria-label="Diskon 20%">
+                            <span class="promo__badge-back"></span>
+                            <span class="promo__badge-face"></span>
+                            <img class="promo__badge-text promo__badge-text--diskon" src="/assets/img/beranda/promo-diskon.webp" width="684" height="254" alt="">
+                            <img class="promo__badge-text promo__badge-text--persen" src="/assets/img/beranda/promo-20.webp" width="835" height="424" alt="">
+                        </div>
+                    </div>
+
+                    <!-- FOOTER banner: 3 keunggulan, dipisah garis vertikal -->
+                    <ul class="promo__features" aria-label="Keunggulan produk">
+                        <li><img src="/assets/img/beranda/promo-ic-bahan.webp" width="138" height="138" alt="" aria-hidden="true"><span>Bahan Adem<br>Dan Nyaman</span></li>
+                        <li><img src="/assets/img/beranda/promo-ic-sablon.webp" width="102" height="102" alt="" aria-hidden="true"><span>Sablon Berkualitas Tahan<br>Lama</span></li>
+                        <li><img src="/assets/img/beranda/promo-ic-bintang.webp" width="121" height="117" alt="" aria-hidden="true"><span>Sablon Berkualitas<br>Tahan Lama</span></li>
+                    </ul>
+
+                </div>
             </div>
         </section>
 
