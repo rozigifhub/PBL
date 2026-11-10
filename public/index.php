@@ -120,7 +120,7 @@ if (($_SESSION["role"] ?? "") === "Mahasiswa") {
                         <!-- Tombol menuju katalog: $urlKatalog = /mahasiswa/katalog.php (https://simer.my.id/mahasiswa/katalog.php) -->
                         <a class="promo__cta" href="<?= e($urlKatalog) ?>">
                             <img src="/assets/img/beranda/promo-ic-cart.webp" width="220" height="223" alt="" aria-hidden="true">
-                            <span>Beli Sekarang!</span>
+                            <span>Pesan Sekarang Juga</span>
                         </a>
                     </div>
 

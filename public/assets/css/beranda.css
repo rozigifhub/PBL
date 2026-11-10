@@ -44,7 +44,7 @@
              src: url('../fonts/poppins-bold-latin.woff') format('woff'); }
 
 .promo { --px: calc(100cqw / 4857); --d: calc(100cqw / 4857); --sx: calc(100cqw / 4857);
-         --c-pill: #FF9F1C; --c-pill-hi: #FFB13D; --c-red: #E31C14; --c-yellow: #FFD600; --c-sun: #FDC61E; --c-coral: #E95B2A; --c-navy2: #0D3055;
+         --pill-up: 30; --c-pill: #FF9F1C; --c-pill-hi: #FFB13D; --c-red: #E31C14; --c-yellow: #FFD600; --c-sun: #FDC61E; --c-coral: #E95B2A; --c-navy2: #0D3055;
          container-type: inline-size; max-width: 102rem; margin: 0 auto; animation: rise .7s var(--ease) backwards; }
 
 .promo__card { position: relative; isolation: isolate; overflow: hidden; width: 100%; aspect-ratio: 6476 / 2620;
@@ -74,7 +74,7 @@
 .promo__left > * { margin-block: 0; }
 
 /* --- 3c. Kolom kiri: pill, judul, subjudul, deskripsi, tombol (tiap elemen miring tipis sesuai desain) --- */
-.promo__gift { position: absolute; left: calc(269 * var(--px)); top: calc(179 * var(--px)); width: calc(497 * var(--px)); height: auto; z-index: 2;
+.promo__gift { position: absolute; left: calc(269 * var(--px)); top: calc((179 - var(--pill-up)) * var(--px)); width: calc(497 * var(--px)); height: auto; z-index: 2;
                transform-origin: 50% 88%; animation: promo-gift 5s ease-in-out infinite; }
 /* Hadiah melompat & bergoyang ± 1,2 detik, lalu diam; berulang tiap 5 detik */
 @keyframes promo-gift {
@@ -88,13 +88,12 @@
 }
 
 .promo__pill { display: flex; align-items: center; flex: none; width: calc(1885 * var(--px)); height: calc(320 * var(--px));
-               margin: calc(256.5 * var(--px)) 0 0 calc(207 * var(--px)); padding-left: calc(580 * var(--px));
+               margin: calc((256.5 - var(--pill-up)) * var(--px)) 0 0 calc(207 * var(--px)); padding-left: calc(580 * var(--px));
                border-radius: 999px; background: var(--c-pill); color: #fff; transform: rotate(2.5deg);
                box-shadow: 0 calc(22 * var(--px)) calc(34 * var(--px)) rgba(160, 90, 0, .26);
                font: 700 calc(145 * var(--px)) / 1 'Poppins', var(--font); text-transform: uppercase; white-space: nowrap; -webkit-text-stroke: calc(3 * var(--px)) currentColor; }
-.promo__pill span { transform: translateY(calc(47 * var(--px))); }
 
-.promo__headline { position: relative; flex: none; align-self: stretch; height: calc(300 * var(--px)); margin: calc(26.3 * var(--px)) 0 0; font-weight: 700; }
+.promo__headline { position: relative; flex: none; align-self: stretch; height: calc(300 * var(--px)); margin: calc((26.3 + var(--pill-up)) * var(--px)) 0 0; font-weight: 700; }
 .promo__diskon, .promo__persen { position: absolute; display: block; font-family: 'Poppins', var(--font); font-weight: 700; line-height: 1; white-space: nowrap; text-transform: uppercase; }
 .promo__diskon { left: calc(145 * var(--px)); top: calc(15.9 * var(--px)); font-size: calc(278 * var(--px)); letter-spacing: .04em; color: var(--c-navy);
                  transform-origin: 0 85%; transform: rotate(3.4deg); -webkit-text-stroke: calc(8 * var(--px)) currentColor; }
@@ -105,12 +104,13 @@
 .promo__desc { flex: none; margin: calc(61.5 * var(--px)) 0 0 calc(139 * var(--px)); font: 500 calc(60.5 * var(--px)) / 1.15 var(--font); color: var(--c-name);
                white-space: nowrap; transform-origin: 0 40%; transform: rotate(1.5deg); }
 
-.promo__cta { flex: none; display: flex; align-items: center; justify-content: center; gap: calc(47 * var(--px)); width: calc(1886 * var(--px)); height: calc(271 * var(--px));
+.promo__cta { flex: none; display: flex; align-items: center; justify-content: flex-start; gap: calc(46 * var(--px)); padding-left: calc(205 * var(--px)); width: calc(1886 * var(--px)); height: calc(271 * var(--px));
               margin: calc(110.1 * var(--px)) 0 0 calc(233.5 * var(--px)); border-radius: 999px; background: var(--c-pill); color: #fff; text-decoration: none; pointer-events: auto;
               font: 700 calc(95 * var(--px)) / 1 'Poppins', var(--font); text-transform: uppercase; white-space: nowrap; transform: rotate(1.7deg);
               box-shadow: 0 calc(22 * var(--px)) calc(34 * var(--px)) rgba(160, 90, 0, .26);
               transition: transform .25s var(--ease), background-color .25s, box-shadow .25s; }
-.promo__cta img { flex: none; width: calc(220 * var(--px)); height: auto; }
+.promo__cta img { flex: none; position: relative; top: calc(-13 * var(--px)); width: calc(220 * var(--px)); height: auto; }
+.promo__cta span { position: relative; top: calc(7 * var(--px)); }
 .promo__cta:hover { transform: rotate(1.7deg) scale(1.05); background: var(--c-pill-hi); box-shadow: 0 calc(34 * var(--px)) calc(56 * var(--px)) rgba(255, 159, 28, .5); }
 .promo__cta:active { transform: rotate(1.7deg) scale(1.01); }
 .promo__cta:focus-visible { outline: calc(14 * var(--px)) solid var(--c-navy); outline-offset: calc(14 * var(--px)); }
