@@ -33,7 +33,27 @@
 /* ---------- 2. DASAR ---------- */
 html { font-size: clamp(10px, .8333vw, 16px); }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: var(--font); background: var(--c-cream); color: var(--c-text); }
+body { margin: 0; font-family: var(--font); color: var(--c-text); }
+
+/* LATAR GLOBAL: satu gambar untuk SEMUA halaman (Admin & Mahasiswa), dipasang sekali di sini.
+   Sumber: Group 8606.png (8000x3947) -> diperkecil ke 2560 px & WebP supaya ringan (assets/img/bg-global.webp).
+   Halaman lain TIDAK boleh memberi background sendiri pada pembungkusnya (.dash, .catalog, .home, dst.),
+   biar gambar ini tetap terlihat di belakang kartu & tabel. `fixed` = gambar tidak ikut tergulir. */
+body {
+  background-color: #FDF9F1;                       /* warna cadangan bila gambar gagal dimuat */
+  background-image: url('../img/bg-global.webp');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+/* iOS Safari mengabaikan `background-attachment: fixed` (gambar jadi ikut tergulir & membesar mengikuti tinggi halaman).
+   Khusus iOS, gambar yang sama dipasang lewat lapisan `fixed` di belakang konten. */
+@supports (-webkit-touch-callout: none) {
+  body { background-image: none; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+                 background: #FDF9F1 url('../img/bg-global.webp') center center / cover no-repeat; }
+}
 a { color: inherit; }
 img { display: block; }
 
@@ -50,9 +70,7 @@ img { display: block; }
 
 /* ---------- 4. LATAR HALAMAN & KARTU ---------- */
 .auth { min-height: calc(100vh - var(--nav-h)); padding: 1.9rem 1rem 3.2rem; display: flex; justify-content: center;
-        align-items: flex-start; background: var(--c-cream) var(--bg) center top / cover no-repeat; }
-.page-login    { --bg: url('../img/bg-login.webp'); }
-.page-register { --bg: url('../img/bg-register.webp'); }
+        align-items: flex-start; }   /* latar: lihat body (LATAR GLOBAL) di atas */
 
 .card { width: min(var(--card-w), 100%); padding: 1.2rem 0 5.5rem; background: #fff; border-radius: 1rem;
         box-shadow: 0 .5rem 1.4rem rgba(0, 0, 0, .35); animation: rise .6s ease-out both; }

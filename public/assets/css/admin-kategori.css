@@ -21,12 +21,6 @@
   --kt-spring:    cubic-bezier(.34, 1.56, .64, 1);   /* sedikit "memantul" untuk gerak tutup tong & tanda + */
 }
 
-/* Latar khusus halaman ini (dari tim desainer). Pseudo-element "fixed" dari dashboard.css
-   dipakai ulang, hanya gambarnya diganti. */
-.dash-kategori::before {
-  background: var(--c-cream) url('../img/bg-kelola-kategori.webp') center top / cover no-repeat;
-}
-
 .kt { width: min(96.4rem, 100% - 4rem); margin: 0 auto; padding: 5.1rem 0 7rem; }
 
 /* Teks untuk pembaca layar saja */

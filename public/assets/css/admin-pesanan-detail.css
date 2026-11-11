@@ -35,15 +35,6 @@
   --pd-btn-text:  #fff;      /* sesuai desain; isi #14264D bila ingin kontras lebih tinggi di atas oranye */
 }
 
-/* Latar dekoratif desain (bentuk di sudut-sudut). Berbeda dari halaman lain yang memakai latar "fixed",
-   di sini latar ikut menggulir bersama halaman supaya komposisi bentuknya sama seperti di Figma
-   (blob navy di bawah navbar, lingkaran garis di kanan, lengkung di bawah). */
-.dash.pd-page::before {
-  position: absolute;
-  inset: calc(-1 * var(--nav-h)) 0 0;   /* mulai dari puncak halaman (di balik navbar), seperti di desain */
-  background: #FBF4E2 url('../img/bg-kelola-pesanan.webp') center top / 100% auto no-repeat;   /* #FBF4E2 = warna dasar gambar, supaya tidak ada sambungan bila halaman lebih tinggi dari gambar */
-}
-
 .pd { width: min(115rem, 100% - 4rem); margin: 0 auto; padding: 4.65rem 0 3.6rem; }
 
 /* Teks untuk pembaca layar saja */

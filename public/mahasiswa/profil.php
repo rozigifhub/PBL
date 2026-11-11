@@ -210,7 +210,7 @@ $daftarAlamat = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Profil Saya - Merchandise Kampus</title>
     <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
     <link rel="stylesheet" href="/assets/css/profil.css?v=<?= @filemtime(__DIR__ . "/../assets/css/profil.css") ?>">
     <script src="/assets/js/profil.js?v=<?= @filemtime(__DIR__ . "/../assets/js/profil.js") ?>" defer></script>
