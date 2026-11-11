@@ -24,14 +24,9 @@
            clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* ---------- 2. LATAR HALAMAN ----------
-   Gambar background dipotong di baris yang polos krem (tanpa hiasan):
-   bagian atas menempel di atas, bagian bawah menempel di dasar halaman.
-   Jadi berapa pun tinggi halaman, tidak ada sambungan yang terlihat. */
+   Latar belakang kini global (style.css, body). Di sini hanya kerangka halamannya. */
 .home { position: relative; isolation: isolate; overflow-x: clip; padding: 3.6rem 0 7.5rem;
-        min-height: calc(100vw * 1504 / 1903);   /* minimal setinggi gambar background utuh */
-        background: var(--c-bg-cream) url('../img/beranda/bg-beranda-atas.webp') center top / 100% auto no-repeat; }
-.home::after { content: ""; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; aspect-ratio: 1903 / 514;
-               background: url('../img/beranda/bg-beranda-bawah.webp') center bottom / 100% 100% no-repeat; pointer-events: none; }
+        min-height: calc(100vh - var(--nav-h)); }
 .home__inner { width: min(102rem, 100% - 2rem); margin: 0 auto; }
 
 /* ---------- 3. BANNER DISKON ----------
