@@ -1,0 +1,173 @@
+/* =========================================================
+   CHECKOUT MAHASISWA  (mahasiswa/checkout.php)
+   Dimuat SETELAH style.css & navbar-mahasiswa.css (memakai --nav-h, --font, .alert dari style.css).
+   Satuan rem (1rem = 16px di layar 1920), jadi tata letak mengecil proporsional.
+   Semua class berawalan "co-" supaya tidak bentrok dengan halaman lain.
+   Latar halaman = gambar global di body (style.css): JANGAN beri background pada .co.
+
+   Daftar isi:  1. Token  2. Kepala halaman  3. Kartu dasar  4. Ringkasan Pesanan
+                5. Metode Pembayaran  6. Alamat Pengiriman  7. Tombol Buat Pesanan  8. Responsif
+   ========================================================= */
+
+/* ---------- 1. TOKEN & KERANGKA ---------- */
+.co {
+  --co-title:  #2A4580;   /* judul & teks utama */
+  --co-card:   #FFF6E0;   /* latar kartu */
+  --co-head:   #FFEBBC;   /* header kolom tabel */
+  --co-total:  #FFEEC7;   /* baris TOTAL */
+  --co-pick:   #FFEBBC;   /* latar baris pembayaran yang DIPILIH (desain Figma = kuning krem; ganti ke #E8F0FB bila ingin biru pudar) */
+  --co-tile:   #F3E8D4;   /* kotak foto produk */
+  --co-orange: #FF9F1C;
+  --co-orange-dk: #F08C00;
+  --co-blue:   #4B92D5;   /* titik radio / centang */
+  --co-sub:    #707070;
+  --co-line:   #A8A8A8;   /* border input */
+  --co-shadow: 0 .4rem 1.2rem rgba(20, 38, 77, .18);
+  --co-shadow-up: 0 1rem 2.4rem rgba(20, 38, 77, .26);
+
+  position: relative; isolation: isolate; overflow-x: clip; display: flow-root;
+  min-height: calc(100vh - var(--nav-h)); color: var(--co-title); font-family: var(--font);
+}
+.co__inner { width: min(115.2rem, 100% - 4.8rem); margin: 0 auto; padding: 2.7rem 0 5rem; }
+.co a { color: inherit; }
+.co .alert { margin: 0 0 2.4rem; font-size: 1.5rem; }
+
+/* ---------- 2. KEPALA HALAMAN ---------- */
+.co-crumb { display: flex; align-items: center; gap: 1.5rem; margin: 0 0 1.5rem; padding-left: 2.7rem; }
+.co-crumb__home img { width: 2rem; height: 2rem; transition: transform .3s ease; }
+.co-crumb__home:hover img { transform: scale(1.12); }
+.co-back { display: inline-flex; align-items: center; gap: .8rem; font-size: 1.4rem; font-weight: 500; text-transform: uppercase; text-underline-offset: .3rem; transition: color .3s ease; }
+.co-back svg { width: 1.8rem; height: 1.8rem; transition: transform .3s ease; }
+.co-back:hover { color: var(--co-orange-dk); }
+.co-back:hover svg { transform: translateX(-.4rem); }
+
+.co-head { display: flex; align-items: center; gap: 2.5rem; margin: 0 0 2.6rem; padding-left: 2.4rem; }
+.co-head__icon { flex: none; display: grid; place-items: center; width: 7.1rem; height: 7.1rem; border-radius: 50%; background: var(--co-orange); }
+.co-head__icon img { width: 4.1rem; height: 4.1rem; }
+.co-head__title { margin: 0; font-size: 2.5rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; }
+.co-head__sub { margin: .8rem 0 0; color: var(--co-sub); font-size: 1.25rem; font-weight: 700; line-height: 1.4; }
+
+/* ---------- 3. KARTU DASAR (+ efek melayang saat hover) ---------- */
+.co-card { position: relative; min-width: 0; margin-bottom: 2.4rem; border-radius: 1.3rem; background: var(--co-card); box-shadow: var(--co-shadow);
+           transition: all 0.3s ease; }
+.co-card:hover { transform: translateY(-2px); box-shadow: var(--co-shadow-up); }
+.co-card--kosong { padding: 2.4rem 3rem; font-size: 1.5rem; }
+
+.co-card__title { display: flex; align-items: center; gap: 1.8rem; height: 6.4rem; margin: 0; padding: 0 1.7rem 0 3.9rem; font-size: 2.1rem; font-weight: 700; line-height: 1.2; }
+.co-card__title svg, .co-card__title img { flex: none; height: auto; }
+.co-ic--pkg  { width: 3.3rem; }
+.co-ic--pay  { width: 3.4rem; }
+.co-ic--home { width: 2.9rem; }
+
+/* ---------- 4. RINGKASAN PESANAN (tabel -> grid) ----------
+   Header, baris item & TOTAL memakai kolom yang sama (.co-grid) supaya sejajar. */
+.co-table { padding: 0 2.2rem 2.4rem; }
+.co-grid { display: grid; grid-template-columns: 6.2rem minmax(0, 1fr) 21rem 21rem 13.9rem 13.5rem; align-items: center; padding-left: 1.9rem; }
+
+.co-thead { min-height: 5.56rem; border-radius: 1.3rem; background: var(--co-head); font-size: 1.5rem; font-weight: 500; }
+.co-th { text-align: center; }
+.co-th--name { grid-column: 2; padding-left: 3.5rem; text-align: left; }
+
+.co-row { position: relative; padding-block: 1.35rem; transition: background .3s ease; }
+.co-row + .co-row::before { content: ""; position: absolute; top: 0; left: 0; right: .75rem; border-top: .19rem solid #000; }
+.co-row:hover { background: rgba(255, 255, 255, .5); }
+.co-cell { min-width: 0; font-size: 1.5rem; font-weight: 500; text-align: center; }
+.co-cell--photo { display: grid; place-items: center; width: 6.2rem; height: 7rem; overflow: hidden; border-radius: 1rem; background: var(--co-tile); color: #9B8E78; }
+.co-cell--photo img { width: 100%; height: 100%; padding: .6rem; object-fit: contain; transition: transform .35s ease; }
+.co-cell--photo svg { width: 3rem; height: 3rem; }
+.co-row:hover .co-cell--photo img { transform: scale(1.07); }
+.co-cell--name { padding-left: 3.5rem; text-align: left; overflow-wrap: anywhere; }
+.co-cat { display: block; margin-top: .3rem; color: #6F7FA6; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+
+.co-total { min-height: 5.56rem; margin-top: 1.2rem; border-radius: 1.3rem; background: var(--co-total); font-size: 1.5rem; }
+.co-total__label { grid-column: 1 / 5; justify-self: end; padding-right: 1.4rem; font-weight: 500; text-transform: uppercase; }
+.co-total__value { grid-column: 5; position: relative; text-align: center; font-weight: 700; }
+.co-total__value::before { content: ""; position: absolute; left: 1.3rem; top: 50%; height: 3.75rem; border-left: .13rem solid var(--co-title); transform: translateY(-50%); }
+
+/* ---------- 5. METODE PEMBAYARAN (radio & checkbox kustom) ---------- */
+.co-card--bayar .co-card__title { height: 6.4rem; padding-top: .9rem; }
+.co-opts { display: grid; gap: .6rem; padding: 0 2.2rem 1.7rem; }
+.co-opt { position: relative; }
+.co-opt__input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none; }   /* input bawaan disembunyikan, tetap bisa difokus & dikirim */
+.co-opt__row { display: flex; align-items: center; gap: 2.2rem; min-height: 5.56rem; padding: .8rem 1.2rem .8rem .75rem; border-radius: 1.3rem; cursor: pointer;
+               font-size: 1.4rem; font-weight: 500; line-height: 1.35; transition: all 0.3s ease; }
+.co-opt__row:hover { background: rgba(255, 235, 188, .45); }
+.co-opt__input:checked + .co-opt__row { background: var(--co-pick); }
+.co-opt__input:focus-visible + .co-opt__row { outline: .25rem solid rgba(255, 159, 28, .75); outline-offset: .1rem; }
+.co-opt__mark { flex: none; display: grid; place-items: center; width: 1.65rem; height: 1.65rem; border: .1rem solid var(--co-line); border-radius: 50%; background: #E6E3DC; transition: all .2s ease; }
+.co-opt__mark::after { content: ""; width: .75rem; height: .75rem; border-radius: 50%; background: var(--co-blue); transform: scale(0); transition: transform .2s ease; }
+.co-opt__input:checked + .co-opt__row .co-opt__mark { border-color: var(--co-blue); background: #8FB8E3; }
+.co-opt__input:checked + .co-opt__row .co-opt__mark::after { transform: scale(1); }
+/* Checkbox "Gunakan saldo dompet": baris sama persis, penanda kotak bercentang */
+.co-opt--check .co-opt__mark { border-radius: .4rem; }
+.co-opt--check .co-opt__mark::after { width: .95rem; height: .5rem; border-radius: 0; background: none; border-left: .2rem solid #fff; border-bottom: .2rem solid #fff; transform: translateY(-.1rem) rotate(-45deg) scale(0); }
+.co-opt--check .co-opt__input:checked + .co-opt__row .co-opt__mark { background: var(--co-blue); }
+.co-opt--check .co-opt__input:checked + .co-opt__row .co-opt__mark::after { transform: translateY(-.1rem) rotate(-45deg) scale(1); }
+.co-opt__note { display: block; margin-top: .3rem; color: #50639A; font-size: 1.15rem; font-weight: 500; }
+
+/* ---------- 6. ALAMAT PENGIRIMAN ---------- */
+.co-card--alamat .co-card__title { height: 6.4rem; padding-top: .6rem; }
+.co-addr { padding: 0 3.3rem 4.4rem; }
+.co-field + .co-field { margin-top: 1.9rem; }
+.co-label { display: block; margin-bottom: .9rem; font-size: 1.4rem; font-weight: 700; text-transform: uppercase; }
+
+.co-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem 2.4rem; }
+.co-select { position: relative; flex: 0 1 38.3rem; min-width: 0; }
+.co-select select { width: 100%; height: 4.4rem; padding: 0 5rem 0 .9rem; border: .1rem solid var(--co-line); border-radius: .7rem; background: #fff; color: #000;
+                    font: 400 1.4rem var(--font); text-transform: capitalize; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none;
+                    transition: all 0.3s ease; }
+.co-select::after { content: ""; position: absolute; right: 2rem; top: 50%; width: 1rem; height: 1rem; border-right: .2rem solid #9B9B9B; border-bottom: .2rem solid #9B9B9B;
+                    transform: translateY(-70%) rotate(45deg); pointer-events: none; transition: transform .3s ease; }   /* chevron kustom */
+.co-select:focus-within::after { border-color: var(--co-orange); }
+.co-manage { font-size: 1.4rem; font-weight: 500; text-transform: uppercase; text-underline-offset: .3rem; transition: color .3s ease; }
+.co-manage:hover { color: var(--co-orange-dk); }
+
+.co-select select:focus, .co-textarea:focus { border-color: var(--co-orange); outline: 0; box-shadow: 0 0 0 .3rem rgba(255, 159, 28, .22); }
+.co-textarea { display: block; width: 100%; min-height: 8rem; padding: 1.2rem 1.2rem; border: .1rem solid var(--co-line); border-radius: .5rem; background: #fff; color: #000;
+               font: 400 1.4rem/1.5 var(--font); resize: vertical; transition: all 0.3s ease; }
+.co-textarea::placeholder { color: #A9A9A9; }
+.co-hint { display: block; margin-top: .8rem; color: #50639A; font-size: 1.15rem; font-weight: 500; }
+
+/* ---------- 7. TOMBOL BUAT PESANAN (kanan bawah) ---------- */
+.co-actions { display: flex; justify-content: flex-end; margin-top: 4.9rem; padding-right: 5.7rem; }
+.co-submit { display: inline-flex; align-items: center; justify-content: flex-start; gap: 2.2rem; min-width: 31rem; height: 5.5rem; padding: 0 2rem 0 3.8rem; border: 0; border-radius: .7rem;
+             background: var(--co-orange); color: #fff; font: 700 2.5rem var(--font); cursor: pointer;
+             box-shadow: 0 .4rem 1rem rgba(255, 159, 28, .35); transition: all 0.3s ease; }
+.co-submit img { flex: none; width: 5rem; height: 5rem; transition: transform .3s ease; }
+.co-submit svg { flex: none; width: 2.6rem; height: 1.6rem; }
+.co-submit:hover { transform: scale(1.05); background: #FFA92E; box-shadow: 0 1.2rem 2.8rem rgba(255, 159, 28, .55); }
+.co-submit:hover img { transform: translateX(5px); }
+.co-submit:active { transform: scale(.98); box-shadow: 0 .3rem .8rem rgba(255, 159, 28, .4); }
+.co-submit:focus-visible { outline: .3rem solid var(--co-title); outline-offset: .3rem; }
+
+@media (prefers-reduced-motion: reduce) { .co *, .co *::before, .co *::after { transition: none !important; } .co-card:hover, .co-submit:hover { transform: none; } }
+
+/* ---------- 8. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .co-grid { grid-template-columns: 6.2rem minmax(0, 1fr) 13rem 9rem 14rem; }
+  .co-total__label { grid-column: 1 / 4; }
+  .co-total__value { grid-column: 5; }
+  .co-th--name, .co-cell--name { padding-left: 1.6rem; }
+  .co-actions { padding-right: 2rem; }
+}
+@media (max-width: 760px) {
+  .co__inner { width: calc(100% - 2.4rem); }
+  .co-crumb, .co-head { padding-left: .4rem; }
+  .co-card__title { padding-left: 2rem; font-size: 1.9rem; }
+  .co-table { padding: 0 1.2rem 1.6rem; }
+  .co-thead { display: none; }                                   /* header kolom disembunyikan; label tampil di tiap sel */
+  .co-grid { grid-template-columns: 6.2rem minmax(0, 1fr); column-gap: 1.4rem; row-gap: .4rem; padding: 0 1rem; }
+  .co-row { padding-block: 1.4rem; }
+  .co-cell--photo { grid-row: 1 / span 4; }
+  .co-cell--name { grid-column: 2; padding-left: 0; }
+  .co-cell--price, .co-cell--qty, .co-cell--sub { grid-column: 2; display: flex; justify-content: space-between; gap: 1rem; text-align: left; font-size: 1.35rem; }
+  .co-cell[data-label]::before { content: attr(data-label); color: #50639A; font-weight: 400; }
+  .co-total { grid-template-columns: 1fr auto; padding: 0 1.6rem; }
+  .co-total__label, .co-total__value { grid-column: auto; padding: 0; }
+  .co-total__label { margin-right: 1.2rem; }
+  .co-total__value::before { display: none; }
+  .co-addr { padding: 0 1.8rem 2.8rem; }
+  .co-select { flex-basis: 100%; }
+  .co-actions { padding-right: 0; margin-top: 2.4rem; }
+  .co-submit { width: 100%; min-width: 0; }
+}
