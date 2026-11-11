@@ -19,10 +19,38 @@ $idAkun = (int)$_SESSION["id_akun"];
 $error  = "";
 $flash  = take_flash();
 
+/** Tautan WhatsApp admin dengan pesan withdraw terisi (nomor admin: WA_ADMIN di config/dompet.php). */
+function link_withdraw(PDO $pdo, int $idAkun, float $saldo, int $jumlah): string
+{
+    $stmt = $pdo->prepare("SELECT nim, nama FROM mahasiswa WHERE id_akun = :id");
+    $stmt->execute([":id" => $idAkun]);
+    $mhs = $stmt->fetch() ?: ["nim" => "-", "nama" => (string)($_SESSION["username"] ?? "")];
+
+    $pesan = "Halo admin, saya ingin withdraw saldo dompet.\n"
+           . "Nama: " . $mhs["nama"] . "\n"
+           . "NIM: " . $mhs["nim"] . "\n"
+           . "ID akun: " . $idAkun . "\n"
+           . "Saldo saat ini: Rp " . number_format($saldo, 0, ",", ".") . "\n"
+           . "Jumlah yang ingin ditarik: Rp " . number_format($jumlah, 0, ",", ".");
+
+    return "https://wa.me/" . preg_replace("/\D/", "", WA_ADMIN) . "?text=" . rawurlencode($pesan);
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (!csrf_validate()) {
         $error = "Sesi tidak valid. Silakan coba lagi.";
+    } elseif (($_POST["action"] ?? "") === "withdraw") {
+        $jumlah    = (int)preg_replace("/\D/", "", (string)($_POST["jumlah"] ?? ""));
+        $saldoKini = dompet_saldo($pdo, $idAkun);
+
+        if ($jumlah < WITHDRAW_MINIMAL) {
+            $error = "Jumlah withdraw minimal Rp " . number_format(WITHDRAW_MINIMAL, 0, ",", ".") . ".";
+        } elseif ($jumlah > $saldoKini) {
+            $error = "Jumlah withdraw melebihi saldo (Rp " . number_format($saldoKini, 0, ",", ".") . ").";
+        } else {
+            redirect(link_withdraw($pdo, $idAkun, $saldoKini, $jumlah)); // buka WhatsApp admin
+        }
     } else {
         $jumlah = (int)preg_replace("/\D/", "", (string)($_POST["jumlah"] ?? ""));
 
@@ -46,28 +74,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 $saldo = dompet_saldo($pdo, $idAkun);
-
-// Tautan WhatsApp untuk withdraw (nomor admin: WA_ADMIN di config/dompet.php)
-$waAdmin = preg_replace("/\D/", "", WA_ADMIN);
-$linkWd  = "";
-if ($waAdmin !== "") {
-    $stmt = $pdo->prepare("SELECT nim, nama FROM mahasiswa WHERE id_akun = :id");
-    $stmt->execute([":id" => $idAkun]);
-    $mhs = $stmt->fetch() ?: ["nim" => "-", "nama" => (string)($_SESSION["username"] ?? "")];
-
-    $pesanWd = "Halo admin, saya ingin withdraw saldo dompet." . "
-"
-             . "Nama: " . $mhs["nama"] . "
-"
-             . "NIM: " . $mhs["nim"] . "
-"
-             . "ID akun: " . $idAkun . "
-"
-             . "Saldo saat ini: Rp " . number_format($saldo, 0, ",", ".") . "
-"
-             . "Jumlah yang ingin ditarik: Rp ";
-    $linkWd = "https://wa.me/" . $waAdmin . "?text=" . rawurlencode($pesanWd);
-}
 
 $stmt = $pdo->prepare("
     SELECT created_at, jenis, jumlah, saldo_sesudah, id_pesanan, keterangan
@@ -127,13 +133,22 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
     <p><small>Saldo dipakai untuk membayar pesanan (penuh atau sebagian). Refund pesanan masuk ke dompet ini.</small></p>
 
     <h2>Withdraw</h2>
-    <?php if ($linkWd !== "" && $saldo > 0): ?>
-        <p><a href="<?= e($linkWd) ?>" target="_blank" rel="noopener noreferrer"><b>Withdraw via WhatsApp</b></a></p>
-        <p><small>Anda akan diarahkan ke WhatsApp admin dengan pesan yang sudah terisi. Tulis jumlah yang ingin ditarik, lalu kirim.</small></p>
-    <?php elseif ($linkWd === ""): ?>
-        <p><small>Withdraw belum tersedia.</small></p>
+    <?php if ($saldo >= WITHDRAW_MINIMAL): ?>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="action" value="withdraw">
+
+            <p>
+                <label>Jumlah yang ingin ditarik (minimal Rp <?= number_format(WITHDRAW_MINIMAL, 0, ",", ".") ?>, maksimal sebesar saldo)</label><br>
+                <input type="number" name="jumlah" min="<?= WITHDRAW_MINIMAL ?>" max="<?= (int)floor($saldo) ?>"
+                       step="1" placeholder="mis. <?= WITHDRAW_MINIMAL ?>" required>
+                <button type="button" onclick="this.form.jumlah.value=<?= (int)floor($saldo) ?>">Semua</button>
+            </p>
+            <button type="submit"><b>Withdraw via WhatsApp</b></button>
+        </form>
+        <p><small>Anda akan diarahkan ke WhatsApp admin dengan pesan yang sudah terisi (termasuk jumlah). Saldo baru berkurang setelah admin memproses penarikan.</small></p>
     <?php else: ?>
-        <p><small>Tidak ada saldo yang dapat ditarik.</small></p>
+        <p><small>Saldo belum cukup untuk withdraw (minimal Rp <?= number_format(WITHDRAW_MINIMAL, 0, ",", ".") ?>).</small></p>
     <?php endif; ?>
 
     <h2>Top Up</h2>

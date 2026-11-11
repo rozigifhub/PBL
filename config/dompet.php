@@ -14,6 +14,9 @@ const TOPUP_MAKSIMAL = 5000000;
 // Nomor WhatsApp admin untuk withdraw (format internasional tanpa +, mis. 6281234567890)
 const WA_ADMIN = "6282331373292";
 
+// Jumlah minimal sekali withdraw (Rp)
+const WITHDRAW_MINIMAL = 10000;
+
 function dompet_saldo(PDO $pdo, int $idAkun): float
 {
     $stmt = $pdo->prepare("SELECT saldo FROM dompet WHERE id_akun = :id");
