@@ -224,6 +224,8 @@
 .mp-btn--lanjut:hover { background: rgba(42, 69, 128, .1); border-color: var(--mp-navy); color: var(--mp-navy); box-shadow: 0 .7rem 1.4rem rgba(20, 38, 77, .18); }
 
 /* Batalkan & Refund: tombol outline merah, teks tebal */
+.mp-aksi__alasan-label { flex: 1 1 100%; margin: 0; color: var(--mp-title); font-size: 1.5rem; font-weight: 600; }
+.mp-aksi__alasan { flex: 1 1 100%; min-width: 28rem; padding: 1rem 1.2rem; border: .15rem solid var(--mp-line); border-radius: 1rem; font: inherit; font-size: 1.5rem; resize: vertical; }
 .mp-btn--refund { background: transparent; border-color: var(--mp-red); color: var(--mp-red); }
 .mp-btn--refund:hover { background: #FBE3E0; border-color: var(--mp-red-dk); color: var(--mp-red-dk); box-shadow: 0 .7rem 1.4rem rgba(163, 34, 25, .22); }
 

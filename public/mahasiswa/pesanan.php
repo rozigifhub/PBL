@@ -33,11 +33,35 @@ if ($id === 0 && !empty($_GET["order_id"])
     $id = (int)$m[1];
 }
 
+// Pilihan alasan refund; di bawahnya selalu ada "Lainnya" (user menulis sendiri)
+const ALASAN_REFUND = [
+    "Salah memilih ukuran/varian",
+    "Tidak jadi membeli",
+    "Ingin mengganti produk",
+    "Menemukan harga lebih murah",
+    "Pembayaran/pesanan ganda",
+    "Pengiriman terlalu lama",
+];
+
 // ---------- Refund ke dompet (maks 24 jam sejak pembayaran pertama) ----------
 if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["action"] ?? "") === "refund") {
 
     if (!csrf_validate()) {
         set_flash("gagal", "Sesi tidak valid. Silakan coba lagi.");
+        redirect("/mahasiswa/pesanan.php?id=" . $id);
+    }
+
+    $pilihan = (string)($_POST["alasan_pilihan"] ?? "");
+    if ($pilihan === "Lainnya") {
+        $lain   = trim((string)($_POST["alasan_lain"] ?? ""));
+        $alasan = "Lainnya: " . $lain;
+        $valid  = mb_strlen($lain) >= 5 && mb_strlen($lain) <= 300;
+    } else {
+        $alasan = $pilihan;
+        $valid  = in_array($pilihan, ALASAN_REFUND, true);
+    }
+    if (!$valid) {
+        set_flash("gagal", "Pilih alasan refund. Untuk \"Lainnya\", tulis alasan Anda (5-300 karakter).");
         redirect("/mahasiswa/pesanan.php?id=" . $id);
     }
 
@@ -67,6 +91,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["action"] ?? "") === "refun
             set_flash("gagal", $hasil["out_pesan"]);
             redirect("/mahasiswa/pesanan.php?id=" . $id);
         }
+
+        // Alasan refund disimpan dalam transaksi yang sama dengan refund-nya
+        $stmt = $pdo->prepare("
+            INSERT INTO refund_pesanan (id_pesanan, id_akun, alasan, jumlah)
+            VALUES (:id, :akun, :alasan, :jumlah)
+            ON CONFLICT (id_pesanan) DO NOTHING
+        ");
+        $stmt->execute([
+            ":id"     => $id,
+            ":akun"   => $_SESSION["id_akun"],
+            ":alasan" => $alasan,
+            ":jumlah" => $hasil["out_jumlah"],
+        ]);
 
         $pdo->commit();
 
@@ -612,6 +649,17 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                     <form class="mp-aksi__tombol" method="POST" onsubmit="return confirm('Batalkan pesanan ini dan refund ke dompet?');">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                         <input type="hidden" name="action" value="refund">
+                        <label class="mp-aksi__alasan-label" for="alasan-pilihan">Alasan refund <span aria-hidden="true">*</span></label>
+                        <select class="mp-aksi__alasan" id="alasan-pilihan" name="alasan_pilihan" required
+                                onchange="document.getElementById('alasan-lain').hidden = this.value !== 'Lainnya'; document.getElementById('alasan-lain').required = this.value === 'Lainnya';">
+                            <option value="">-- pilih alasan --</option>
+                            <?php foreach (ALASAN_REFUND as $opsi): ?>
+                                <option value="<?= e($opsi) ?>"><?= e($opsi) ?></option>
+                            <?php endforeach; ?>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                        <textarea class="mp-aksi__alasan" id="alasan-lain" name="alasan_lain" rows="3" minlength="5" maxlength="300" hidden
+                                  placeholder="Tulis alasan Anda (minimal 5 karakter)"></textarea>
                         <button class="mp-btn mp-btn--refund" type="submit">Batalkan &amp; Refund ke Dompet</button>
                     </form>
                 </div>

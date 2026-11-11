@@ -195,6 +195,16 @@ if ($pesanan === false) {
     redirect("pesanan.php");
 }
 
+// Alasan refund dari user (ada bila pesanan dibatalkan lewat "Batalkan & Refund")
+$refund = false;
+try {
+    $stmt = $pdo->prepare("SELECT alasan, jumlah, created_at FROM refund_pesanan WHERE id_pesanan = :id");
+    $stmt->execute([":id" => $id]);
+    $refund = $stmt->fetch();
+} catch (PDOException $e) {
+    error_log("Alasan refund gagal dibaca: " . $e->getMessage());
+}
+
 $stmt = $pdo->prepare("
     SELECT d.jumlah, d.harga_satuan, d.subtotal, m.nama_merchandise, m.foto
     FROM detail_pesanan d
@@ -522,6 +532,14 @@ require __DIR__ . "/../includes/navbar-admin.php";
                 </div>
             <?php endif; ?>
         </section>
+
+        <?php if ($refund): ?>
+        <section class="pd-card" aria-labelledby="pd-t-refund">
+            <h2 class="pd-card__title" id="pd-t-refund">Refund oleh pembeli</h2>
+            <p><b>Alasan:</b> <?= nl2br(e($refund["alasan"])) ?></p>
+            <p><small>Dikembalikan ke dompet: Rp <?= number_format((float)$refund["jumlah"], 0, ",", ".") ?> · <?= e(substr((string)$refund["created_at"], 0, 16)) ?></small></p>
+        </section>
+        <?php endif; ?>
 
         <!-- ================= BARIS 4 (2 kolom): UBAH STATUS PESANAN + PENGIRIMAN ================= -->
         <div class="pd-grid pd-grid--forms">
