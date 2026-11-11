@@ -130,7 +130,7 @@ $formAttr = ($produk !== false && $ada && $sudahLogin) ? ' form="form-keranjang"
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $produk !== false ? e($produk["nama_merchandise"]) . " - Merchandise Kampus" : "Produk tidak ditemukan" ?></title>
     <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
     <link rel="stylesheet" href="/assets/css/produk-detail.css?v=<?= @filemtime(__DIR__ . "/../assets/css/produk-detail.css") ?>">
     <link rel="stylesheet" href="/assets/css/menu-cepat.css?v=<?= @filemtime(__DIR__ . "/../assets/css/menu-cepat.css") ?>">

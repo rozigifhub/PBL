@@ -18,11 +18,6 @@
   --rw-ease:            cubic-bezier(.2, .7, .2, 1);
 }
 
-/* Latar khusus halaman ini (dari tim desainer). Pseudo-element "fixed" dari dashboard.css dipakai ulang, hanya gambarnya diganti. */
-.dash-riwayat::before {
-  background: var(--c-cream) url('../img/bg-riwayat-pesanan.webp') center top / cover no-repeat;
-}
-
 .rw { width: min(108rem, 100% - 4rem); margin: 0 auto; padding: 3.4rem 0 7rem; }
 
 /* Teks untuk pembaca layar saja */

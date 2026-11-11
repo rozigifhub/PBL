@@ -44,19 +44,8 @@
 
   position: relative; isolation: isolate; overflow-x: clip; display: flow-root;
   min-height: calc(100vh - var(--nav-h));
-  background: #FBF4E2;   /* warna dasar gambar latar, supaya tidak ada sambungan bila halaman lebih tinggi dari gambar */
   color: var(--mp-title); font-family: var(--font);
 }
-
-/* Latar dekoratif dari desainer (Background.png 1920x1901), dipotong 2 (atas & bawah) agar halaman boleh
-   sepanjang apa pun: bentuk atas menempel di puncak halaman (di balik navbar, seperti di Figma),
-   bentuk bawah menempel di dasar halaman. Sambungannya memudar (mask) supaya tidak terlihat garis potong. */
-.mp::before,
-.mp::after { content: ""; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none; background-repeat: no-repeat; background-size: 100% 100%; }
-.mp::before { top: calc(-1 * var(--nav-h)); aspect-ratio: 1920 / 950; background-image: url('../img/bg-detail-pesanan-atas.webp');
-              -webkit-mask-image: linear-gradient(#000 80%, transparent); mask-image: linear-gradient(#000 80%, transparent); }
-.mp::after  { bottom: 0; aspect-ratio: 1920 / 951; background-image: url('../img/bg-detail-pesanan-bawah.webp');
-              -webkit-mask-image: linear-gradient(transparent, #000 20%); mask-image: linear-gradient(transparent, #000 20%); }
 
 .mp__inner { width: min(114.3rem, 100% - 4rem); margin: 0 auto; padding: 4.65rem 0 0; }   /* 114.3rem = lebar dua kartu + jarak pada desain Figma */
 

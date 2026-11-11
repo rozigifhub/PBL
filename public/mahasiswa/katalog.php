@@ -73,9 +73,9 @@ function foto_thumb_url(string $foto): string
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Katalog Merchandise Kampus</title>
     <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
-    <link rel="stylesheet" href="/assets/css/katalog.css">
+    <link rel="stylesheet" href="/assets/css/katalog.css?v=<?= @filemtime(__DIR__ . "/../assets/css/katalog.css") ?>">
     <link rel="stylesheet" href="/assets/css/menu-cepat.css?v=<?= @filemtime(__DIR__ . "/../assets/css/menu-cepat.css") ?>">
     <script src="/assets/js/katalog.js" defer></script>
 </head>

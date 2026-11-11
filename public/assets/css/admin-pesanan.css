@@ -17,12 +17,6 @@
   --po-ease:            cubic-bezier(.2, .7, .2, 1);
 }
 
-/* Latar khusus halaman ini (dari tim desainer). Pseudo-element "fixed" dari dashboard.css
-   dipakai ulang, hanya gambarnya diganti. */
-.dash-pesanan::before {
-  background: var(--c-cream) url('../img/bg-kelola-pesanan.webp') center top / cover no-repeat;
-}
-
 .po { width: min(112rem, 100% - 4rem); margin: 0 auto; padding: 4.4rem 0 7rem; }
 
 /* Teks untuk pembaca layar saja */
