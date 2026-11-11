@@ -115,6 +115,47 @@ function refresh_mv_rekap(PDO $pdo): void
     }
 }
 
+// ---------- Log aktivitas admin ----------
+
+/**
+ * Catat aksi admin ke tabel log_admin (siapa, apa, kapan, dari IP mana).
+ * Best-effort: kegagalan hanya dicatat di error log dan tidak membatalkan aksinya.
+ * Jangan dipanggil di tengah transaksi yang masih terbuka (error di sini akan menggagalkan transaksi).
+ */
+function catat_log_admin(PDO $pdo, string $aksi, string $entitas, ?int $idEntitas, string $detail = ""): void
+{
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO log_admin (id_akun, username, aksi, entitas, id_entitas, detail, ip)
+            VALUES (:akun, :user, :aksi, :entitas, :id, :detail, :ip)
+        ");
+        $stmt->execute([
+            ":akun"    => $_SESSION["id_akun"] ?? null,
+            ":user"    => (string)($_SESSION["username"] ?? "-"),
+            ":aksi"    => $aksi,
+            ":entitas" => $entitas,
+            ":id"      => $idEntitas,
+            ":detail"  => mb_substr($detail, 0, 1000),
+            ":ip"      => $_SERVER["REMOTE_ADDR"] ?? null,
+        ]);
+    } catch (PDOException $e) {
+        error_log("Gagal mencatat log_admin: " . $e->getMessage());
+    }
+}
+
+/** Ringkas perubahan field: "harga: 85000 → 90000; stok: 5 → 8" (hanya yang berbeda). */
+function ringkas_perubahan(array $lama, array $baru): string
+{
+    $out = [];
+    foreach ($baru as $kolom => $nilai) {
+        $sebelum = (string)($lama[$kolom] ?? "");
+        if ($sebelum !== (string)$nilai) {
+            $out[] = $kolom . ": " . mb_substr($sebelum, 0, 60) . " → " . mb_substr((string)$nilai, 0, 60);
+        }
+    }
+    return implode("; ", $out);
+}
+
 // ---------- Util ----------
 
 /** Escape output HTML. */

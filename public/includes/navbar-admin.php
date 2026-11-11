@@ -16,6 +16,7 @@ $adminLinks = [
     "pesanan"   => ["KELOLA PESANAN",  "/admin/pesanan.php"],
     "kategori"  => ["KELOLA KATEGORI", "/admin/kategori.php"],
     "produk"    => ["KELOLA PRODUK",   "/admin/merchandise.php"],
+    "log"       => ["LOG",             "/admin/log.php"],
 ];
 ?>
 <header class="navbar navbar--admin">

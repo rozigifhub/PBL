@@ -31,19 +31,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             } elseif ($action === "create") {
                 $stmt = $pdo->prepare("INSERT INTO kategori_merchandise (nama_kategori) VALUES (:nama)");
                 $stmt->execute([":nama" => $nama]);
+                catat_log_admin($pdo, "Tambah", "Kategori", (int)$pdo->lastInsertId("kategori_merchandise_id_kategori_seq"), $nama);
                 set_flash("sukses", "Kategori \"{$nama}\" ditambahkan.");
                 redirect("kategori.php");
             } elseif ($action === "update") {
                 $id = (int)($_POST["id_kategori"] ?? 0);
+                $stmt = $pdo->prepare("SELECT nama_kategori FROM kategori_merchandise WHERE id_kategori = :id");
+                $stmt->execute([":id" => $id]);
+                $namaLama = (string)$stmt->fetchColumn();
                 $stmt = $pdo->prepare("UPDATE kategori_merchandise SET nama_kategori = :nama WHERE id_kategori = :id");
                 $stmt->execute([":nama" => $nama, ":id" => $id]);
+                catat_log_admin($pdo, "Ubah", "Kategori", $id, "nama: {$namaLama} → {$nama}");
                 set_flash("sukses", "Kategori diperbarui.");
                 redirect("kategori.php");
             } elseif ($action === "delete") {
                 $id = (int)($_POST["id_kategori"] ?? 0);
                 try {
+                    $stmt = $pdo->prepare("SELECT nama_kategori FROM kategori_merchandise WHERE id_kategori = :id");
+                    $stmt->execute([":id" => $id]);
+                    $namaHapus = (string)$stmt->fetchColumn();
                     $stmt = $pdo->prepare("DELETE FROM kategori_merchandise WHERE id_kategori = :id");
                     $stmt->execute([":id" => $id]);
+                    catat_log_admin($pdo, "Hapus", "Kategori", $id, $namaHapus);
                     set_flash("sukses", "Kategori dihapus.");
                     redirect("kategori.php");
                 } catch (PDOException $e) {

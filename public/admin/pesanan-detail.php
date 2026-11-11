@@ -143,6 +143,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 if ($error === "") {
                     $pdo->commit();
 
+                    if ($action === "status") {
+                        catat_log_admin($pdo, "Status", "Pesanan", $id, "{$statusKini} → {$statusBaru}");
+                    } elseif ($action === "pengiriman") {
+                        catat_log_admin($pdo, "Pengiriman", "Pesanan", $id,
+                            "status: {$statusKir}" . ($tanggal !== "" ? "; tanggal: {$tanggal}" : "") . ($bukti !== "" ? "; bukti/resi: {$bukti}" : ""));
+                    }
+
                     if ($action === "status" && $statusBaru === "Dibatalkan") {
                         refresh_mv_rekap($pdo);
 

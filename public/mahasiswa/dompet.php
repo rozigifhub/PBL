@@ -3,8 +3,9 @@
 /**
  * Dompet mahasiswa: saldo, top up via Midtrans, riwayat mutasi.
  *
- * Saldo hanya bisa dipakai untuk membayar pesanan (tidak bisa ditarik).
- * Refund pesanan masuk ke sini.
+ * Saldo dipakai untuk membayar pesanan. Penarikan (withdraw) diproses manual
+ * oleh admin: tombol Withdraw membuka WhatsApp admin dengan pesan terisi
+ * (nomor WA_ADMIN di config/dompet.php). Refund pesanan masuk ke sini.
  */
 
 require_once __DIR__ . "/../../config/functions.php";
@@ -45,6 +46,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 $saldo = dompet_saldo($pdo, $idAkun);
+
+// Tautan WhatsApp untuk withdraw (nomor admin: WA_ADMIN di config/dompet.php)
+$waAdmin = preg_replace("/\D/", "", WA_ADMIN);
+$linkWd  = "";
+if ($waAdmin !== "") {
+    $stmt = $pdo->prepare("SELECT nim, nama FROM mahasiswa WHERE id_akun = :id");
+    $stmt->execute([":id" => $idAkun]);
+    $mhs = $stmt->fetch() ?: ["nim" => "-", "nama" => (string)($_SESSION["username"] ?? "")];
+
+    $pesanWd = "Halo admin, saya ingin withdraw saldo dompet." . "
+"
+             . "Nama: " . $mhs["nama"] . "
+"
+             . "NIM: " . $mhs["nim"] . "
+"
+             . "ID akun: " . $idAkun . "
+"
+             . "Saldo saat ini: Rp " . number_format($saldo, 0, ",", ".") . "
+"
+             . "Jumlah yang ingin ditarik: Rp ";
+    $linkWd = "https://wa.me/" . $waAdmin . "?text=" . rawurlencode($pesanWd);
+}
 
 $stmt = $pdo->prepare("
     SELECT created_at, jenis, jumlah, saldo_sesudah, id_pesanan, keterangan
@@ -101,7 +124,17 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
 
     <h2>Saldo</h2>
     <p style="font-size:2rem;"><b>Rp <?= number_format($saldo, 0, ",", ".") ?></b></p>
-    <p><small>Saldo dipakai untuk membayar pesanan (penuh atau sebagian) dan tidak dapat ditarik. Refund pesanan masuk ke dompet ini.</small></p>
+    <p><small>Saldo dipakai untuk membayar pesanan (penuh atau sebagian). Refund pesanan masuk ke dompet ini.</small></p>
+
+    <h2>Withdraw</h2>
+    <?php if ($linkWd !== "" && $saldo > 0): ?>
+        <p><a href="<?= e($linkWd) ?>" target="_blank" rel="noopener noreferrer"><b>Withdraw via WhatsApp</b></a></p>
+        <p><small>Anda akan diarahkan ke WhatsApp admin dengan pesan yang sudah terisi. Tulis jumlah yang ingin ditarik, lalu kirim.</small></p>
+    <?php elseif ($linkWd === ""): ?>
+        <p><small>Withdraw belum tersedia.</small></p>
+    <?php else: ?>
+        <p><small>Tidak ada saldo yang dapat ditarik.</small></p>
+    <?php endif; ?>
 
     <h2>Top Up</h2>
 

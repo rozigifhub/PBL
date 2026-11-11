@@ -167,15 +167,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         ":stok"        => $stok,
                         ":foto"        => $upload[1],
                     ]);
+                    catat_log_admin($pdo, "Tambah", "Produk", (int)$pdo->lastInsertId("merchandise_id_merchandise_seq"),
+                        "{$nama} (ukuran {$ukuran}, harga {$harga}, stok {$stok})");
                     set_flash("sukses", "Produk \"{$nama}\" ditambahkan.");
                     redirect("merchandise.php");
                 }
 
             } elseif ($action === "update") {
 
-                $stmt = $pdo->prepare("SELECT foto FROM merchandise WHERE id_merchandise = :id");
+                $stmt = $pdo->prepare("SELECT * FROM merchandise WHERE id_merchandise = :id");
                 $stmt->execute([":id" => $id]);
-                $lama = $stmt->fetchColumn();
+                $rowLama = $stmt->fetch();
+                $lama    = $rowLama === false ? false : $rowLama["foto"];
                 if ($lama === false) {
                     $error = "Produk tidak ditemukan.";
                 } else {
@@ -206,6 +209,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             ":stok"        => $stok,   ":foto"  => $fotoBaru,
                             ":id"          => $id,
                         ]);
+                        $perubahan = ringkas_perubahan($rowLama, [
+                            "id_kategori"      => $idKat,
+                            "nama_merchandise" => $nama,
+                            "deskripsi"        => $deskripsi,
+                            "ukuran"           => $ukuran,
+                            "harga"            => number_format((float)$harga, 2, ".", ""),
+                            "stok"             => (int)$stok,
+                        ]);
+                        if ($fotoBaru !== $lama) {
+                            $perubahan .= ($perubahan !== "" ? "; " : "") . "foto diganti";
+                        }
+                        catat_log_admin($pdo, "Ubah", "Produk", $id,
+                            $rowLama["nama_merchandise"] . ($perubahan !== "" ? " — " . $perubahan : " — (tanpa perubahan)"));
                         set_flash("sukses", "Produk \"{$nama}\" diperbarui.");
                         redirect("merchandise.php");
                     }
@@ -213,15 +229,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             } elseif ($action === "delete") {
 
-                $stmt = $pdo->prepare("SELECT foto FROM merchandise WHERE id_merchandise = :id");
+                $stmt = $pdo->prepare("SELECT foto, nama_merchandise FROM merchandise WHERE id_merchandise = :id");
                 $stmt->execute([":id" => $id]);
-                $foto = $stmt->fetchColumn();
+                $rowHapus = $stmt->fetch();
+                $foto     = $rowHapus === false ? false : $rowHapus["foto"];
 
                 if ($foto !== false) {
                     try {
                         $stmt = $pdo->prepare("DELETE FROM merchandise WHERE id_merchandise = :id");
                         $stmt->execute([":id" => $id]);
                         hapus_foto($foto);
+                        catat_log_admin($pdo, "Hapus", "Produk", $id, $rowHapus["nama_merchandise"]);
                         set_flash("sukses", "Produk dihapus.");
                         redirect("merchandise.php");
                     } catch (PDOException $e) {
