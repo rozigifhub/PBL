@@ -261,3 +261,109 @@
   .pd-more__title { font-size: 2.2rem; }
   .pd-desc, .pd-empty { padding-left: 2rem; padding-right: 2rem; }
 }
+
+/* =========================================================
+   10. TAMPILAN RINGKAS DESKTOP (>= 1201px)  -- skala "zoom 100% terlihat pas"
+   Hanya menimpa UKURAN (lebar, padding, font). Warna, animasi, hover, dan seluruh
+   kode PHP/HTML TIDAK diubah. Layar <= 1200px tetap memakai aturan responsif di atas.
+   Satuan rem dipertahankan seperti file ini (1rem = 16px di layar 1920), jadi:
+     71.25rem = 1140px | 30rem = 480px | 26.25rem = 420px  (di layar 1920 / zoom 100%)
+   Mau lebih lebar/sempit? Cukup ubah angka max-width di .pd__inner dan .pd-top.
+   ========================================================= */
+@media (min-width: 1201px) {
+
+  /* ---- 1. Kontainer utama: tombol Kembali sampai "Pilih Lainnya" ada di dalam .pd__inner ---- */
+  .pd { --pd-fit: contain; padding: 2.2rem 0 3rem; }
+  .pd__inner { width: 90%; max-width: 71.25rem; margin: 0 auto; }            /* ±1140px, rata tengah */
+  .pd .menu-cepat { width: 90%; max-width: 71.25rem; margin: 1.6rem auto 0; } /* menu cepat (di luar .pd__inner) ikut selebar kontainer */
+  .pd .menu-cepat a { padding: .7rem 1.8rem; font-size: 1.1rem; }
+
+  .pd-back { margin: 0 0 1.2rem; }
+  .pd-back a { padding: .45rem 1.2rem; font-size: 1rem; }
+
+  /* ---- 2. Kolom kiri: kartu gambar maks 480px, foto maks 420px ---- */
+  .pd-top { grid-template-columns: minmax(0, 30rem) minmax(0, 1fr); gap: 2.4rem; }
+  .pd-gallery { min-height: 0; max-height: none; max-width: 30rem; padding: 1.5rem; border-radius: 1.6rem; box-shadow: 0 .6rem 2rem rgba(20, 38, 77, .18); }
+  .pd-gallery::before { width: 6rem; height: 6rem; border-radius: 1.6rem 0 100% 0; }
+  .pd-photo { display: flex; align-items: center; justify-content: center; min-height: 20rem; border-radius: 1.3rem; }   /* foto di tengah panel */
+  .pd-photo img { position: static; width: 100%; height: auto; max-height: 26.25rem; object-fit: contain; }
+  .pd-photo::after { right: -1.8rem; bottom: -1.8rem; width: 6.4rem; height: 6.4rem; background: repeating-linear-gradient(135deg, #FFB627 0 .55rem, #FFF3D6 .55rem 1.1rem); }
+  .pd-photo__none { gap: .6rem; font-size: 1.1rem; }
+  .pd-photo__none svg { width: 5rem; height: 5rem; }
+
+  /* ---- 3. Kolom kanan: tipografi & elemen detail ---- */
+  .pd-info { padding: 2rem 1.4rem 1.8rem; border-radius: 1.6rem; }
+  .pd-name { font-size: 2.2rem; font-weight: 700; line-height: 1.15; letter-spacing: 0; }
+  .pd-name--sm { font-size: 1.9rem; }
+  .pd-name--xs { font-size: 1.6rem; line-height: 1.2; }
+  .pd-price { margin-top: .6rem; font-size: 1.6rem; }
+
+  /* Card Stok */
+  .pd-stock { margin-top: 1.3rem; padding: 1.1rem 1.4rem 1.3rem; border-radius: 1.3rem; }
+  .pd-stock__title { gap: 1rem; font-size: 1.7rem; }
+  .pd-stock__title img { width: 2.6rem; height: 2.6rem; }
+  .pd-stock__row { gap: 1.6rem; margin-top: .9rem; }
+  .pd-stock__divider { width: .12rem; height: 2.1rem; }
+  .pd-badge { gap: .5rem; padding: .4rem 1.1rem; border-radius: .7rem; font-size: 1.05rem; }
+  .pd-badge img, .pd-badge svg { width: 1.4rem; height: 1.4rem; }
+  .pd-count { gap: .6rem; min-width: 6.6rem; padding: .4rem 1.2rem; border-radius: .7rem; }
+  .pd-count svg { width: 1.5rem; height: 1.5rem; }
+  .pd-count b { font-size: 1.25rem; }
+  .pd-sep { margin-top: 1.5rem; border-top-width: .1rem; }
+
+  /* Baris Kategori & Pilih Ukuran */
+  .pd-row { gap: 1.4rem; margin-top: .6rem; padding-left: 1.4rem; }
+  .pd-row + .pd-row { margin-top: .8rem; }
+  .pd-row__icon { width: 2.9rem; height: 2.9rem; }
+  .pd-row--ukuran .pd-row__icon { margin-top: .5rem; }
+  .pd-row__label { font-size: 1.15rem; }
+  .pd-row__sub { font-size: .8rem; }
+
+  /* Tombol ukuran S / M / L / XL */
+  .pd-sizes { gap: .9rem; margin: .4rem 0 0 -.2rem; }
+  .pd-size span { min-width: 2.7rem; height: 2rem; padding: 0 .6rem; border-radius: .5rem; font-size: .95rem; }
+
+  /* Input jumlah  [ - ][ 1 ][ + ] */
+  .pd-qtyrow { margin-top: 1.3rem; padding-left: 1.4rem; }
+  .pd-qtyrow__label { gap: .6rem; font-size: 1.05rem; }
+  .pd-qtyrow__icon { width: 1.9rem; }
+  .pd-qtyrow__max { font-size: .8rem; }
+  .pd-qty { margin-top: .2rem; border-radius: .7rem; }
+  .pd-qty__btn { width: 2.3rem; height: 2.3rem; font-size: 1.5rem; }
+  .pd-qty__input { width: 4.2rem; height: 2.3rem; font-size: 1.25rem; }
+
+  /* Tombol aksi */
+  .pd-actions { gap: .7rem; width: 25rem; max-width: calc(100% - 3.4rem); margin: 1.1rem 0 0 3.4rem; }
+  .pd-actions__note { font-size: .9rem; }
+  .pd-btn { height: 3.2rem; padding: 0 1.4rem; gap: .7rem; font-size: 1.1rem; border-width: .1rem; }
+  .pd-btn__icon { width: 2.6rem; }
+  .pd-btn--cta { padding-right: 2rem; }
+  .pd-btn--inline { height: 3.2rem; font-size: 1rem; }
+
+  /* ---- 4. Deskripsi Produk ---- */
+  .pd-desc { margin-top: 2.2rem; padding: 1.8rem 2.2rem 2.2rem; border-radius: 1.6rem; }
+  .pd-desc__title { margin-bottom: .9rem; font-size: 1.8rem; }
+  .pd-desc__text { font-size: 1.1rem; line-height: 1.75; }
+
+  /* ---- 5. "Pilih Lainnya": kartu ±0.85x dari ukuran lama, proporsi bingkai tetap ---- */
+  .pd-more { margin-top: 3rem; }
+  .pd-more__head { padding: 0 .4rem; }
+  .pd-more__title { font-size: 1.6rem; }
+  .pd-more__all { gap: .5rem; padding: .3rem .9rem; font-size: 1rem; }
+  .pd-more__all svg { width: 1.6rem; height: .8rem; }
+  .pd-more__grid { grid-template-columns: repeat(auto-fit, 21.6rem); gap: 3rem 1.5rem; margin-top: 1.4rem; padding-bottom: 2rem; }
+
+  .pd-card { width: 21.6rem; height: 26rem; padding: 1.3rem 1.1rem 1rem; }
+  .pd-card__photo { height: 15.2rem; padding: .8rem; border-radius: .7rem; }
+  .pd-card__nofoto { font-size: 1rem; }
+  .pd-card__name { margin-top: .75rem; font-size: 1.3rem; }
+  .pd-card__kat { font-size: .75rem; }
+  .pd-card__price { margin-top: .4rem; font-size: 1.45rem; }
+  .pd-card__btn { height: 2.5rem; gap: .4rem; padding: 0 .8rem; font-size: .8rem; }
+  .pd-card__btn img { height: 1.8rem; }
+
+  /* ---- Produk tidak ditemukan ---- */
+  .pd-empty { max-width: 44rem; margin: 3rem auto; padding: 3rem 2.4rem; border-radius: 1.6rem; }
+  .pd-empty__title { font-size: 2.4rem; }
+  .pd-empty__text { margin-bottom: 1.8rem; font-size: 1.3rem; }
+}
