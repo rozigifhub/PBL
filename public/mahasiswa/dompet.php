@@ -141,7 +141,7 @@ $menunggu = $stmt->fetchAll();
 <body>
 <?php
 $mhsActive = "";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <main>

@@ -77,7 +77,7 @@ if ($saldo > 0 && $_SERVER["REQUEST_METHOD"] !== "POST") {
 <body>
 <?php
 $mhsActive = "";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 <main>
     <h1>Bayar Pesanan #<?= $id ?></h1>

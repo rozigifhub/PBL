@@ -26,7 +26,8 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
-require_mahasiswa();
+// Tamu (belum login) dilempar ke login.php?error=cart, baik untuk aksi tambah (POST) maupun membuka halaman ini.
+require_mahasiswa("../login.php", "cart");
 
 /**
  * Estimasi ongkos kirim (Rupiah) pada Ringkasan Belanja. Isi 0 untuk menyembunyikan baris ongkir.
@@ -278,7 +279,7 @@ $flash = take_flash();
 <body class="page-keranjang">
 <?php
 $mhsActive = "keranjang";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <main class="cart" data-cart data-ongkir="<?= (int)$ongkir ?>">

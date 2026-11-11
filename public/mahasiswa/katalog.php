@@ -12,6 +12,8 @@ if ($sudahLogin) {
     require_mahasiswa();
 }
 $loginNext = "/login.php?next=" . rawurlencode($_SERVER["REQUEST_URI"]);
+// Tamu menekan "+ Keranjang" -> login.php menampilkan pesan error=cart (tetap kembali ke halaman ini lewat next).
+$loginCart = $loginNext . "&error=cart";
 
 // Filter kategori (opsional): katalog.php?kategori=ID
 $idKat = (int)($_GET["kategori"] ?? 0);
@@ -82,7 +84,7 @@ function foto_thumb_url(string $foto): string
 <body>
 <?php
 $mhsActive = "produk";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <main class="catalog">
@@ -168,8 +170,8 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                             <a class="pbtn pbtn--ghost" href="<?= $detail ?>">Detail Produk</a>
 
                             <?php if ($ada && !$sudahLogin): ?>
-                                <!-- Tamu: arahkan ke login, lalu kembali ke halaman ini -->
-                                <a class="pbtn pbtn--cta" href="<?= e($loginNext) ?>">
+                                <!-- Tamu: arahkan ke login (pesan error=cart), lalu kembali ke halaman ini -->
+                                <a class="pbtn pbtn--cta" href="<?= e($loginCart) ?>">
                                     <img src="/assets/img/icon-cart.png" alt=""><span>+ Keranjang</span>
                                 </a>
                             <?php elseif ($ada): ?>

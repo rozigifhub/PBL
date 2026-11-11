@@ -13,6 +13,15 @@ if (empty($_SESSION["csrf_token"])) {
 $error = "";
 $success = "";
 
+// Pesan untuk tamu yang dilempar ke sini oleh halaman/aksi yang butuh login (?error=menu|cart|buy).
+// Kode yang tidak dikenal diabaikan (tidak menampilkan kotak kosong).
+$pesanGuard = [
+    "menu" => "Kamu harus login dulu sebelum melihat menu dashboard/pesanan!",
+    "cart" => "Kamu harus login dulu sebelum menambah produk ke keranjang!",
+    "buy"  => "Kamu harus login dulu sebelum membeli barang!",
+];
+$kodeGuard = $_GET["error"] ?? "";
+
 if (isset($_GET["register"]) && $_GET["register"] === "success") {
     $success = "Registrasi berhasil. Silakan login.";
 }
@@ -100,6 +109,7 @@ require_once __DIR__ . "/includes/components.php";
     <title>Login - Merchandise Kampus</title>
     <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . "/assets/css/style.css") ?>">
+    <link rel="stylesheet" href="assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/assets/css/navbar-mahasiswa.css") ?>">
     <script src="assets/js/auth.js" defer></script>
 </head>
 <body class="page-login">
@@ -112,6 +122,12 @@ require_once __DIR__ . "/includes/components.php";
 
         <form class="form" method="POST" data-auth>
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
+
+            <?php if (is_string($kodeGuard) && isset($pesanGuard[$kodeGuard])): ?>
+                <div role="alert" style="background-color: #ffe6e6; color: #cc0000; padding: 10px; border: 1px solid #cc0000; border-radius: 5px; text-align: center; margin-bottom: 15px; font-weight: bold;">
+                    <?= htmlspecialchars($pesanGuard[$kodeGuard]) ?>
+                </div>
+            <?php endif; ?>
 
             <?php if ($success !== ""): ?>
                 <div class="alert alert--success" role="status"><?= htmlspecialchars($success) ?></div>

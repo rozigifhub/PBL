@@ -12,7 +12,8 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
-require_mahasiswa();
+// Tamu (belum login) dilempar ke login.php?error=menu (ini target menu PESANAN di navbar).
+require_mahasiswa("../login.php", "menu");
 
 // [TAMBAHAN UI] Dua kolom baru di query ini (nama_produk, jenis_produk) hanya untuk kolom
 // "Nama Produk" di desain. Kolom, WHERE, dan ORDER BY lainnya TIDAK diubah.
@@ -87,7 +88,7 @@ $kelasBadge = [
 <body class="page-dashboard">
 <?php
 $mhsActive = "pesanan";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <!-- Ikon tombol Detail (dipakai berulang lewat <use>) -->

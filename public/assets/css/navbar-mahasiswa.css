@@ -1,5 +1,6 @@
 /* =========================================================
-   NAVBAR MAHASISWA  (includes/navbar-mahasiswa.php)
+   NAVBAR GLOBAL  (includes/navbar.php; dulu bernama navbar-mahasiswa.php)
+   Dimuat di SEMUA halaman yang memakai navbar.php: beranda, login, register, katalog, dst.
    Dimuat SETELAH style.css, memakai token (--c-navy, --c-btn, --nav-h, dll) dari sana.
    Polanya sama dengan navbar admin (admin-dashboard.css), semua di bawah .navbar--mhs
    agar tidak mengubah halaman lain. Boleh ditempel ke akhir style.css.

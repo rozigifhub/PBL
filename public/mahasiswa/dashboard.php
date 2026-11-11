@@ -5,7 +5,8 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
-require_mahasiswa();
+// Tamu (belum login) dilempar ke login.php?error=menu.
+require_mahasiswa("../login.php", "menu");
 
 // Profil mahasiswa (join akun_login untuk email)
 $stmt = $pdo->prepare("
@@ -85,7 +86,7 @@ $kelasStatus = [
 <body class="page-dashboard">
 <?php
 $mhsActive = "dashboard";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <!-- Ikon yang dipakai berulang (tombol Detail) -->

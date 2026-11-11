@@ -75,10 +75,29 @@ function csrf_validate(): bool
 
 // ---------- Guard auth ----------
 
-function require_login(string $loginUrl = "../login.php"): void
+/**
+ * Tambahkan ?error=KODE ke URL login. login.php membaca kode ini untuk menampilkan
+ * pesan "harus login dulu":
+ *   menu = membuka Dashboard / Pesanan
+ *   cart = menambah produk ke keranjang
+ *   buy  = membeli barang / checkout
+ */
+function login_url_dengan_error(string $loginUrl, string $errorCode = ""): string
+{
+    if ($errorCode === "") {
+        return $loginUrl;
+    }
+    return $loginUrl . (strpos($loginUrl, "?") === false ? "?" : "&") . "error=" . rawurlencode($errorCode);
+}
+
+/**
+ * Wajib login. $errorCode (opsional) dikirim ke login.php?error=... hanya untuk TAMU
+ * (belum login), mis. require_login("../login.php", "menu").
+ */
+function require_login(string $loginUrl = "../login.php", string $errorCode = ""): void
 {
     if (empty($_SESSION["id_akun"])) {
-        header("Location: " . $loginUrl);
+        header("Location: " . login_url_dengan_error($loginUrl, $errorCode));
         exit;
     }
 }
@@ -93,9 +112,14 @@ function require_admin(string $loginUrl = "../login.php"): void
     }
 }
 
-function require_mahasiswa(string $loginUrl = "../login.php"): void
+/**
+ * Wajib login sebagai Mahasiswa. Tamu dilempar ke login.php?error=$errorCode (bila diisi);
+ * akun yang sudah login tetapi bukan mahasiswa (mis. admin) dilempar ke login.php tanpa
+ * pesan "harus login dulu", karena memang sudah login.
+ */
+function require_mahasiswa(string $loginUrl = "../login.php", string $errorCode = ""): void
 {
-    require_login($loginUrl);
+    require_login($loginUrl, $errorCode);
 
     if (($_SESSION["role"] ?? "") !== "Mahasiswa") {
         header("Location: " . $loginUrl);

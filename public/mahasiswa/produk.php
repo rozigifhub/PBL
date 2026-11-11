@@ -21,6 +21,9 @@ if ($sudahLogin) {
     require_mahasiswa();
 }
 $loginNext = "/login.php?next=" . rawurlencode($_SERVER["REQUEST_URI"]);
+// Tamu menekan tombol keranjang / beli -> login.php menampilkan pesan sesuai ?error= (tetap kembali ke halaman ini lewat next).
+$loginCart = $loginNext . "&error=cart";
+$loginBuy  = $loginNext . "&error=buy";
 
 $id = (int)($_GET["id"] ?? 0);
 
@@ -139,7 +142,7 @@ $formAttr = ($produk !== false && $ada && $sudahLogin) ? ' form="form-keranjang"
 <body>
 <?php
 $mhsActive = "produk";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <main class="pd">
@@ -277,12 +280,13 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
 
                     <div class="pd-actions">
                         <?php if (!$sudahLogin): ?>
-                            <!-- Tamu: arahkan ke login (logika asli: "Login untuk menambahkan ke keranjang") -->
-                            <a class="pd-btn pd-btn--cta" href="<?= e($loginNext) ?>">
+                            <!-- Tamu: arahkan ke login (logika asli: "Login untuk menambahkan ke keranjang").
+                                 Tambah keranjang -> login.php?error=cart, Beli Sekarang -> login.php?error=buy -->
+                            <a class="pd-btn pd-btn--cta" href="<?= e($loginCart) ?>">
                                 <img class="pd-btn__icon" src="/assets/img/produk-basket.png" alt="">
                                 <span>TAMBAH KE KERANJANG</span>
                             </a>
-                            <a class="pd-btn pd-btn--outline" href="<?= e($loginNext) ?>"><span>BELI SEKARANG</span></a>
+                            <a class="pd-btn pd-btn--outline" href="<?= e($loginBuy) ?>"><span>BELI SEKARANG</span></a>
                             <p class="pd-actions__note">Login untuk menambahkan ke keranjang.</p>
                         <?php else: ?>
                             <!-- Tombol oranye: hover = naik sedikit + ikon keranjang "melaju" (lihat CSS .pd-btn--cta) -->
@@ -359,8 +363,8 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
 
                         <div class="pd-card__actions">
                             <?php if (!$sudahLogin): ?>
-                                <!-- Tamu: arahkan ke login, lalu kembali ke halaman ini -->
-                                <a class="pd-card__btn" href="<?= e($loginNext) ?>">
+                                <!-- Tamu: arahkan ke login (pesan error=cart), lalu kembali ke halaman ini -->
+                                <a class="pd-card__btn" href="<?= e($loginCart) ?>">
                                     <img src="/assets/img/icon-cart.png" alt=""><span>Tambah ke Keranjang</span>
                                 </a>
                             <?php else: ?>

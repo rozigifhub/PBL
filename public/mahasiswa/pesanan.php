@@ -21,7 +21,8 @@ app_session_start();
 require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../config/midtrans.php";
 require_once __DIR__ . "/../../config/gambar.php";   // thumb_nama(): thumbnail foto produk di kartu Item Pesanan
-require_mahasiswa();
+// Tamu (belum login) dilempar ke login.php?error=menu.
+require_mahasiswa("../login.php", "menu");
 
 $id   = (int)($_GET["id"] ?? 0);
 $baru = isset($_GET["baru"]);
@@ -350,7 +351,7 @@ if ($pesanan !== false) {
 <body>
 <?php
 $mhsActive = "pesanan";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <!-- Ikon (dipakai berulang lewat <use>): badge status, penanda timeline, ikon kartu Aksi -->

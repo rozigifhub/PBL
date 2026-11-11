@@ -26,7 +26,8 @@ require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../config/midtrans.php";
 require_once __DIR__ . "/../../config/dompet.php";
 require_once __DIR__ . "/../../config/gambar.php";   // thumb_nama(): thumbnail foto produk di Ringkasan Pesanan
-require_mahasiswa();
+// Tamu (belum login) dilempar ke login.php?error=buy.
+require_mahasiswa("../login.php", "buy");
 
 $error = "";
 
@@ -300,7 +301,7 @@ if (!function_exists("foto_thumb_url")) {
 <body>
 <?php
 $mhsActive = "";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <main class="co">

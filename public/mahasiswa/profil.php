@@ -218,7 +218,7 @@ $daftarAlamat = $stmt->fetchAll();
 <body>
 <?php
 $mhsActive = "";
-require __DIR__ . "/../includes/navbar-mahasiswa.php";
+require __DIR__ . "/../includes/navbar.php";
 ?>
 
 <!-- Ikon dipakai berulang lewat <use>: mata (tampil/sembunyi password) dan coretan mata -->

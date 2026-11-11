@@ -65,20 +65,15 @@ function foto_kartu_url(string $foto): string
     <link rel="preload" href="/assets/fonts/poppins-bold-latin.woff" as="font" type="font/woff" crossorigin>
     <link rel="preload" as="image" type="image/webp" href="/assets/img/beranda/promo-hoodie.webp" fetchpriority="high">
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/assets/css/style.css") ?>">
-    <?php if (($_SESSION["role"] ?? "") === "Mahasiswa"): ?>
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/assets/css/navbar-mahasiswa.css") ?>">
-    <?php endif; ?>
     <link rel="stylesheet" href="/assets/css/beranda.css?v=<?= @filemtime(__DIR__ . "/assets/css/beranda.css") ?>">
     <script src="/assets/js/beranda.js?v=<?= @filemtime(__DIR__ . "/assets/js/beranda.js") ?>" defer></script>
 </head>
 <body class="page-beranda">
 <?php
-if (($_SESSION["role"] ?? "") === "Mahasiswa") {
-    $mhsActive = "beranda";
-    require __DIR__ . "/includes/navbar-mahasiswa.php";
-} else {
-    require __DIR__ . "/includes/navbar.php";
-}
+// Navbar global (sama dengan semua halaman lain): menu lengkap + LOGIN untuk tamu.
+$mhsActive = "beranda";
+require __DIR__ . "/includes/navbar.php";
 ?>
 
 <main class="home">
@@ -224,8 +219,8 @@ if (($_SESSION["role"] ?? "") === "Mahasiswa") {
                                         </button>
                                     </form>
                                 <?php else: ?>
-                                    <!-- Keranjang hanya untuk mahasiswa yang sudah login -->
-                                    <a class="fbtn" href="/login.php">
+                                    <!-- Keranjang hanya untuk mahasiswa yang sudah login; tamu -> login.php?error=cart -->
+                                    <a class="fbtn" href="<?= $sudahLogin ? "/login.php" : "/login.php?error=cart" ?>">
                                         <img src="/assets/img/icon-cart.png" alt=""><span>Tambah ke Keranjang</span>
                                     </a>
                                 <?php endif; ?>
