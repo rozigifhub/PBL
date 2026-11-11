@@ -4,7 +4,7 @@
  * Dompet mahasiswa: saldo, top up via Midtrans, riwayat mutasi.
  *
  * Saldo dipakai untuk membayar pesanan. Penarikan (withdraw) diproses manual
- * oleh admin: tombol Withdraw membuka WhatsApp admin dengan pesan terisi
+ * oleh admin: pengajuan withdraw tercatat di withdraw_dompet (saldo ditahan), lalu WhatsApp admin terbuka dengan pesan terisi
  * (nomor WA_ADMIN di config/dompet.php). Refund pesanan masuk ke sini.
  */
 
@@ -20,18 +20,19 @@ $error  = "";
 $flash  = take_flash();
 
 /** Tautan WhatsApp admin dengan pesan withdraw terisi (nomor admin: WA_ADMIN di config/dompet.php). */
-function link_withdraw(PDO $pdo, int $idAkun, float $saldo, int $jumlah): string
+function link_withdraw(PDO $pdo, int $idAkun, int $idWithdraw, int $jumlah, string $tujuan): string
 {
     $stmt = $pdo->prepare("SELECT nim, nama FROM mahasiswa WHERE id_akun = :id");
     $stmt->execute([":id" => $idAkun]);
     $mhs = $stmt->fetch() ?: ["nim" => "-", "nama" => (string)($_SESSION["username"] ?? "")];
 
-    $pesan = "Halo admin, saya ingin withdraw saldo dompet.\n"
+    $pesan = "Halo admin, saya mengajukan withdraw dompet.\n"
+           . "ID permintaan: #" . $idWithdraw . "\n"
            . "Nama: " . $mhs["nama"] . "\n"
            . "NIM: " . $mhs["nim"] . "\n"
-           . "ID akun: " . $idAkun . "\n"
-           . "Saldo saat ini: Rp " . number_format($saldo, 0, ",", ".") . "\n"
-           . "Jumlah yang ingin ditarik: Rp " . number_format($jumlah, 0, ",", ".");
+           . "Jumlah: Rp " . number_format($jumlah, 0, ",", ".") . "\n"
+           . "Tujuan: " . $tujuan . "\n"
+           . "Mohon diproses, terima kasih.";
 
     return "https://wa.me/" . preg_replace("/\D/", "", WA_ADMIN) . "?text=" . rawurlencode($pesan);
 }
@@ -42,14 +43,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "Sesi tidak valid. Silakan coba lagi.";
     } elseif (($_POST["action"] ?? "") === "withdraw") {
         $jumlah    = (int)preg_replace("/\D/", "", (string)($_POST["jumlah"] ?? ""));
+        $tujuan    = trim((string)($_POST["tujuan"] ?? ""));
         $saldoKini = dompet_saldo($pdo, $idAkun);
 
         if ($jumlah < WITHDRAW_MINIMAL) {
             $error = "Jumlah withdraw minimal Rp " . number_format(WITHDRAW_MINIMAL, 0, ",", ".") . ".";
         } elseif ($jumlah > $saldoKini) {
             $error = "Jumlah withdraw melebihi saldo (Rp " . number_format($saldoKini, 0, ",", ".") . ").";
+        } elseif ($tujuan === "" || mb_strlen($tujuan) > 200) {
+            $error = "Tujuan transfer wajib diisi (maks 200 karakter), mis. BCA 1234567890 a.n. Nama.";
         } else {
-            redirect(link_withdraw($pdo, $idAkun, $saldoKini, $jumlah)); // buka WhatsApp admin
+            try {
+                // Permintaan dibuat + saldo ditahan dalam satu function database
+                $stmt = $pdo->prepare("SELECT fn_withdraw_ajukan(:akun, :jumlah, :tujuan)");
+                $stmt->execute([":akun" => $idAkun, ":jumlah" => $jumlah, ":tujuan" => $tujuan]);
+                $idWd = (int)$stmt->fetchColumn();
+
+                set_flash("sukses", "Permintaan withdraw #{$idWd} dibuat. Saldo ditahan sampai admin memproses.");
+                redirect(link_withdraw($pdo, $idAkun, $idWd, $jumlah, $tujuan)); // buka WhatsApp admin
+            } catch (PDOException $e) {
+                error_log("Withdraw gagal: " . $e->getMessage());
+                $error = str_contains($e->getMessage(), "Saldo dompet tidak cukup")
+                    ? "Saldo dompet tidak cukup."
+                    : "Terjadi kesalahan database. Coba lagi.";
+            }
         }
     } else {
         $jumlah = (int)preg_replace("/\D/", "", (string)($_POST["jumlah"] ?? ""));
@@ -74,6 +91,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 $saldo = dompet_saldo($pdo, $idAkun);
+
+// Permintaan withdraw milik user ini (status: Diproses / Selesai / Ditolak)
+$daftarWd = [];
+try {
+    $stmt = $pdo->prepare("
+        SELECT id_withdraw, jumlah, tujuan, status, catatan_admin, created_at, diproses_pada
+        FROM withdraw_dompet
+        WHERE id_akun = :id
+        ORDER BY id_withdraw DESC
+        LIMIT 10
+    ");
+    $stmt->execute([":id" => $idAkun]);
+    $daftarWd = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Daftar withdraw gagal dibaca: " . $e->getMessage());
+}
 
 $stmt = $pdo->prepare("
     SELECT created_at, jenis, jumlah, saldo_sesudah, id_pesanan, keterangan
@@ -144,11 +177,47 @@ require __DIR__ . "/../includes/navbar-mahasiswa.php";
                        step="1" placeholder="mis. <?= WITHDRAW_MINIMAL ?>" required>
                 <button type="button" onclick="this.form.jumlah.value=<?= (int)floor($saldo) ?>">Semua</button>
             </p>
-            <button type="submit"><b>Withdraw via WhatsApp</b></button>
+            <p>
+                <label>Tujuan transfer (rekening / e-wallet)</label><br>
+                <input type="text" name="tujuan" maxlength="200" size="40"
+                       placeholder="mis. BCA 1234567890 a.n. Nama" required>
+            </p>
+            <button type="submit"><b>Ajukan Withdraw</b></button>
         </form>
-        <p><small>Anda akan diarahkan ke WhatsApp admin dengan pesan yang sudah terisi (termasuk jumlah). Saldo baru berkurang setelah admin memproses penarikan.</small></p>
+        <p><small>Saldo langsung ditahan, lalu Anda diarahkan ke WhatsApp admin dengan pesan yang sudah terisi. Jika ditolak, saldo kembali otomatis.</small></p>
     <?php else: ?>
         <p><small>Saldo belum cukup untuk withdraw (minimal Rp <?= number_format(WITHDRAW_MINIMAL, 0, ",", ".") ?>).</small></p>
+    <?php endif; ?>
+
+    <?php if ($daftarWd): ?>
+        <h3>Permintaan Withdraw</h3>
+        <table border="1" cellpadding="8" cellspacing="0">
+            <tr>
+                <th>ID</th>
+                <th>Diajukan</th>
+                <th>Jumlah</th>
+                <th>Tujuan</th>
+                <th>Status</th>
+                <th>Catatan admin</th>
+            </tr>
+            <?php foreach ($daftarWd as $w): ?>
+                <?php $warna = ["Diproses" => "#b36b00", "Selesai" => "#0a7d32", "Ditolak" => "#b00020"][$w["status"]] ?? "inherit"; ?>
+                <tr>
+                    <td>#<?= (int)$w["id_withdraw"] ?></td>
+                    <td><?= e(substr($w["created_at"], 0, 16)) ?></td>
+                    <td>Rp <?= number_format((float)$w["jumlah"], 0, ",", ".") ?></td>
+                    <td><?= e($w["tujuan"]) ?></td>
+                    <td style="color:<?= $warna ?>;">
+                        <b><?= e($w["status"]) ?></b>
+                        <?php if ($w["diproses_pada"]): ?>
+                            <br><small><?= e(substr($w["diproses_pada"], 0, 16)) ?></small>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= e($w["catatan_admin"] ?? "") ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+        <p><small>Diproses = menunggu admin. Selesai = sudah ditransfer. Ditolak = saldo dikembalikan ke dompet.</small></p>
     <?php endif; ?>
 
     <h2>Top Up</h2>

@@ -13,7 +13,7 @@ require_admin();
 const LOG_PER_HALAMAN = 50;
 
 $filterEntitas = $_GET["entitas"] ?? "";
-if (!in_array($filterEntitas, ["Produk", "Kategori", "Pesanan"], true)) {
+if (!in_array($filterEntitas, ["Produk", "Kategori", "Pesanan", "Withdraw"], true)) {
     $filterEntitas = "";
 }
 $halaman = max(1, (int)($_GET["hal"] ?? 1));
@@ -60,6 +60,7 @@ function tautan_entitas(string $entitas, ?int $id): string
         "Pesanan"  => "/admin/pesanan-detail.php?id=" . $id,
         "Produk"   => "/admin/merchandise.php?edit=" . $id,
         "Kategori" => "/admin/kategori.php?edit=" . $id,
+        "Withdraw" => "/admin/withdraw.php",
         default    => "",
     };
 }
@@ -106,7 +107,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
 
             <p>
                 Tampilkan:
-                <?php foreach (["" => "Semua", "Produk" => "Produk", "Kategori" => "Kategori", "Pesanan" => "Pesanan"] as $nilai => $teks): ?>
+                <?php foreach (["" => "Semua", "Produk" => "Produk", "Kategori" => "Kategori", "Pesanan" => "Pesanan", "Withdraw" => "Withdraw"] as $nilai => $teks): ?>
                     <?php if ($nilai === $filterEntitas): ?>
                         <b><?= e($teks) ?></b>
                     <?php else: ?>
