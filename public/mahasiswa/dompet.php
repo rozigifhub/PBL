@@ -37,6 +37,19 @@ function link_withdraw(PDO $pdo, int $idAkun, int $idWithdraw, int $jumlah, stri
     return "https://wa.me/" . preg_replace("/\D/", "", WA_ADMIN) . "?text=" . rawurlencode($pesan);
 }
 
+/**
+ * HELPER TAMPILAN (bukan logika backend): ubah "2026-11-10 22:23:41" menjadi "10 Nov 2026, 22:23".
+ * Memotong string apa adanya (tanpa konversi zona waktu), jadi jam yang tampil sama persis dengan yang disimpan database.
+ */
+function tampil_tanggal_mutasi(string $waktu): string
+{
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/', $waktu, $p)) {
+        return substr($waktu, 0, 16);
+    }
+    $bulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    return $p[3] . " " . ($bulan[(int)$p[2] - 1] ?? $p[2]) . " " . $p[1] . ", " . $p[4] . ":" . $p[5];
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (!csrf_validate()) {
@@ -137,6 +150,8 @@ $menunggu = $stmt->fetchAll();
     <title>Dompet Saya - Merchandise Kampus</title>
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
+    <link rel="stylesheet" href="/assets/css/dompet.css?v=<?= @filemtime(__DIR__ . "/../assets/css/dompet.css") ?>">
+    <script src="/assets/js/dompet.js?v=<?= @filemtime(__DIR__ . "/../assets/js/dompet.js") ?>" defer></script>
 </head>
 <body>
 <?php
@@ -144,146 +159,244 @@ $mhsActive = "";
 require __DIR__ . "/../includes/navbar.php";
 ?>
 
-<main>
-    <h1>Dompet Saya</h1>
-    <p>
-        <a href="/mahasiswa/dashboard.php">&larr; Dashboard</a> |
-        <a href="/mahasiswa/riwayat.php">Riwayat Pesanan</a>
-    </p>
+<main class="dp">
+<div class="dp__inner">
 
+    <!-- ===== BREADCRUMB: ikon rumah + "DASHBOARD / DOMPET SAYA" ===== -->
+    <nav class="dp-crumb" aria-label="Navigasi halaman">
+        <a class="dp-crumb__home" href="/mahasiswa/dashboard.php" aria-label="Dashboard"><img src="/assets/img/dompet-ic-home.png" alt=""></a>
+        <p class="dp-crumb__trail"><a href="/mahasiswa/dashboard.php">Dashboard</a> / <a href="/mahasiswa/dompet.php" aria-current="page">Dompet Saya</a></p>
+    </nav>
+
+    <!-- ===== HEADER: ikon dompet oranye + judul + sub-judul ===== -->
+    <header class="dp-head">
+        <span class="dp-head__icon"><img src="/assets/img/dompet-ic-wallet-white.png" alt=""></span>
+        <div>
+            <h1 class="dp-head__title">Dompet Saya</h1>
+            <p class="dp-head__sub">Detail riwayat mutasi dan top up</p>
+        </div>
+    </header>
+
+    <!-- PHP: PESAN FLASH DARI BACKEND ($flash) — kondisi if asli dipertahankan -->
     <?php if ($flash): ?>
-        <p style="color:<?= $flash["type"] === "sukses" ? "#0a7d32" : "#b00020" ?>;">
-            <b><?= e($flash["msg"]) ?></b>
-        </p>
+        <p class="alert <?= $flash["type"] === "sukses" ? "alert--success" : "alert--error" ?>" role="status"><b><?= e($flash["msg"]) ?></b></p>
     <?php endif; ?>
 
+    <!-- PHP: PESAN ERROR VALIDASI / MIDTRANS ($error) — kondisi if asli dipertahankan -->
     <?php if ($error !== ""): ?>
-        <p style="color:#b00020;"><b><?= e($error) ?></b></p>
+        <p class="alert alert--error" role="alert"><b><?= e($error) ?></b></p>
     <?php endif; ?>
 
-    <h2>Saldo</h2>
-    <p style="font-size:2rem;"><b>Rp <?= number_format($saldo, 0, ",", ".") ?></b></p>
-    <p><small>Saldo dipakai untuk membayar pesanan (penuh atau sebagian). Refund pesanan masuk ke dompet ini.</small></p>
+    <!-- ===== LAYOUT DUA KOLOM: kiri = Saldo Anda + Metode Pembayaran, kanan = Riwayat Mutasi ===== -->
+    <div class="dp-grid">
 
-    <h2>Withdraw</h2>
-    <?php if ($saldo >= WITHDRAW_MINIMAL): ?>
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-            <input type="hidden" name="action" value="withdraw">
+        <div class="dp-col dp-col--kiri">
 
-            <p>
-                <label>Jumlah yang ingin ditarik (minimal Rp <?= number_format(WITHDRAW_MINIMAL, 0, ",", ".") ?>, maksimal sebesar saldo)</label><br>
-                <input type="number" name="jumlah" min="<?= WITHDRAW_MINIMAL ?>" max="<?= (int)floor($saldo) ?>"
-                       step="1" placeholder="mis. <?= WITHDRAW_MINIMAL ?>" required>
-                <button type="button" onclick="this.form.jumlah.value=<?= (int)floor($saldo) ?>">Semua</button>
-            </p>
-            <p>
-                <label>Tujuan transfer (rekening / e-wallet)</label><br>
-                <input type="text" name="tujuan" maxlength="200" size="40"
-                       placeholder="mis. BCA 1234567890 a.n. Nama" required>
-            </p>
-            <button type="submit"><b>Ajukan Withdraw</b></button>
-        </form>
-        <p><small>Saldo langsung ditahan, lalu Anda diarahkan ke WhatsApp admin dengan pesan yang sudah terisi. Jika ditolak, saldo kembali otomatis.</small></p>
-    <?php else: ?>
-        <p><small>Saldo belum cukup untuk withdraw (minimal Rp <?= number_format(WITHDRAW_MINIMAL, 0, ",", ".") ?>).</small></p>
-    <?php endif; ?>
+            <!-- ===== CARD 1: SALDO ANDA (nominal saldo + form Withdraw) ===== -->
+            <section class="dp-card dp-card--saldo" aria-labelledby="dp-t-saldo">
+                <div class="dp-card__head">
+                    <img src="/assets/img/dompet-ic-wallet-blue.png" alt="">
+                    <h2 class="dp-card__title" id="dp-t-saldo">Saldo Anda</h2>
+                    <p class="dp-card__note">Saldo dipakai untuk membayar pesanan (penuh atau sebagian). Refund pesanan masuk ke dompet ini.</p>
+                </div>
 
+                <!-- PHP: NOMINAL SALDO ($saldo dari dompet_saldo()). Tampil "Rp. 50.000,00"; kelas --sm dipasang bila angkanya sangat panjang -->
+                <?php $saldoTeks = "Rp. " . number_format($saldo, 2, ",", "."); ?>
+                <div class="dp-saldo">
+                    <p class="dp-saldo__val<?= strlen($saldoTeks) > 14 ? " dp-saldo__val--sm" : "" ?>"><?= $saldoTeks ?></p>
+                </div>
+
+                <!-- PHP: FORM WITHDRAW — hanya tampil jika $saldo >= WITHDRAW_MINIMAL (if/else asli dipertahankan).
+                     method POST, csrf_token, action=withdraw, name="jumlah" dan name="tujuan" TIDAK diubah. -->
+                <?php if ($saldo >= WITHDRAW_MINIMAL): ?>
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                        <input type="hidden" name="action" value="withdraw">
+
+                        <div class="dp-wd">
+                            <div class="dp-field dp-field--all">
+                                <label class="dp-label" for="wd-jumlah">Jumlah yang ingin ditarik</label>
+                                <input class="dp-input" type="number" id="wd-jumlah" name="jumlah" min="<?= WITHDRAW_MINIMAL ?>" max="<?= (int)floor($saldo) ?>"
+                                       step="1" placeholder="Minimal <?= number_format(WITHDRAW_MINIMAL, 0, ",", ".") ?>, Maksimal sebesar saldo" required>
+                                <!-- Tombol "Semua": mengisi kolom jumlah dengan seluruh saldo (onclick asli dipertahankan) -->
+                                <button type="button" class="dp-field__all" onclick="this.form.jumlah.value=<?= (int)floor($saldo) ?>">Semua</button>
+                            </div>
+                            <div class="dp-field">
+                                <label class="dp-label" for="wd-tujuan">Tujuan transfer</label>
+                                <input class="dp-input" type="text" id="wd-tujuan" name="tujuan" maxlength="200"
+                                       placeholder="Mis. BCA 123456789 a.n Nama" required>
+                            </div>
+                        </div>
+
+                        <div class="dp-actions">
+                            <p class="dp-hint">Saldo langsung ditahan, lalu Anda diarahkan ke WhatsApp admin dengan pesan yang sudah terisi. Jika ditolak, saldo kembali otomatis.</p>
+                            <!-- Tombol kirim asli (type="submit") — dulu "Ajukan Withdraw" -->
+                            <button type="submit" class="dp-btn dp-btn--wd">
+                                <img src="/assets/img/dompet-ic-wallet-white.png" alt="">
+                                <span>Withdraw</span>
+                                <span class="dp-btn__arrow" aria-hidden="true"><svg viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h22.5M17 1.8 24 8l-7 6.2"/></svg></span>
+                            </button>
+                        </div>
+                    </form>
+                <?php else: ?>
+                    <p class="dp-empty">Saldo belum cukup untuk withdraw (minimal Rp <?= number_format(WITHDRAW_MINIMAL, 0, ",", ".") ?>).</p>
+                <?php endif; ?>
+            </section>
+
+            <!-- ===== CARD 2: METODE PEMBAYARAN (form Top Up via Midtrans) ===== -->
+            <section class="dp-card dp-card--topup" aria-labelledby="dp-t-topup">
+                <div class="dp-card__head">
+                    <img src="/assets/img/dompet-ic-card-blue.png" alt="">
+                    <h2 class="dp-card__title" id="dp-t-topup">Metode Pembayaran</h2>
+                </div>
+
+                <!-- FORM TOP UP ASLI: method POST, csrf_token, name="jumlah" TIDAK diubah (backend: midtrans_buat_topup()).
+                     data-dp-topup dipakai assets/js/dompet.js untuk efek pill aktif. -->
+                <form method="POST" class="dp-tu" data-dp-topup>
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+
+                    <!-- PHP: TOMBOL NOMINAL CEPAT (foreach asli). Pill 50.000 aktif bawaan; klik = isi kolom "Nominal Lainnya" (lihat dompet.js) -->
+                    <div class="dp-pills" role="group" aria-label="Pilih nominal top up">
+                        <?php foreach ([20000, 50000, 100000, 200000] as $n): ?>
+                            <button type="button" class="dp-pill<?= $n === 50000 ? " is-active" : "" ?>" data-dp-nominal="<?= $n ?>" aria-pressed="<?= $n === 50000 ? "true" : "false" ?>">Rp. <?= number_format($n, 0, ",", ".") ?></button>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Kolom input asli name="jumlah" (min, max, step, required dipertahankan) -->
+                    <div class="dp-field dp-field--nominal">
+                        <label class="dp-label" for="tu-jumlah">Nominal lainnya</label>
+                        <input class="dp-input" type="number" id="tu-jumlah" name="jumlah" min="<?= TOPUP_MINIMAL ?>" max="<?= TOPUP_MAKSIMAL ?>"
+                               step="1000" placeholder="Masukkan nominal" required>
+                    </div>
+
+                    <div class="dp-actions">
+                        <p class="dp-hint">Top up Rp <?= number_format(TOPUP_MINIMAL, 0, ",", ".") ?> – Rp <?= number_format(TOPUP_MAKSIMAL, 0, ",", ".") ?>, dibayar lewat Midtrans.</p>
+                        <!-- Tombol kirim asli (type="submit") — dulu "Top Up via Midtrans" -->
+                        <button type="submit" class="dp-btn dp-btn--tu">
+                            <img src="/assets/img/dompet-ic-card-white.png" alt="">
+                            <span>Top up via Midtrans</span>
+                            <span class="dp-btn__arrow" aria-hidden="true"><svg viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h22.5M17 1.8 24 8l-7 6.2"/></svg></span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- PHP: TOP UP MENUNGGU PEMBAYARAN ($menunggu) — hanya tampil bila ada; if & foreach asli, tautan payment_url Midtrans TIDAK diubah -->
+                <?php if ($menunggu): ?>
+                    <div class="dp-pending">
+                        <h3 class="dp-pending__title">Top up menunggu pembayaran</h3>
+                        <ul class="dp-pending__list">
+                            <!-- PHP: LOOPING TOP UP MENUNGGU MULAI DARI SINI -->
+                            <?php foreach ($menunggu as $t): ?>
+                                <li class="dp-pending__item">
+                                    <span>Rp <?= number_format((float)$t["jumlah"], 0, ",", ".") ?> (<?= e(substr($t["created_at"], 0, 16)) ?>)</span>
+                                    <a class="dp-pending__link" href="<?= e($t["payment_url"]) ?>">Lanjutkan pembayaran</a>
+                                </li>
+                            <?php endforeach; ?>
+                            <!-- PHP: LOOPING TOP UP MENUNGGU SELESAI DI SINI -->
+                        </ul>
+                    </div>
+                <?php endif; ?>
+            </section>
+
+        </div>
+
+        <div class="dp-col dp-col--kanan">
+
+            <!-- ===== CARD 3: RIWAYAT MUTASI (tabel bawaan diganti daftar modern; header krem, tanpa garis vertikal) ===== -->
+            <section class="dp-card dp-card--mutasi" aria-labelledby="dp-t-mutasi">
+                <div class="dp-card__head">
+                    <img src="/assets/img/dompet-ic-refresh.png" alt="">
+                    <h2 class="dp-card__title" id="dp-t-mutasi">Riwayat Mutasi</h2>
+                </div>
+
+                <!-- PHP: JIKA BELUM ADA MUTASI ($mutasi kosong) — if/else asli dipertahankan -->
+                <?php if (!$mutasi): ?>
+                    <p class="dp-kosong">Belum ada mutasi.</p>
+                <?php else: ?>
+                    <div class="dp-table-wrap">
+                        <table class="dp-table">
+                            <thead>
+                                <tr>
+                                    <th class="dp-c-tgl" scope="col">Tanggal</th>
+                                    <th class="dp-c-ket" scope="col">Keterangan</th>
+                                    <th class="dp-c-nom" scope="col">Nominal</th>
+                                    <th class="dp-c-sld" scope="col">Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- PHP: LOOPING RIWAYAT MUTASI MULAI DARI SINI (foreach asli; variabel $m dan $masuk tidak diubah) -->
+                                <?php foreach ($mutasi as $m): ?>
+                                    <?php $masuk = (float)$m["jumlah"] > 0; ?>
+                                    <tr>
+                                        <td class="dp-c-tgl"><?= e(tampil_tanggal_mutasi((string)$m["created_at"])) ?></td>
+                                        <td class="dp-c-ket">
+                                            <span class="dp-sr"><?= e($m["jenis"]) ?>: </span><?= e($m["keterangan"] ?? "") ?>
+                                            <?php if ($m["id_pesanan"]): ?>
+                                                (<a class="dp-order" href="/mahasiswa/pesanan.php?id=<?= (int)$m["id_pesanan"] ?>">#<?= (int)$m["id_pesanan"] ?></a>)
+                                            <?php endif; ?>
+                                        </td>
+                                        <!-- PHP: NOMINAL — hijau (+) bila $masuk, merah (-) bila keluar; kolom saldo ikut warna barisnya seperti desain -->
+                                        <td class="dp-c-nom <?= $masuk ? "dp-plus" : "dp-minus" ?>"><?= $masuk ? "+" : "-" ?> Rp. <?= number_format(abs((float)$m["jumlah"]), 0, ",", ".") ?></td>
+                                        <td class="dp-c-sld <?= $masuk ? "dp-plus" : "dp-minus" ?>">Rp. <?= number_format((float)$m["saldo_sesudah"], 0, ",", ".") ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <!-- PHP: LOOPING RIWAYAT MUTASI SELESAI DI SINI -->
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- PHP: PERMINTAAN WITHDRAW ($daftarWd) — hanya tampil bila ada; if & foreach asli dipertahankan.
+         Bagian ini tidak ada di desain Figma, jadi dibuat sebagai kartu lebar penuh di bawah grid utama. -->
     <?php if ($daftarWd): ?>
-        <h3>Permintaan Withdraw</h3>
-        <table border="1" cellpadding="8" cellspacing="0">
-            <tr>
-                <th>ID</th>
-                <th>Diajukan</th>
-                <th>Jumlah</th>
-                <th>Tujuan</th>
-                <th>Status</th>
-                <th>Catatan admin</th>
-            </tr>
-            <?php foreach ($daftarWd as $w): ?>
-                <?php $warna = ["Diproses" => "#b36b00", "Selesai" => "#0a7d32", "Ditolak" => "#b00020"][$w["status"]] ?? "inherit"; ?>
-                <tr>
-                    <td>#<?= (int)$w["id_withdraw"] ?></td>
-                    <td><?= e(substr($w["created_at"], 0, 16)) ?></td>
-                    <td>Rp <?= number_format((float)$w["jumlah"], 0, ",", ".") ?></td>
-                    <td><?= e($w["tujuan"]) ?></td>
-                    <td style="color:<?= $warna ?>;">
-                        <b><?= e($w["status"]) ?></b>
-                        <?php if ($w["diproses_pada"]): ?>
-                            <br><small><?= e(substr($w["diproses_pada"], 0, 16)) ?></small>
-                        <?php endif; ?>
-                    </td>
-                    <td><?= e($w["catatan_admin"] ?? "") ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-        <p><small>Diproses = menunggu admin. Selesai = sudah ditransfer. Ditolak = saldo dikembalikan ke dompet.</small></p>
+        <section class="dp-card dp-card--wdlist" aria-labelledby="dp-t-wdlist">
+            <div class="dp-card__head">
+                <img src="/assets/img/dompet-ic-wallet-blue.png" alt="">
+                <h2 class="dp-card__title" id="dp-t-wdlist">Permintaan Withdraw</h2>
+            </div>
+            <div class="dp-table-wrap dp-wdlist">
+                <table class="dp-table">
+                    <thead>
+                        <tr>
+                            <th class="dp-w-id" scope="col">ID</th>
+                            <th class="dp-w-tgl" scope="col">Diajukan</th>
+                            <th class="dp-w-jml" scope="col">Jumlah</th>
+                            <th scope="col">Tujuan</th>
+                            <th class="dp-w-sts" scope="col">Status</th>
+                            <th scope="col">Catatan admin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- PHP: LOOPING PERMINTAAN WITHDRAW MULAI DARI SINI (foreach asli; variabel $w tidak diubah) -->
+                        <?php foreach ($daftarWd as $w): ?>
+                            <?php $kelasStatus = ["Diproses" => "dp-badge--proses", "Selesai" => "dp-badge--selesai", "Ditolak" => "dp-badge--tolak"][$w["status"]] ?? ""; ?>
+                            <tr>
+                                <td>#<?= (int)$w["id_withdraw"] ?></td>
+                                <td><?= e(tampil_tanggal_mutasi((string)$w["created_at"])) ?></td>
+                                <td>Rp <?= number_format((float)$w["jumlah"], 0, ",", ".") ?></td>
+                                <td><?= e($w["tujuan"]) ?></td>
+                                <td>
+                                    <span class="dp-badge <?= $kelasStatus ?>"><?= e($w["status"]) ?></span>
+                                    <?php if ($w["diproses_pada"]): ?>
+                                        <small class="dp-badge__time"><?= e(tampil_tanggal_mutasi((string)$w["diproses_pada"])) ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= e($w["catatan_admin"] ?? "") ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <!-- PHP: LOOPING PERMINTAAN WITHDRAW SELESAI DI SINI -->
+                    </tbody>
+                </table>
+            </div>
+            <p class="dp-hint dp-wdnote">Diproses = menunggu admin. Selesai = sudah ditransfer. Ditolak = saldo dikembalikan ke dompet.</p>
+        </section>
     <?php endif; ?>
 
-    <h2>Top Up</h2>
-
-    <form method="POST">
-        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-
-        <p>
-            <label>Jumlah (Rp <?= number_format(TOPUP_MINIMAL, 0, ",", ".") ?> – <?= number_format(TOPUP_MAKSIMAL, 0, ",", ".") ?>)</label><br>
-            <input type="number" name="jumlah" min="<?= TOPUP_MINIMAL ?>" max="<?= TOPUP_MAKSIMAL ?>"
-                   step="1000" value="50000" required>
-        </p>
-        <p>
-            <?php foreach ([25000, 50000, 100000, 200000] as $n): ?>
-                <button type="button" onclick="this.form.jumlah.value=<?= $n ?>">Rp <?= number_format($n, 0, ",", ".") ?></button>
-            <?php endforeach; ?>
-        </p>
-        <button type="submit"><b>Top Up via Midtrans</b></button>
-    </form>
-
-    <?php if ($menunggu): ?>
-        <h3>Top up menunggu pembayaran</h3>
-        <ul>
-            <?php foreach ($menunggu as $t): ?>
-                <li>
-                    Rp <?= number_format((float)$t["jumlah"], 0, ",", ".") ?>
-                    (<?= e(substr($t["created_at"], 0, 16)) ?>) —
-                    <a href="<?= e($t["payment_url"]) ?>">Lanjutkan pembayaran</a>
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
-
-    <h2>Riwayat Mutasi</h2>
-
-    <?php if (!$mutasi): ?>
-        <p>Belum ada mutasi.</p>
-    <?php else: ?>
-        <table border="1" cellpadding="8" cellspacing="0">
-            <tr>
-                <th>Waktu</th>
-                <th>Jenis</th>
-                <th>Keterangan</th>
-                <th>Jumlah</th>
-                <th>Saldo</th>
-            </tr>
-            <?php foreach ($mutasi as $m): ?>
-                <?php $masuk = (float)$m["jumlah"] > 0; ?>
-                <tr>
-                    <td><?= e(substr($m["created_at"], 0, 16)) ?></td>
-                    <td><?= e($m["jenis"]) ?></td>
-                    <td>
-                        <?= e($m["keterangan"] ?? "") ?>
-                        <?php if ($m["id_pesanan"]): ?>
-                            (<a href="/mahasiswa/pesanan.php?id=<?= (int)$m["id_pesanan"] ?>">#<?= (int)$m["id_pesanan"] ?></a>)
-                        <?php endif; ?>
-                    </td>
-                    <td style="color:<?= $masuk ? "#0a7d32" : "#b00020" ?>;">
-                        <b><?= $masuk ? "+" : "−" ?>Rp <?= number_format(abs((float)$m["jumlah"]), 0, ",", ".") ?></b>
-                    </td>
-                    <td>Rp <?= number_format((float)$m["saldo_sesudah"], 0, ",", ".") ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php endif; ?>
-
+</div>
 </main>
 
 </body>
