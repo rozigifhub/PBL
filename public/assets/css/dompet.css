@@ -1,0 +1,255 @@
+/* =========================================================
+   DOMPET SAYA MAHASISWA  (mahasiswa/dompet.php)
+   Dimuat SETELAH style.css & navbar-mahasiswa.css (memakai --nav-h, --font, .alert dari style.css).
+   Satuan rem (1rem = 16px di layar 1920), jadi tata letak mengecil proporsional.
+   Semua class berawalan "dp-" supaya tidak bentrok dengan halaman lain.
+   Latar halaman = gambar global di body (style.css): JANGAN beri background pada .dp.
+
+   Daftar isi:  1. Token & kerangka   2. Kepala halaman   3. Grid dua kolom & kartu dasar
+                4. Kartu Saldo Anda (Withdraw)   5. Kartu Metode Pembayaran (Top Up)
+                6. Tombol oranye   7. Kartu Riwayat Mutasi   8. Kartu tambahan (withdraw / top up menunggu)
+                9. Responsif
+   ========================================================= */
+
+/* ---------- 1. TOKEN & KERANGKA ---------- */
+.dp {
+  --dp-blue:      #2A4580;   /* judul, teks utama, garis pembatas */
+  --dp-card:      #FFF6E0;   /* latar kartu krem terang */
+  --dp-head:      #FFEBBC;   /* latar header tabel (krem kekuningan) */
+  --dp-saldo-bg:  #EFE8DA;   /* kotak nominal saldo (abu-abu terang) */
+  --dp-orange:    #FF9F1C;   /* tombol utama, pill terpilih, ikon judul */
+  --dp-orange-dk: #F08C00;
+  --dp-green:     #57D581;   /* nominal bertambah (sesuai desain; ganti ke #0a7d32 bila ingin lebih kontras) */
+  --dp-red:       #B73532;   /* nominal berkurang */
+  --dp-sub:       #969696;   /* sub-judul halaman */
+  --dp-muted:     #707070;   /* teks bantuan kecil */
+  --dp-line:      #A8A8A8;   /* border input */
+  --dp-row-hover: rgba(75, 146, 213, .11);   /* biru sangat pudar saat baris mutasi di-hover */
+  --dp-shadow:    0 .35rem 1.7rem rgba(0, 0, 0, .13);
+  --dp-shadow-up: 0 .9rem 2.4rem rgba(0, 0, 0, .2);
+
+  position: relative; isolation: isolate; overflow-x: clip; display: flow-root;
+  min-height: calc(100vh - var(--nav-h)); color: var(--dp-blue); font-family: var(--font);
+}
+.dp__inner { width: min(115.2rem, 100% - 4.8rem); margin: 0 auto; padding: 5.17rem 0 5rem; }
+.dp a { color: inherit; }
+.dp .alert { margin: 0 0 2.4rem; font-size: 1.5rem; }
+
+/* Teks untuk pembaca layar saja */
+.dp-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 2. KEPALA HALAMAN: breadcrumb + ikon dompet oranye + judul ---------- */
+.dp-crumb { display: flex; align-items: center; gap: 1.05rem; margin: 0 0 2.5rem; padding-left: 12.25rem; font-size: 1.5rem; font-weight: 400; text-transform: uppercase; }
+.dp-crumb__home { display: block; flex: none; }
+.dp-crumb__home img { width: 1.9rem; height: 1.75rem; transition: transform .3s ease; }
+.dp-crumb__home:hover img { transform: scale(1.12); }
+.dp-crumb a { text-underline-offset: .25rem; transition: color .3s ease; }
+.dp-crumb a:hover { color: var(--dp-orange-dk); }
+.dp-crumb__trail { margin: 0; }
+
+.dp-head { display: flex; align-items: center; gap: 2.7rem; margin: 0 0 1.65rem; padding-left: 10.8rem; }
+.dp-head__icon { flex: none; display: grid; place-items: center; width: 8.4rem; height: 8.4rem; border-radius: 50%; background: var(--dp-orange); }
+.dp-head__icon img { width: 5.2rem; height: 4.95rem; }
+.dp-head__title { margin: 0; padding-top: .6rem; font-size: 4.4rem; font-weight: 700; line-height: 1.05; text-transform: uppercase; }
+.dp-head__sub { margin: .375rem 0 0; color: var(--dp-sub); font-size: 1.25rem; font-weight: 700; line-height: 1.4; }
+
+/* ---------- 3. GRID DUA KOLOM & KARTU DASAR ----------
+   Kiri: Saldo Anda (Withdraw) di atas, Metode Pembayaran (Top Up) di bawah.  Kanan: Riwayat Mutasi, memanjang ke bawah. */
+.dp-grid { display: grid; grid-template-columns: minmax(0, 52.4fr) minmax(0, 61fr); gap: 1.6rem; align-items: stretch; }
+.dp-col { display: flex; flex-direction: column; gap: 4.05rem; min-width: 0; }
+.dp-col--kanan { gap: 0; }
+
+.dp-card { position: relative; min-width: 0; border-radius: 1.25rem; background: var(--dp-card); box-shadow: var(--dp-shadow);
+           transition: all 0.3s ease; }
+.dp-card:hover { transform: translateY(-2px); box-shadow: var(--dp-shadow-up); }
+
+/* Judul kartu: ikon + judul, garis biru di bawahnya (garis dibuat lewat ::after agar jarak kiri/kanannya bisa diatur per kartu) */
+.dp-card__head { position: relative; display: flex; align-items: center; padding: var(--pt, 2.8rem) 0 var(--pb, 1.3rem) var(--pl, 3.6rem); }
+.dp-card__head::after { content: ""; position: absolute; left: var(--dv-l, .95rem); right: var(--dv-r, 2.5rem); bottom: 0; height: .125rem; background: var(--dp-blue); }
+.dp-card__head img { flex: none; display: block; }
+.dp-card__title { margin: 0; font-size: 2.25rem; font-weight: 700; line-height: 1; }
+
+/* Label & kolom isian (dipakai Withdraw dan Top Up) */
+.dp-label { display: block; font-size: 1.5rem; font-weight: 700; line-height: 1.2; text-transform: uppercase; }
+.dp-input { display: block; width: 100%; height: 3.3rem; padding: 0 .7rem 0 .7rem; border: .0625rem solid var(--dp-line); border-radius: .6rem; background: #fff; color: #000;
+            font: 400 1.5rem var(--font); transition: all 0.3s ease; -moz-appearance: textfield; appearance: textfield; }
+.dp-input::placeholder { color: #A9A9A9; opacity: 1; }
+.dp-input::-webkit-outer-spin-button, .dp-input::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }   /* panah naik/turun bawaan disembunyikan */
+.dp-input:focus { border-color: var(--dp-orange); outline: 0; box-shadow: 0 0 0 .3rem rgba(255, 159, 28, .22); }
+
+/* Teks bantuan kecil */
+.dp-hint { margin: 0; color: var(--dp-muted); font-size: 1.15rem; font-weight: 500; line-height: 1.45; }
+
+/* ---------- 4. KARTU SALDO ANDA (form Withdraw) ---------- */
+.dp-card--saldo .dp-card__head { --pt: 2.8rem; --pb: 1.3rem; --pl: 3.6rem; --dv-l: .95rem; --dv-r: 2.5rem; gap: 1.45rem; }
+.dp-card--saldo .dp-card__head img { width: 2.9rem; height: 2.8rem; }
+.dp-card__note { margin: 0 3rem 0 auto; color: var(--dp-muted); font-size: 1.05rem; font-weight: 500; line-height: 1.35; text-align: right; white-space: nowrap; }
+
+/* Nominal saldo: kotak abu-abu terang, angka biru tua besar & tebal */
+.dp-saldo { display: flex; align-items: center; width: fit-content; max-width: calc(100% - 1.7rem); min-height: 7.1rem; margin: 2.1rem 0 0 1.7rem; padding: 0 2.45rem 0 1.1rem; border-radius: 1.25rem;
+            background: var(--dp-saldo-bg); }
+.dp-saldo__val { margin: 0; font-size: 6.1rem; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; }
+.dp-saldo__val--sm { font-size: 4.6rem; }   /* dipakai PHP bila nominal sangat panjang agar tidak meluap */
+
+.dp-wd { margin: 2.54rem 0 0 1rem; }
+.dp-wd .dp-field { width: 38.3rem; max-width: 100%; }
+.dp-wd .dp-field + .dp-field { margin-top: .37rem; }
+.dp-field { position: relative; }
+.dp-field .dp-label { margin-bottom: .21rem; }
+.dp-field__all { position: absolute; right: .55rem; bottom: .3rem; height: 2.7rem; padding: 0 1.1rem; border: 0; border-radius: .5rem; background: rgba(255, 159, 28, .16); color: var(--dp-blue);
+                 font: 700 1.2rem var(--font); cursor: pointer; transition: all 0.3s ease; }
+.dp-field__all:hover { background: var(--dp-orange); color: #fff; }
+.dp-field--all .dp-input { padding-right: 7rem; }
+
+.dp-actions { display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
+.dp-actions .dp-hint { flex: 1; min-width: 0; font-size: 1rem; line-height: 1.3; }   /* teks bantuan di kiri tombol; tingginya tidak boleh melebihi tombol */
+.dp-card--saldo .dp-actions { margin: 1.4rem 1.7rem 0 1rem; padding-bottom: 1.5rem; }
+.dp-empty { margin: 2.4rem 1.7rem 0 1.7rem; padding: 1.6rem 2rem; border-radius: 1.25rem; background: rgba(255, 255, 255, .6); font-size: 1.4rem; font-weight: 500; line-height: 1.5; }
+.dp-card--saldo .dp-empty { margin-bottom: 2.2rem; }
+
+/* ---------- 5. KARTU METODE PEMBAYARAN (form Top Up) ---------- */
+.dp-card--topup .dp-card__head { --pt: 2.3rem; --pb: 1.3rem; --pl: 1.75rem; --dv-l: 2.05rem; --dv-r: 1.8rem; gap: 1.9rem; }
+.dp-card--topup .dp-card__head img { width: 3.25rem; height: 2.44rem; }
+
+/* Tombol nominal cepat: outline, berubah oranye solid saat dipilih (.is-active diatur dompet.js) */
+.dp-pills { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3.78rem; margin: 3.375rem 1.875rem 0 1.8rem; }
+.dp-pill { height: 2.8rem; padding: 0; border: .0625rem solid #000; border-radius: .6rem; background: transparent; color: #000; cursor: pointer;
+           font: 500 1.25rem var(--font); text-transform: uppercase; white-space: nowrap; transition: all 0.3s ease; }
+.dp-pill:hover { background: rgba(255, 159, 28, .18); border-color: var(--dp-orange-dk); }
+.dp-pill.is-active, .dp-pill.is-active:hover { border-color: var(--dp-orange); background: var(--dp-orange); }
+.dp-pill:focus-visible { outline: .25rem solid rgba(42, 69, 128, .55); outline-offset: .2rem; }
+
+.dp-tu { margin: 0; }
+.dp-field--nominal { width: 38.3rem; max-width: calc(100% - 1.875rem); margin: 2.15rem 0 0 1.875rem; }
+.dp-field--nominal .dp-label { margin: 0 0 .2rem 0; }
+.dp-field--nominal .dp-input { height: 4.4rem; padding: 0 .85rem; }
+.dp-card--topup .dp-actions { margin: 1.86rem 1.75rem 0 1.875rem; padding-bottom: 2.3rem; }
+
+/* ---------- 6. TOMBOL ORANYE (Withdraw & Top up via Midtrans) ----------
+   Hover: sedikit membesar, panah bergeser ke kanan, bayangan menebal (transition 0.3s ease). */
+.dp-btn { display: inline-flex; align-items: center; flex: none; height: 4.25rem; border: 0; border-radius: .625rem; background: var(--dp-orange); color: #fff; cursor: pointer;
+          font-family: var(--font); line-height: 1; white-space: nowrap; box-shadow: 0 .3rem .8rem rgba(255, 159, 28, .3); transition: all 0.3s ease; }
+.dp-btn img { flex: none; display: block; transition: transform .3s ease; }
+.dp-btn__arrow { flex: none; display: block; transition: transform .3s ease; }
+.dp-btn__arrow svg { display: block; width: 100%; height: 100%; }
+.dp-btn:hover { transform: scale(1.05); background: #FFA92E; box-shadow: 0 1rem 2.4rem rgba(255, 159, 28, .55); }
+.dp-btn:hover .dp-btn__arrow { transform: translateX(.6rem); }
+.dp-btn:active { transform: scale(.98); box-shadow: 0 .2rem .6rem rgba(255, 159, 28, .4); }
+.dp-btn:focus-visible { outline: .3rem solid var(--dp-blue); outline-offset: .3rem; }
+
+.dp-btn--wd { width: 18.7rem; padding: 0 0 0 1.875rem; gap: 1.5rem; font-size: 2rem; font-weight: 500; }
+.dp-btn--wd img { width: 3rem; height: 2.85rem; }
+.dp-btn--wd .dp-btn__arrow { width: 1.6rem; height: 1rem; margin-left: -.8rem; }
+.dp-btn--tu { width: 23rem; padding: 0 0 0 1.5rem; gap: 1.6rem; font-size: 1.56rem; font-weight: 500; }
+.dp-btn--tu img { width: 3.25rem; height: 2.4rem; }
+.dp-btn--tu .dp-btn__arrow { width: 1.5rem; height: 1rem; margin-left: -.8rem; }
+
+/* ---------- 7. KARTU RIWAYAT MUTASI (tabel -> daftar modern) ---------- */
+.dp-card--mutasi { margin-top: .45rem; }   /* garis judul sejajar dengan kartu kiri, sesuai desain */
+.dp-card--mutasi .dp-card__head { --pt: 1.44rem; --pb: .41rem; --pl: 2.75rem; --dv-l: 1.875rem; --dv-r: 1.8rem; gap: 1.55rem; }
+.dp-card--mutasi .dp-card__head img { width: 3.17rem; height: 4.65rem; }
+
+.dp-table-wrap { margin: 1.625rem 1.8rem 2.4rem 1.875rem; }
+.dp-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 1.5rem; font-weight: 500; }
+.dp-table th, .dp-table td { box-sizing: border-box; padding: 0; text-align: left; vertical-align: middle; }
+
+/* Header: latar krem kekuningan, sudut membulat, tanpa garis pembatas vertikal */
+.dp-table thead th { height: 5.5rem; background: var(--dp-head); font-size: 1.5rem; font-weight: 500; }
+.dp-table thead th:first-child { padding-left: 2.25rem; border-radius: 1.25rem 0 0 1.25rem; }
+.dp-table thead th:last-child { border-radius: 0 1.25rem 1.25rem 0; }
+.dp-table .dp-c-tgl { width: 16rem; }
+.dp-table .dp-c-nom { width: 13.5rem; text-align: center; }
+.dp-table .dp-c-sld { width: 12rem; text-align: center; }
+.dp-table .dp-c-ket { padding-left: 1.7rem; padding-right: .75rem; }
+
+/* Baris data: garis bawah tipis kecuali baris terakhir, hover biru sangat pudar */
+.dp-table tbody td { font-weight: 600; height: 5.55rem; border-bottom: .125rem solid var(--dp-blue); transition: background-color .3s ease; }
+.dp-table tbody tr:first-child td { height: 5.25rem; padding-top: .55rem; }   /* baris pertama: teks sedikit lebih turun, sama seperti desain */
+.dp-table tbody tr:last-child td { border-bottom-color: transparent; }
+.dp-table tbody td:first-child { padding-left: 2.25rem; }
+.dp-table tbody tr:hover td { background-color: var(--dp-row-hover); }
+.dp-table tbody tr:hover td:first-child { border-radius: .8rem 0 0 .8rem; }
+.dp-table tbody tr:hover td:last-child { border-radius: 0 .8rem .8rem 0; }
+.dp-table td.dp-c-ket { line-height: 1.35; overflow-wrap: anywhere; }
+.dp-order { text-underline-offset: .2rem; transition: color .3s ease; }
+.dp-order:hover { color: var(--dp-orange-dk); }
+
+/* Warna nominal: hijau = bertambah, merah = berkurang (kolom saldo ikut warna barisnya, seperti desain) */
+.dp-plus  { color: var(--dp-green); }
+.dp-minus { color: var(--dp-red); }
+.dp-kosong { margin: 0; padding: 3.4rem 1rem; font-size: 1.5rem; font-weight: 500; text-align: center; }
+
+/* ---------- 8. KARTU TAMBAHAN (hanya muncul bila ada datanya) ---------- */
+/* Top up menunggu pembayaran: daftar kecil di dalam kartu Metode Pembayaran */
+.dp-pending { margin: 0 1.8rem 2.3rem 1.875rem; padding: 1.6rem 1.8rem; border-radius: 1.25rem; background: rgba(255, 255, 255, .6); }
+.dp-pending__title { margin: 0 0 1rem; font-size: 1.4rem; font-weight: 700; text-transform: uppercase; }
+.dp-pending__list { margin: 0; padding: 0; list-style: none; }
+.dp-pending__item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1.5rem; padding: .9rem 0; font-size: 1.35rem; font-weight: 500; }
+.dp-pending__item + .dp-pending__item { border-top: .0625rem solid rgba(42, 69, 128, .35); }
+.dp-pending__link { padding: .55rem 1.3rem; border-radius: .6rem; background: var(--dp-orange); color: #fff !important; font-size: 1.2rem; font-weight: 700; text-decoration: none; transition: all 0.3s ease; }
+.dp-pending__link:hover { background: #FFA92E; transform: scale(1.05); box-shadow: 0 .6rem 1.4rem rgba(255, 159, 28, .45); }
+
+/* Permintaan withdraw: kartu lebar penuh di bawah grid utama */
+.dp-card--wdlist { margin-top: 2.4rem; padding-bottom: 2.4rem; }
+.dp-card--wdlist .dp-card__head { --pt: 2.3rem; --pb: 1.3rem; --pl: 2.75rem; --dv-l: 1.875rem; --dv-r: 1.8rem; gap: 1.5rem; }
+.dp-card--wdlist .dp-card__head img { width: 2.9rem; height: 2.8rem; }
+.dp-wdlist .dp-table { font-size: 1.35rem; }
+.dp-wdlist .dp-table thead th { height: 4.6rem; font-size: 1.35rem; }
+.dp-wdlist .dp-table td { height: 5.2rem; }
+.dp-wdlist .dp-table tbody tr:first-child td { height: 5.2rem; }
+.dp-wdlist .dp-table td, .dp-wdlist .dp-table th { padding-right: 1rem; }
+.dp-wdlist .dp-table th:first-child, .dp-wdlist .dp-table td:first-child { padding-left: 2.25rem; }
+.dp-wdlist .dp-table td { overflow-wrap: anywhere; line-height: 1.35; }
+.dp-wdlist .dp-w-id  { width: 7rem; }
+.dp-wdlist .dp-w-tgl { width: 17rem; }
+.dp-wdlist .dp-w-jml { width: 14rem; }
+.dp-wdlist .dp-w-sts { width: 14rem; }
+.dp-badge { display: inline-block; padding: .45rem 1.2rem; border-radius: 99rem; font-size: 1.2rem; font-weight: 700; color: #fff; background: var(--dp-muted); }
+.dp-badge--proses  { background: #B36B00; }
+.dp-badge--selesai { background: #0A7D32; }
+.dp-badge--tolak   { background: #B00020; }
+.dp-badge__time { display: block; margin-top: .35rem; color: var(--dp-muted); font-size: 1.05rem; font-weight: 500; }
+.dp-wdnote { margin: 1.4rem 1.8rem 0 2.25rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dp *, .dp *::before, .dp *::after { transition: none !important; }
+  .dp-card:hover, .dp-btn:hover, .dp-pending__link:hover { transform: none; }
+}
+
+/* ---------- 9. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .dp-grid { grid-template-columns: minmax(0, 1fr); }
+  .dp-col { gap: 2.4rem; }
+  .dp-card--mutasi { margin-top: 0; }
+  .dp-crumb { padding-left: 2rem; }
+  .dp-head { padding-left: 1.2rem; }
+  .dp-card--mutasi .dp-card__head { --pt: 2.8rem; --pb: 1.3rem; }
+}
+@media (max-width: 760px) {
+  .dp__inner { width: calc(100% - 2.4rem); padding-top: 3rem; }
+  .dp-crumb { padding-left: .4rem; font-size: 1.3rem; }
+  .dp-head { gap: 1.8rem; padding-left: 0; }
+  .dp-head__icon { width: 6rem; height: 6rem; }
+  .dp-head__icon img { width: 3.7rem; height: 3.5rem; }
+  .dp-head__title { font-size: 3rem; }
+  .dp-card__note { display: none; }
+
+  .dp-card--saldo .dp-card__head, .dp-card--topup .dp-card__head, .dp-card--mutasi .dp-card__head, .dp-card--wdlist .dp-card__head { --pl: 2rem; --dv-l: 1.4rem; --dv-r: 1.4rem; }
+  .dp-saldo { margin-left: 1.4rem; max-width: calc(100% - 2.8rem); }
+  .dp-saldo__val { font-size: 4rem; }
+  .dp-saldo__val--sm { font-size: 3.2rem; }
+  .dp-wd { margin-left: 1.4rem; margin-right: 1.4rem; }
+  .dp-wd .dp-field, .dp-field--nominal { width: 100%; max-width: 100%; }
+  .dp-field--nominal { margin: 2rem 0 0; padding: 0 1.4rem; }
+  .dp-card--saldo .dp-actions, .dp-card--topup .dp-actions { flex-direction: column-reverse; align-items: stretch; margin-inline: 1.4rem; }
+  .dp-btn--wd, .dp-btn--tu { width: 100%; justify-content: center; padding: 0; }
+  .dp-pills { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; margin-inline: 1.4rem; }
+  .dp-pill { height: 3.8rem; font-size: 1.4rem; }
+  .dp-empty { margin-inline: 1.4rem; }
+  .dp-pending { margin-inline: 1.4rem; }
+
+  .dp-table-wrap { margin-inline: 1.2rem; overflow-x: auto; }
+  .dp-table { min-width: 56rem; }
+  .dp-wdlist .dp-table { min-width: 88rem; }   /* 6 kolom: geser ke samping di layar kecil */
+  .dp-table thead th:first-child, .dp-table tbody td:first-child { padding-left: 1.4rem; }
+}
