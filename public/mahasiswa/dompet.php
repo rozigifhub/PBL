@@ -197,7 +197,7 @@ require __DIR__ . "/../includes/navbar.php";
                 <div class="dp-card__head">
                     <img src="/assets/img/dompet-ic-wallet-blue.png" alt="">
                     <h2 class="dp-card__title" id="dp-t-saldo">Saldo Anda</h2>
-                    <p class="dp-card__note">Saldo dipakai untuk membayar pesanan (penuh atau sebagian). Refund pesanan masuk ke dompet ini.</p>
+                    <p class="dp-card__note">Saldo dipakai untuk bayar pesanan.Refund masuk ke sini.</p>
                 </div>
 
                 <!-- PHP: NOMINAL SALDO ($saldo dari dompet_saldo()). Tampil "Rp. 50.000,00"; kelas --sm dipasang bila angkanya sangat panjang -->
