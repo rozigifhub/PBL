@@ -123,3 +123,28 @@
   .pt-table td.pt-td-check::before { display: none; }
   .pt-table col:first-child { width: auto; }
 }
+
+/* ---------- 5. DIALOG KONFIRMASI HAPUS (dibuat oleh pesanan-tools.js) ---------- */
+.pt-dialog { width: min(92vw, 46rem); padding: 2.6rem 2.8rem 2.2rem; border: 0; border-radius: 1.6rem; background: #FFF6E3; color: var(--d-title, #1F3A7A);
+  box-shadow: 0 2.4rem 6rem rgba(10, 25, 70, .35); font-family: inherit; }
+.pt-dialog::backdrop { background: rgba(10, 25, 70, .5); }
+.pt-dialog[open] { animation: pt-dialog-in .22s cubic-bezier(.2, .7, .2, 1); }
+.pt-dialog__title { margin: 0 0 1rem; font-size: 2.2rem; font-weight: 700; line-height: 1.25; }
+.pt-dialog__text { margin: 0; font-size: 1.5rem; font-weight: 500; line-height: 1.5; color: #4A4A4A; }
+.pt-dialog__text:empty { display: none; }
+.pt-dialog__actions { display: flex; justify-content: flex-end; gap: 1.2rem; margin-top: 2.2rem; }
+.pt-dialog__btn { min-width: 10rem; padding: 1rem 2rem; border: .2rem solid var(--d-title, #1F3A7A); border-radius: 1rem; background: transparent; color: var(--d-title, #1F3A7A);
+  font: inherit; font-size: 1.5rem; font-weight: 600; cursor: pointer; transition: background-color .2s, transform .15s; }
+.pt-dialog__btn:hover { background: rgba(31, 58, 122, .09); }
+.pt-dialog__btn:active { transform: scale(.96); }
+.pt-dialog__btn--danger { border-color: #963834; background: #963834; color: #fff; }
+.pt-dialog__btn--danger:hover { background: #7C2C29; }
+.pt-dialog__btn:focus-visible { outline: .25rem solid rgba(255, 159, 28, .85); outline-offset: .2rem; }
+@keyframes pt-dialog-in { from { opacity: 0; transform: translateY(1rem) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pt-dialog[open] { animation: none; } }
+@media (max-width: 900px) {
+  .pt-dialog { padding: 2.2rem 2rem 1.8rem; }
+  .pt-dialog__title { font-size: 2rem; }
+  .pt-dialog__actions { flex-direction: column-reverse; }
+  .pt-dialog__btn { width: 100%; }
+}

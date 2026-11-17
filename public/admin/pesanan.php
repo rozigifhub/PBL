@@ -13,6 +13,7 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../config/pesanan_hapus.php";
 require_admin();
 
 $daftarStatus = [
@@ -23,6 +24,30 @@ $daftarStatus = [
 $statusFilter = in_array($_GET["status"] ?? "", $daftarStatus, true)
     ? $_GET["status"]
     : "";
+
+// ---------- Hapus pesanan terpilih dari daftar (POST dari tombol "Hapus Yang Dipilih") ----------
+// Pesanan hanya disembunyikan dari daftar admin (hapus lunak); data pembayaran & laporan tetap utuh.
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $kembali = "/admin/pesanan.php" . ($statusFilter !== "" ? "?" . http_build_query(["status" => $statusFilter]) : "");
+
+    if (!csrf_validate()) {
+        set_flash("gagal", "Sesi tidak valid. Muat ulang halaman lalu coba lagi.");
+    } elseif (($_POST["action"] ?? "") === "hapus") {
+        $ids = is_array($_POST["ids"] ?? null) ? $_POST["ids"] : [];
+        try {
+            $hasil = hapus_pesanan_dari_daftar($pdo, $ids, PESANAN_SISI_ADMIN, null, (int)$_SESSION["id_akun"]);
+            foreach ($hasil["dihapus"] as $idHapus => $statusHapus) {
+                catat_log_admin($pdo, "Hapus", "Pesanan", (int)$idHapus, "Dihapus dari daftar Kelola Pesanan (status: {$statusHapus})");
+            }
+            [$tipe, $pesan] = pesan_hapus_pesanan($hasil);
+            set_flash($tipe, $pesan);
+        } catch (PDOException $e) {
+            error_log("Admin hapus pesanan gagal: " . $e->getMessage());
+            set_flash("gagal", "Pesanan belum bisa dihapus. Pastikan migrasi scripts/migrasi_hapus_pesanan.sql sudah dijalankan.");
+        }
+    }
+    redirect($kembali);
+}
 
 $sql = "
     SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga, p.status_pesanan,
@@ -38,10 +63,11 @@ $sql = "
     FROM pesanan p
     JOIN akun_login a ON a.id_akun = p.id_akun
     LEFT JOIN mahasiswa m ON m.id_akun = p.id_akun
+    WHERE " . sql_pesanan_tampil(PESANAN_SISI_ADMIN) . "
 ";
 $params = [];
 if ($statusFilter !== "") {
-    $sql .= " WHERE p.status_pesanan = :status";
+    $sql .= " AND p.status_pesanan = :status";
     $params[":status"] = $statusFilter;
 }
 $sql .= " ORDER BY p.id_pesanan DESC";
@@ -186,6 +212,12 @@ require __DIR__ . "/../includes/navbar-admin.php";
 
             <div class="pt" data-pt data-pt-mode="server" data-pt-label="<?= e($statusFilter) ?>">
 
+                <!-- Form hapus: diisi & dikirim oleh pesanan-tools.js setelah konfirmasi (ids[] = pesanan terpilih) -->
+                <form method="post" action="" data-pt-form data-pt-konfirmasi="Pesanan hanya dihapus dari daftar Kelola Pesanan. Riwayat pembayaran, stok, dan laporan penjualan tetap tersimpan." hidden>
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <input type="hidden" name="action" value="hapus">
+                </form>
+
                 <!-- Toolbar: pencarian nama pembeli (kiri) + tombol filter "Semua" dengan dropdown status (kanan).
                      Tiap opsi = tautan ?status=..., jadi data tetap difilter oleh query backend di atas. -->
                 <div class="pt-toolbar">
@@ -256,7 +288,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
                             <tbody>
                                 <?php foreach ($pesanan as $i => $p): ?>
                                     <?php $urlDetail = "/admin/pesanan-detail.php?id=" . (int)$p["id_pesanan"]; ?>
-                                    <tr style="--i:<?= (int)$i ?>" data-href="<?= e($urlDetail) ?>" data-id="<?= (int)$p["id_pesanan"] ?>" data-search="<?= e(($p["nama_mhs"] ?? $p["username"]) . " " . ($p["nim"] ?? "")) ?>">
+                                    <tr style="--i:<?= (int)$i ?>" data-href="<?= e($urlDetail) ?>" data-id="<?= (int)$p["id_pesanan"] ?>" data-bisa-hapus="<?= pesanan_bisa_dihapus($p["status_pesanan"]) ? "1" : "0" ?>" data-search="<?= e(($p["nama_mhs"] ?? $p["username"]) . " " . ($p["nim"] ?? "")) ?>">
                                         <td class="pt-td-check">
                                             <input class="pt-check" type="checkbox" value="<?= (int)$p["id_pesanan"] ?>" data-pt-row-check aria-label="Pilih pesanan nomor <?= (int)$p["id_pesanan"] ?>">
                                         </td>

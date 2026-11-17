@@ -5,6 +5,7 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../config/pesanan_hapus.php";
 // Tamu (belum login) dilempar ke login.php?error=menu.
 require_mahasiswa("../login.php", "menu");
 
@@ -32,6 +33,7 @@ $stmt = $pdo->prepare("
             LIMIT 1) AS status_bayar
     FROM pesanan p
     WHERE p.id_akun = :id_akun
+      AND " . sql_pesanan_tampil(PESANAN_SISI_MAHASISWA) . "
     ORDER BY p.id_pesanan DESC
 ");
 $stmt->execute([":id_akun" => $_SESSION["id_akun"]]);
