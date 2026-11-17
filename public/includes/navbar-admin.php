@@ -17,6 +17,7 @@ $adminLinks = [
     "kategori"  => ["KELOLA KATEGORI", "/admin/kategori.php"],
     "produk"    => ["KELOLA PRODUK",   "/admin/merchandise.php"],
     "withdraw"  => ["WITHDRAW",        "/admin/withdraw.php"],
+    "laporan"   => ["LAPORAN",         "/admin/laporan.php"],
     "log"       => ["LOG",             "/admin/log.php"],
 ];
 ?>
