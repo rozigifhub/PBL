@@ -149,7 +149,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 $stmt = $pdo->prepare("
     SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga,
-           p.status_pesanan, p.tipe_pesanan, p.persentase_dp,
+           p.status_pesanan, p.tipe_pesanan, p.persentase_dp, p.tanggal_ambil,
            a.username, a.email,
            m.nim, m.nama AS nama_mhs, m.no_hp
     FROM pesanan p
@@ -555,6 +555,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
                 </h2>
                 <dl class="pd-list">
                     <div class="pd-list__row"><dt>Lokasi</dt><dd><?= nl2br(e($pengiriman["alamat"] ?? PICKUP_LOKASI)) ?></dd></div>
+                    <div class="pd-list__row"><dt>Hari ambil</dt><dd><?= !empty($pesanan["tanggal_ambil"]) ? e(date("d-m-Y", strtotime($pesanan["tanggal_ambil"]))) : "-" ?></dd></div>
                     <div class="pd-list__row"><dt>Status</dt><dd><?= e($pengiriman["status_pengiriman"] ?? "Belum Diambil") ?></dd></div>
                 </dl>
                 <p class="pd-note">Ubah status pesanan ke <b>Siap Diambil</b> saat barang siap, lalu <b>Selesai</b> setelah pembeli mengambilnya.</p>

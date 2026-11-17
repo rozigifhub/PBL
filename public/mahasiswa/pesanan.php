@@ -143,7 +143,7 @@ $flash = take_flash();
 $stmt = $pdo->prepare("
     SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga,
            p.status_pesanan, p.tipe_pesanan, p.persentase_dp,
-           g.alamat, g.status_pengiriman, g.tanggal_pengiriman
+           p.tanggal_ambil, g.alamat, g.status_pengiriman, g.tanggal_pengiriman
     FROM pesanan p
     LEFT JOIN pengiriman g ON g.id_pesanan = p.id_pesanan
     WHERE p.id_pesanan = :id AND p.id_akun = :id_akun
@@ -495,7 +495,7 @@ require __DIR__ . "/../includes/navbar.php";
                     </div>
                     <div class="mp-list__row">
                         <dt>Pengambilan (Self Pickup)</dt>
-                        <dd><?= nl2br(e(($pesanan["alamat"] ?? PICKUP_LOKASI) . "\n" . PICKUP_JAM)) ?></dd>
+                        <dd><?= nl2br(e(($pesanan["alamat"] ?? PICKUP_LOKASI) . (!empty($pesanan["tanggal_ambil"]) ? "\nHari ambil: " . date("d-m-Y", strtotime($pesanan["tanggal_ambil"])) : "\nHari ambil akan diinformasikan"))) ?></dd>
                     </div>
                 </dl>
 

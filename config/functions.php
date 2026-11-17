@@ -12,9 +12,8 @@
  */
 
 // Self pickup: semua pesanan diambil di tempat (tanpa pengiriman / ongkir).
-// TODO: isi lokasi & jam sesuai informasi dari mitra.
-const PICKUP_LOKASI = "Lokasi pengambilan: (isi alamat pengambilan)";
-const PICKUP_JAM    = "Jam pengambilan: (isi hari dan jam)";
+// Hari ambil diinput admin per produk Pre Order (merchandise.tanggal_ambil), bukan konstanta.
+const PICKUP_LOKASI = "Sekretariat HMTI";
 
 // ---------- Session ----------
 

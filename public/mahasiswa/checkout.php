@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $ids = array_map("intval", array_keys($keranjang));
                 $placeholder = implode(",", array_fill(0, count($ids), "?"));
                 $stmt = $pdo->prepare("
-                    SELECT id_merchandise, nama_merchandise, harga, stok
+                    SELECT id_merchandise, nama_merchandise, harga, stok, tipe_produk, po_tutup, tanggal_ambil
                     FROM merchandise
                     WHERE id_merchandise IN ($placeholder)
                     FOR UPDATE
@@ -80,6 +80,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     set_flash("gagal", "Semua item di keranjang sudah tidak tersedia.");
                     redirect("/mahasiswa/keranjang.php");
                 }
+
+                // 2a. Jenis penjualan: tidak boleh campur, PO harus masih dibuka
+                $jenisSet = [];
+                $tglAmbilPesanan = null;
+                foreach ($keranjang as $kid => $item) {
+                    $p = $produkDb[(int)$kid];
+                    $jenisSet[$p["tipe_produk"]] = true;
+                    if ($p["tipe_produk"] === "Pre Order") {
+                        if ((string)$p["po_tutup"] < date("Y-m-d")) {
+                            $pdo->rollBack();
+                            set_flash("gagal", "Pre Order \"" . $p["nama_merchandise"] . "\" sudah ditutup. Hapus dari keranjang.");
+                            redirect("/mahasiswa/keranjang.php");
+                        }
+                        if ($tglAmbilPesanan === null || (string)$p["tanggal_ambil"] > $tglAmbilPesanan) {
+                            $tglAmbilPesanan = (string)$p["tanggal_ambil"];
+                        }
+                    }
+                }
+                if (count($jenisSet) > 1) {
+                    $pdo->rollBack();
+                    set_flash("gagal", "Pre Order dan Ready Stock tidak bisa dibeli dalam satu pesanan. Pisahkan keranjangnya.");
+                    redirect("/mahasiswa/keranjang.php");
+                }
+                $tipePesanan = isset($jenisSet["Pre Order"]) ? "Pre Order" : "Ready Stock";
 
                 // 2. Validasi stok tiap item
                 $kekurangan = [];
@@ -109,9 +133,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 $stmt = $pdo->prepare("
                     INSERT INTO pesanan
-                        (id_akun, total_harga, status_pesanan, tipe_pesanan, persentase_dp)
+                        (id_akun, total_harga, status_pesanan, tipe_pesanan, persentase_dp, tanggal_ambil)
                     VALUES
-                        (:id_akun, :total, :status, 'Ready Stock', :persen)
+                        (:id_akun, :total, :status, :tipe, :persen, :tgl_ambil)
                     RETURNING id_pesanan
                 ");
                 $stmt->execute([
@@ -119,6 +143,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     ":total"   => number_format($total, 2, ".", ""),
                     ":status"  => $statusAwal,
                     ":persen"  => $persenDb,
+                    ":tipe"    => $tipePesanan,
+                    ":tgl_ambil" => $tglAmbilPesanan,
                 ]);
                 $idPesanan = (int)$stmt->fetchColumn();
 
@@ -201,10 +227,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 $items = [];
 $total = 0.0;
+$tglAmbilTampil = null;
 
 foreach ($keranjang as $id => $item) {
     $stmt = $pdo->prepare("
-        SELECT m.nama_merchandise, m.harga, m.foto, k.nama_kategori
+        SELECT m.nama_merchandise, m.harga, m.foto, m.tipe_produk, m.tanggal_ambil, k.nama_kategori
         FROM merchandise m
         JOIN kategori_merchandise k ON k.id_kategori = m.id_kategori
         WHERE m.id_merchandise = :id
@@ -218,6 +245,10 @@ foreach ($keranjang as $id => $item) {
 
     $jumlah   = max(1, (int)($item["jumlah"] ?? 1));
     $subtotal = (float)$p["harga"] * $jumlah;
+
+    if ($p["tipe_produk"] === "Pre Order" && ($tglAmbilTampil === null || (string)$p["tanggal_ambil"] > $tglAmbilTampil)) {
+        $tglAmbilTampil = (string)$p["tanggal_ambil"];
+    }
 
     $items[] = [
         "nama"     => $p["nama_merchandise"],
@@ -402,7 +433,9 @@ require __DIR__ . "/../includes/navbar.php";
                 <h2 class="co-card__title" id="co-t-alamat"><img class="co-ic--home" src="/assets/img/checkout-ic-home.png" alt="">Pengambilan (Self Pickup)</h2>
                 <div class="co-addr">
                     <p><?= e(PICKUP_LOKASI) ?></p>
-                    <p><?= e(PICKUP_JAM) ?></p>
+                    <?php if ($tglAmbilTampil !== null): ?>
+                        <p><b>Pre Order</b> — hari pengambilan: <?= e(date("d-m-Y", strtotime($tglAmbilTampil))) ?></p>
+                    <?php endif; ?>
                     <small class="co-hint">Tanpa ongkos kirim. Kamu akan diberi tahu saat pesanan berstatus Siap Diambil.</small>
                 </div>
             </section>

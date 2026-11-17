@@ -29,6 +29,7 @@ $id = (int)($_GET["id"] ?? 0);
 
 $stmt = $pdo->prepare("
     SELECT m.id_merchandise, m.nama_merchandise, m.deskripsi, m.ukuran, m.harga, m.stok, m.foto,
+           m.tipe_produk, m.po_tutup, m.tanggal_ambil,
            k.id_kategori, k.nama_kategori
     FROM merchandise m
     JOIN kategori_merchandise k ON k.id_kategori = m.id_kategori
@@ -79,7 +80,8 @@ $lainnya        = [];     // produk acak untuk "Pilih Lainnya"
 $kelasNama      = "";     // kelas tambahan judul: nama panjang -> huruf mengecil (pd-name--sm / pd-name--xs)
 
 if ($produk !== false) {
-    $ada       = (int)$produk["stok"] > 0;
+    $poTutup   = $produk["tipe_produk"] === "Pre Order" && (string)$produk["po_tutup"] < date("Y-m-d");
+    $ada       = (int)$produk["stok"] > 0 && !$poTutup;
     $stokLabel = (int)$produk["stok"] >= 1000 ? "1000+" : (string)(int)$produk["stok"];
 
     $panjangNama = strlen((string)$produk["nama_merchandise"]);
@@ -318,6 +320,11 @@ require __DIR__ . "/../includes/navbar.php";
         <!-- ===== 2. DESKRIPSI PRODUK: hanya teks dari backend (3 kotak fitur dihapus) ===== -->
         <section class="pd-desc">
             <h2 class="pd-desc__title">DESKRIPSI PRODUK</h2>
+            <?php if ($produk["tipe_produk"] === "Pre Order"): ?>
+                <p class="pd-desc__text"><b>Pre Order</b> —
+                    <?= $poTutup ? "PO sudah ditutup." : "PO dibuka sampai " . e(date("d-m-Y", strtotime($produk["po_tutup"]))) . ". Kuota tersisa: " . (int)$produk["stok"] . "." ?>
+                    Hari pengambilan di Sekretariat HMTI: <?= e(date("d-m-Y", strtotime($produk["tanggal_ambil"]))) ?>.</p>
+            <?php endif; ?>
             <?php if (trim((string)$produk["deskripsi"]) !== ""): ?>
                 <!-- PHP: $produk["deskripsi"]. Ditulis satu baris (tanpa spasi di sekitar tag PHP) karena CSS memakai
                      white-space: pre-line agar baris baru dari admin tetap tampil. -->

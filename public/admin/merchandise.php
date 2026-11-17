@@ -125,6 +125,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $hargaOk = preg_match("/^\d{1,10}(\.\d{1,2})?$/", (string)$harga) && (float)$harga > 0;
         $stokOk  = preg_match("/^\d{1,7}$/", (string)$stok);
 
+        $tipe      = ($_POST["tipe_produk"] ?? "") === "Pre Order" ? "Pre Order" : "Ready Stock";
+        $poTutup   = $tipe === "Pre Order" ? trim((string)($_POST["po_tutup"] ?? "")) : "";
+        $tglAmbil  = $tipe === "Pre Order" ? trim((string)($_POST["tanggal_ambil"] ?? "")) : "";
+        $tglOk     = static function (string $d): bool {
+            $dt = DateTime::createFromFormat("Y-m-d", $d);
+            return $dt !== false && $dt->format("Y-m-d") === $d;
+        };
+
         // Validasi kategori ada
         $kategoriValid = false;
         if ($idKat > 0) {
@@ -146,6 +154,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $error = "Ukuran maksimal 10 karakter (mis. S, M, L, XL, ALL).";
             } elseif (mb_strlen($deskripsi) > 1000) {
                 $error = "Deskripsi maksimal 1000 karakter.";
+            } elseif ($tipe === "Pre Order" && (!$tglOk($poTutup) || !$tglOk($tglAmbil))) {
+                $error = "Pre Order wajib mengisi tanggal tutup PO dan hari pengambilan yang valid.";
+            } elseif ($tipe === "Pre Order" && $tglAmbil < $poTutup) {
+                $error = "Hari pengambilan tidak boleh sebelum tanggal tutup PO.";
             } elseif ($action === "create") {
 
                 $upload = proses_upload($_FILES["foto"] ?? []);
@@ -154,9 +166,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 } else {
                     $stmt = $pdo->prepare("
                         INSERT INTO merchandise
-                            (id_kategori, nama_merchandise, deskripsi, ukuran, harga, stok, foto)
+                            (id_kategori, nama_merchandise, deskripsi, ukuran, harga, stok, foto,
+                             tipe_produk, po_tutup, tanggal_ambil)
                         VALUES
-                            (:id_kategori, :nama, :deskripsi, :ukuran, :harga, :stok, :foto)
+                            (:id_kategori, :nama, :deskripsi, :ukuran, :harga, :stok, :foto,
+                             :tipe, :po_tutup, :tgl_ambil)
                     ");
                     $stmt->execute([
                         ":id_kategori" => $idKat,
@@ -166,9 +180,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         ":harga"       => $harga,
                         ":stok"        => $stok,
                         ":foto"        => $upload[1],
+                        ":tipe"        => $tipe,
+                        ":po_tutup"    => $poTutup !== "" ? $poTutup : null,
+                        ":tgl_ambil"   => $tglAmbil !== "" ? $tglAmbil : null,
                     ]);
                     catat_log_admin($pdo, "Tambah", "Produk", (int)$pdo->lastInsertId("merchandise_id_merchandise_seq"),
-                        "{$nama} (ukuran {$ukuran}, harga {$harga}, stok {$stok})");
+                        "{$nama} (ukuran {$ukuran}, harga {$harga}, stok {$stok}, {$tipe}" . ($tipe === "Pre Order" ? ", tutup {$poTutup}, ambil {$tglAmbil}" : "") . ")");
                     set_flash("sukses", "Produk \"{$nama}\" ditambahkan.");
                     redirect("merchandise.php");
                 }
@@ -199,7 +216,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             UPDATE merchandise
                             SET id_kategori = :id_kategori, nama_merchandise = :nama,
                                 deskripsi = :deskripsi,
-                                ukuran = :ukuran, harga = :harga, stok = :stok, foto = :foto
+                                ukuran = :ukuran, harga = :harga, stok = :stok, foto = :foto,
+                                tipe_produk = :tipe, po_tutup = :po_tutup, tanggal_ambil = :tgl_ambil
                             WHERE id_merchandise = :id
                         ");
                         $stmt->execute([
@@ -207,6 +225,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             ":deskripsi"   => $deskripsi,
                             ":ukuran"      => $ukuran, ":harga" => $harga,
                             ":stok"        => $stok,   ":foto"  => $fotoBaru,
+                            ":tipe"        => $tipe,
+                            ":po_tutup"    => $poTutup !== "" ? $poTutup : null,
+                            ":tgl_ambil"   => $tglAmbil !== "" ? $tglAmbil : null,
                             ":id"          => $id,
                         ]);
                         $perubahan = ringkas_perubahan($rowLama, [
@@ -216,6 +237,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             "ukuran"           => $ukuran,
                             "harga"            => number_format((float)$harga, 2, ".", ""),
                             "stok"             => (int)$stok,
+                            "tipe_produk"      => $tipe,
+                            "po_tutup"         => $poTutup !== "" ? $poTutup : null,
+                            "tanggal_ambil"    => $tglAmbil !== "" ? $tglAmbil : null,
                         ]);
                         if ($fotoBaru !== $lama) {
                             $perubahan .= ($perubahan !== "" ? "; " : "") . "foto diganti";
@@ -412,6 +436,28 @@ require __DIR__ . "/../includes/navbar-admin.php";
                            value="<?= e($editRow["stok"] ?? "") ?>">
                 </div>
 
+                <?php
+                $tipeForm     = $editRow["tipe_produk"] ?? ($_POST["tipe_produk"] ?? "Ready Stock");
+                $poTutupForm  = $editRow["po_tutup"] ?? ($_POST["po_tutup"] ?? "");
+                $tglAmbilForm = $editRow["tanggal_ambil"] ?? ($_POST["tanggal_ambil"] ?? "");
+                ?>
+                <div class="mp-field">
+                    <label class="mp-label" for="tipe_produk">Jenis Penjualan</label>
+                    <select class="mp-control" id="tipe_produk" name="tipe_produk"
+                            onchange="document.getElementById('po-field').hidden = this.value !== 'Pre Order';">
+                        <option value="Ready Stock"<?= $tipeForm === "Ready Stock" ? " selected" : "" ?>>Ready Stock</option>
+                        <option value="Pre Order"<?= $tipeForm === "Pre Order" ? " selected" : "" ?>>Pre Order</option>
+                    </select>
+                </div>
+
+                <div class="mp-field mp-field--full" id="po-field"<?= $tipeForm === "Pre Order" ? "" : " hidden" ?>>
+                    <label class="mp-label" for="po_tutup">Tanggal Tutup PO</label>
+                    <input class="mp-control" id="po_tutup" type="date" name="po_tutup" value="<?= e((string)$poTutupForm) ?>">
+                    <label class="mp-label" for="tanggal_ambil">Hari Pengambilan</label>
+                    <input class="mp-control" id="tanggal_ambil" type="date" name="tanggal_ambil" value="<?= e((string)$tglAmbilForm) ?>">
+                    <small>Stok di atas dipakai sebagai kuota PO.</small>
+                </div>
+
                 <div class="mp-field">
                     <label class="mp-label" for="foto">
                         Foto (JPG/PNG/WEBP, Max: 2MB)
@@ -513,7 +559,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
                                     <td data-label="Nama Produk" class="mp-name"><?= e($namaP) ?></td>
                                     <td data-label="Kategori"><span class="mp-pill <?= e(pil_kategori_kelas((int)$p["id_kategori"])) ?>"><?= e($p["nama_kategori"]) ?></span></td>
                                     <td data-label="Harga" class="is-num">Rp <?= number_format((float)$p["harga"], 0, ",", ".") ?></td>
-                                    <td data-label="Stock" class="is-num"><?= (int)$p["stok"] ?></td>
+                                    <td data-label="Stock" class="is-num"><?= (int)$p["stok"] ?><?= ($p["tipe_produk"] ?? "") === "Pre Order" ? "<br><small>PO s/d " . e((string)$p["po_tutup"]) . "</small>" : "" ?></td>
                                     <td data-label="Ukuran"><?= e($p["ukuran"]) ?></td>
                                     <td data-label="Aksi" class="mp-aksi">
                                         <div class="mp-actions">

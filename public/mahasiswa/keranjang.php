@@ -35,7 +35,7 @@ require_mahasiswa("../login.php", "cart");
  * PERHATIAN: checkout.php BELUM menambahkan ongkir ke pesanan.total_harga maupun
  * tagihan Midtrans. Selama itu belum diubah, angka ini hanya tampilan (estimasi).
  */
-const ONGKIR_ESTIMASI = 15000;
+const ONGKIR_ESTIMASI = 0;   // self pickup: tanpa ongkir
 
 /** URL foto produk (absolut dari root web); string kosong jika file tidak ada. */
 function foto_url(string $foto): string
@@ -120,12 +120,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $jumlah = max(1, (int)($_POST["jumlah"] ?? 1));
 
             // Ambil stok terkini dari database
-            $stmt = $pdo->prepare("SELECT stok FROM merchandise WHERE id_merchandise = :id");
+            $stmt = $pdo->prepare("SELECT stok, tipe_produk, po_tutup FROM merchandise WHERE id_merchandise = :id");
             $stmt->execute([":id" => $id]);
-            $stok = $stmt->fetchColumn();
+            $produkTambah = $stmt->fetch();
+            $stok = $produkTambah === false ? false : $produkTambah["stok"];
+
+            // Jenis lain di keranjang (Ready Stock / Pre Order tidak boleh dicampur)
+            $jenisLain = false;
+            if ($produkTambah !== false && $keranjang) {
+                $idsLain = array_values(array_filter(array_map("intval", array_keys($keranjang)), static fn($k) => $k !== $id));
+                if ($idsLain) {
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM merchandise WHERE tipe_produk <> :tipe AND id_merchandise IN (" . implode(",", $idsLain) . ")");
+                    $stmt->execute([":tipe" => $produkTambah["tipe_produk"]]);
+                    $jenisLain = (int)$stmt->fetchColumn() > 0;
+                }
+            }
 
             if ($stok === false || (int)$stok < 1) {
                 set_flash("gagal", "Produk tidak tersedia.");
+            } elseif ($produkTambah["tipe_produk"] === "Pre Order" && (string)$produkTambah["po_tutup"] < date("Y-m-d")) {
+                set_flash("gagal", "Pre Order produk ini sudah ditutup.");
+            } elseif ($jenisLain) {
+                set_flash("gagal", "Pre Order dan Ready Stock tidak bisa dibeli dalam satu keranjang. Selesaikan atau kosongkan keranjang dulu.");
             } else {
                 $jumlahLama = (int)($keranjang[$id]["jumlah"] ?? 0);
                 $jumlahBaru = min($jumlahLama + $jumlah, (int)$stok);
