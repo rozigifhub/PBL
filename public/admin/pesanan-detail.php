@@ -4,7 +4,7 @@
  * Admin — detail pesanan:
  *   - info pesanan, pembeli, item, riwayat pembayaran
  *   - ubah status pesanan (transisi terbatas sesuai alur)
- *   - kelola pengiriman (status, tanggal, bukti/resi)
+ *   - self pickup: status Siap Diambil -> Selesai (tanpa pengiriman)
  *
  * Pembatalan pesanan mengembalikan stok produk otomatis.
  */
@@ -25,8 +25,8 @@ function transisi_diizinkan(string $status): array
         "Menunggu Pelunasan"  => ["Dibatalkan"],
         "DP Lunas"            => ["Diproses"],
         "Lunas"               => ["Diproses"],
-        "Diproses"            => ["Dikirim"],
-        "Dikirim"             => ["Selesai"],
+        "Diproses"            => ["Siap Diambil"],
+        "Siap Diambil"         => ["Selesai"],
         "Selesai"             => [],
         "Dibatalkan"          => [],
     ];
@@ -112,42 +112,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     }
                 }
 
-                // ---- Aksi: kelola pengiriman ----
-                if ($action === "pengiriman" && $error === "") {
-                    $statusKir = $_POST["status_pengiriman"] ?? "";
-                    $tanggal   = trim($_POST["tanggal_pengiriman"] ?? "");
-                    $bukti     = trim($_POST["bukti_pengiriman"] ?? "");
-
-                    if (!in_array($statusKir, ["Belum Dikirim", "Dikirim", "Diterima"], true)) {
-                        $error = "Status pengiriman tidak valid.";
-                    } else {
-                        $stmt = $pdo->prepare("
-                            UPDATE pengiriman
-                            SET status_pengiriman = :status,
-                                tanggal_pengiriman = COALESCE(CAST(NULLIF(:tanggal, '') AS TIMESTAMPTZ), tanggal_pengiriman),
-                                bukti_pengiriman   = NULLIF(:bukti, ''),
-                                id_admin = COALESCE(id_admin, :admin)
-                            WHERE id_pesanan = :id
-                        ");
-                        $stmt->execute([
-                            ":status"  => $statusKir,
-                            ":tanggal" => $tanggal !== "" ? $tanggal : null,
-                            ":bukti"   => $bukti,
-                            ":admin"   => $_SESSION["id_akun"],
-                            ":id"      => $id,
-                        ]);
-                        set_flash("sukses", "Data pengiriman diperbarui.");
-                    }
-                }
-
                 if ($error === "") {
                     $pdo->commit();
 
                     if ($action === "status") {
                         catat_log_admin($pdo, "Status", "Pesanan", $id, "{$statusKini} → {$statusBaru}");
-                    } elseif ($action === "pengiriman") {
-                        catat_log_admin($pdo, "Pengiriman", "Pesanan", $id,
-                            "status: {$statusKir}" . ($tanggal !== "" ? "; tanggal: {$tanggal}" : "") . ($bukti !== "" ? "; bukti/resi: {$bukti}" : ""));
                     }
 
                     if ($action === "status" && $statusBaru === "Dibatalkan") {
@@ -243,7 +212,7 @@ $badgePesanan = [
     "DP Lunas"            => ["done",    "pd-ic-check"],
     "Lunas"               => ["done",    "pd-ic-check"],
     "Diproses"            => ["process", "pd-ic-gear"],
-    "Dikirim"             => ["ship",    "pd-ic-truck"],
+    "Siap Diambil"         => ["ship",    "pd-ic-truck"],
     "Selesai"             => ["done",    "pd-ic-check"],
     "Dibatalkan"          => ["off",     "pd-ic-x"],
 ];
@@ -441,7 +410,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
                     <div class="pd-list__row"><dt>NIM</dt><dd><?= e($pesanan["nim"] ?? "-") ?></dd></div>
                     <div class="pd-list__row"><dt>Email</dt><dd><?= e($pesanan["email"]) ?></dd></div>
                     <div class="pd-list__row"><dt>No. HP</dt><dd><?= e($pesanan["no_hp"] ?? "-") ?></dd></div>
-                    <div class="pd-list__row"><dt>Alamat Kirim</dt><dd><?= nl2br(e($pengiriman["alamat"] ?? "-")) ?></dd></div>
+                    <div class="pd-list__row"><dt>Pengambilan</dt><dd><?= e("Self pickup") ?></dd></div>
                 </dl>
             </section>
         </div>
@@ -541,7 +510,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
         </section>
         <?php endif; ?>
 
-        <!-- ================= BARIS 4 (2 kolom): UBAH STATUS PESANAN + PENGIRIMAN ================= -->
+        <!-- ================= BARIS 4 (2 kolom): UBAH STATUS PESANAN + PENGAMBILAN ================= -->
         <div class="pd-grid pd-grid--forms">
 
             <!-- ---------- CARD: UBAH STATUS PESANAN ---------- -->
@@ -578,55 +547,17 @@ require __DIR__ . "/../includes/navbar-admin.php";
                 <?php endif; ?>
             </section>
 
-            <!-- ---------- CARD: PENGIRIMAN ---------- -->
+            <!-- ---------- CARD: PENGAMBILAN (SELF PICKUP) ---------- -->
             <section class="pd-card pd-card--form" aria-labelledby="pd-t-kirim">
                 <h2 class="pd-card__title" id="pd-t-kirim">
                     <img class="pd-ic--kirim" src="/assets/img/detail-ic-kirim.png" alt="" width="49" height="42">
-                    Pengiriman
+                    Pengambilan (Self Pickup)
                 </h2>
-
-                <?php if ($pengiriman !== false): ?>
-                    <!-- FORM PENGIRIMAN: method, csrf_token, action, dan semua name input sama dengan kode backend asli -->
-                    <form method="POST" class="pd-form">
-                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                        <input type="hidden" name="action" value="pengiriman">
-
-                        <div class="pd-ship">
-                            <div>
-                                <label class="pd-label" for="pd-status-kirim">Status Pengiriman</label>
-                                <select class="pd-field" id="pd-status-kirim" name="status_pengiriman">
-                                    <?php foreach (["Belum Dikirim", "Dikirim", "Diterima"] as $s): ?>
-                                        <option value="<?= e($s) ?>"
-                                            <?= $pengiriman["status_pengiriman"] === $s ? "selected" : "" ?>>
-                                            <?= e($s) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="pd-label" for="pd-tgl-kirim">Tanggal Pengiriman</label>
-                                <input class="pd-field" type="datetime-local" id="pd-tgl-kirim" name="tanggal_pengiriman"
-                                       value="<?= e(str_replace(" ", "T", substr($pengiriman["tanggal_pengiriman"] ?? "", 0, 16))) ?>">
-                            </div>
-
-                            <div class="pd-ship__resi">
-                                <div class="pd-inline__field">
-                                    <label class="pd-label" for="pd-resi">Bukti / No. Resi (Opsional)</label>
-                                    <input class="pd-field" type="text" id="pd-resi" name="bukti_pengiriman" maxlength="255"
-                                           placeholder="Masukkan No Resi"
-                                           value="<?= e($pengiriman["bukti_pengiriman"] ?? "") ?>">
-                                </div>
-                                <button type="submit" class="pd-btn">
-                                    <img src="/assets/img/detail-ic-simpan.png" alt="" width="30" height="28">
-                                    Simpan Pengiriman
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                <?php else: ?>
-                    <p class="pd-final"><i>Baris pengiriman belum ada untuk pesanan ini.</i></p>
-                <?php endif; ?>
+                <dl class="pd-list">
+                    <div class="pd-list__row"><dt>Lokasi</dt><dd><?= nl2br(e($pengiriman["alamat"] ?? PICKUP_LOKASI)) ?></dd></div>
+                    <div class="pd-list__row"><dt>Status</dt><dd><?= e($pengiriman["status_pengiriman"] ?? "Belum Diambil") ?></dd></div>
+                </dl>
+                <p class="pd-note">Ubah status pesanan ke <b>Siap Diambil</b> saat barang siap, lalu <b>Selesai</b> setelah pembeli mengambilnya.</p>
             </section>
         </div>
 

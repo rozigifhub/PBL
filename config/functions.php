@@ -11,6 +11,11 @@
  *   require_admin();          // untuk halaman admin
  */
 
+// Self pickup: semua pesanan diambil di tempat (tanpa pengiriman / ongkir).
+// TODO: isi lokasi & jam sesuai informasi dari mitra.
+const PICKUP_LOKASI = "Lokasi pengambilan: (isi alamat pengambilan)";
+const PICKUP_JAM    = "Jam pengambilan: (isi hari dan jam)";
+
 // ---------- Session ----------
 
 function app_session_start(): void

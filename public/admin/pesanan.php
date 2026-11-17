@@ -15,7 +15,7 @@ require_admin();
 
 $daftarStatus = [
     "Menunggu Pembayaran", "Menunggu DP", "DP Lunas", "Lunas",
-    "Diproses", "Dikirim", "Selesai", "Dibatalkan",
+    "Diproses", "Siap Diambil", "Selesai", "Dibatalkan",
 ];
 
 $statusFilter = in_array($_GET["status"] ?? "", $daftarStatus, true)
@@ -60,7 +60,7 @@ $badgePesanan = [
     "DP Lunas"            => ["done",    "ic-check"],
     "Lunas"               => ["done",    "ic-check"],
     "Diproses"            => ["process", "ic-gear"],
-    "Dikirim"             => ["ship",    "ic-truck"],
+    "Siap Diambil"         => ["ship",    "ic-truck"],
     "Selesai"             => ["done",    "ic-check"],
     "Dibatalkan"          => ["off",     "ic-x"],
 ];

@@ -41,7 +41,7 @@ const ALASAN_REFUND = [
     "Ingin mengganti produk",
     "Menemukan harga lebih murah",
     "Pembayaran/pesanan ganda",
-    "Pengiriman terlalu lama",
+    "Pesanan terlalu lama diproses",
 ];
 
 // ---------- Refund ke dompet (maks 24 jam sejak pembayaran pertama) ----------
@@ -205,7 +205,7 @@ $badgePesanan = [
     "DP Lunas"            => ["done",    "mp-ic-check"],
     "Lunas"               => ["done",    "mp-ic-check"],
     "Diproses"            => ["process", "mp-ic-gear"],
-    "Dikirim"             => ["ship",    "mp-ic-truck"],
+    "Siap Diambil"         => ["ship",    "mp-ic-truck"],
     "Selesai"             => ["done",    "mp-ic-check"],
     "Dibatalkan"          => ["off",     "mp-ic-x"],
 ];
@@ -294,7 +294,7 @@ if ($pesanan !== false) {
         "Menunggu Pelunasan"  => 1,
         "Lunas"               => 2,
         "Diproses"            => 3,
-        "Dikirim"             => 4,
+        "Siap Diambil"         => 4,
         "Selesai"             => 5,
         "Dibatalkan"          => 1,
     ][$statusKini] ?? 1;
@@ -304,8 +304,8 @@ if ($pesanan !== false) {
         ["Pesanan Dibuat",          substr((string)$pesanan["tanggal_pesanan"], 0, 16), "Pesanan diterima", "Pesanan diterima"],
         ["Pembayaran Dikonfirmasi", $tglBayar ? substr((string)$tglBayar, 0, 16) : "",  "Pembayaran diterima", "Menunggu pembayaran"],
         ["Pesanan Diproses",        "",                                                  "Pesanan sudah diproses admin", "Menunggu diproses admin"],
-        ["Pesanan Dikirim",         !empty($pesanan["tanggal_pengiriman"]) ? substr((string)$pesanan["tanggal_pengiriman"], 0, 16) : "", "Pesanan sudah dikirim", "Belum dikirim"],
-        ["Pesanan Selesai",         "",                                                  "Pesanan telah diterima", "Menunggu pesanan diterima"],
+        ["Siap Diambil",            !empty($pesanan["tanggal_pengiriman"]) ? substr((string)$pesanan["tanggal_pengiriman"], 0, 16) : "", "Pesanan siap diambil", "Belum siap diambil"],
+        ["Pesanan Selesai",         "",                                                  "Pesanan telah diambil", "Menunggu pesanan diambil"],
     ];
 
     foreach ($daftarLangkah as $i => [$judul, $tgl, $teksSelesai, $teksMenunggu]) {
@@ -494,8 +494,8 @@ require __DIR__ . "/../includes/navbar.php";
                         <dd><?= e(format_rupiah((float)$pesanan["total_harga"])) ?></dd>
                     </div>
                     <div class="mp-list__row">
-                        <dt>Alamat Pengiriman</dt>
-                        <dd><?= nl2br(e($pesanan["alamat"] ?? "-")) ?></dd>
+                        <dt>Pengambilan (Self Pickup)</dt>
+                        <dd><?= nl2br(e(($pesanan["alamat"] ?? PICKUP_LOKASI) . "\n" . PICKUP_JAM)) ?></dd>
                     </div>
                 </dl>
 
@@ -512,8 +512,8 @@ require __DIR__ . "/../includes/navbar.php";
                     </div>
                     <?php endif; ?>
                     <div class="mp-list__row">
-                        <dt>Status Pengiriman</dt>
-                        <dd><?= e($pesanan["status_pengiriman"] ?? "Belum Dikirim") ?></dd>
+                        <dt>Status Pengambilan</dt>
+                        <dd><?= e($pesanan["status_pengiriman"] ?? "Belum Diambil") ?></dd>
                     </div>
                 </dl>
             </section>
@@ -670,7 +670,7 @@ require __DIR__ . "/../includes/navbar.php";
                 </div>
             <?php endif; ?>
 
-            <!-- Tidak ada tindakan untuk status ini (mis. Diproses, Dikirim, Selesai, Dibatalkan) -->
+            <!-- Tidak ada tindakan untuk status ini (mis. Diproses, Siap Diambil, Selesai, Dibatalkan) -->
             <?php if (!$bisaBayar && $statusPesanan !== "Lunas" && !$bisaRefund && $batasRefund === null): ?>
                 <div class="mp-aksi__blok">
                     <p class="mp-aksi__lead">Tidak ada tindakan yang perlu Anda lakukan untuk pesanan ini.</p>

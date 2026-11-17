@@ -10,9 +10,7 @@ require_mahasiswa("../login.php", "menu");
 
 // Profil mahasiswa (join akun_login untuk email)
 $stmt = $pdo->prepare("
-    SELECT m.nim, m.nama, m.no_hp, a.email,
-           (SELECT d.alamat FROM alamat_mahasiswa d
-            WHERE d.id_akun = m.id_akun AND d.is_default) AS alamat
+    SELECT m.nim, m.nama, m.no_hp, a.email
     FROM mahasiswa m
     JOIN akun_login a ON a.id_akun = m.id_akun
     WHERE m.id_akun = :id_akun
@@ -47,7 +45,7 @@ $pesanan      = array_slice($semuaPesanan, 0, $batasPesanan);
 // Ringkasan pesanan untuk 4 kartu statistik.
 // Dihitung di PHP dari $semuaPesanan (data yang sudah diambil di atas), jadi TIDAK ada query tambahan.
 // Dihitung dari SEMUA pesanan, bukan dari $pesanan yang dipotong $batasPesanan.
-$jumlahStatus = ["Diproses" => 0, "Dikirim" => 0, "Selesai" => 0];
+$jumlahStatus = ["Diproses" => 0, "Siap Diambil" => 0, "Selesai" => 0];
 foreach ($semuaPesanan as $row) {
     if (isset($jumlahStatus[$row["status_pesanan"]])) {
         $jumlahStatus[$row["status_pesanan"]]++;
@@ -56,7 +54,7 @@ foreach ($semuaPesanan as $row) {
 $ringkasan = [
     ["label" => "Total Pesanan",    "jumlah" => count($semuaPesanan),             "ikon" => "stat-total.png"],
     ["label" => "Pesanan Diproses", "jumlah" => $jumlahStatus["Diproses"], "ikon" => "stat-diproses.png"],
-    ["label" => "Pesanan Dikirim",  "jumlah" => $jumlahStatus["Dikirim"],  "ikon" => "stat-dikirim.png"],
+    ["label" => "Siap Diambil",     "jumlah" => $jumlahStatus["Siap Diambil"],  "ikon" => "stat-dikirim.png"],
     ["label" => "Pesanan Selesai",  "jumlah" => $jumlahStatus["Selesai"],  "ikon" => "stat-selesai.png"],
 ];
 
@@ -68,7 +66,7 @@ $kelasStatus = [
     "DP Lunas"            => "done",
     "Lunas"               => "done",
     "Diproses"            => "process",
-    "Dikirim"             => "ship",
+    "Siap Diambil"         => "ship",
     "Selesai"             => "done",
 ];
 ?>
@@ -132,12 +130,6 @@ require __DIR__ . "/../includes/navbar.php";
                 <div class="dash-data__item">
                     <dt>No. HP</dt>
                     <dd><?= e($profil["no_hp"] ?? "-") ?></dd>
-                </div>
-                <div class="dash-data__item dash-data__item--wide">
-                    <dt>Alamat</dt>
-                    <dd>
-                        <?= $profil["alamat"] ? nl2br(e($profil["alamat"])) : "<i>Belum ada — isi di halaman profil</i>" ?>
-                    </dd>
                 </div>
             </dl>
         </section>

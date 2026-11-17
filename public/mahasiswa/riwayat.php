@@ -55,7 +55,7 @@ $tabRiwayat = [
     "menunggu-dp"         => ["Menunggu DP",         ["Menunggu DP"]],
     "lunas"               => ["Lunas",               ["DP Lunas", "Lunas"]],
     "diproses"            => ["Diproses",            ["Diproses"]],
-    "dikirim"             => ["Dikirim",             ["Dikirim"]],
+    "siap-diambil"        => ["Siap Diambil",        ["Siap Diambil"]],
     "selesai"             => ["Selesai",             ["Selesai"]],
 ];
 
@@ -67,7 +67,7 @@ $kelasBadge = [
     "DP Lunas"            => "done",
     "Lunas"               => "done",
     "Diproses"            => "process",
-    "Dikirim"             => "ship",
+    "Siap Diambil"         => "ship",
     "Selesai"             => "done",
     "Dibatalkan"          => "off",
 ];

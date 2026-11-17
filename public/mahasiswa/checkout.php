@@ -10,7 +10,7 @@
  *   3. INSERT pesanan (status 'Menunggu Pembayaran', tipe 'Ready Stock').
  *   4. INSERT detail_pesanan — harga_satuan = SNAPSHOT harga saat checkout.
  *   5. UPDATE stok tiap produk (stok = stok - jumlah).
- *   6. INSERT pengiriman (alamat dari mahasiswa, status 'Belum Dikirim',
+ *   6. INSERT pengiriman (self pickup: lokasi pengambilan, status 'Belum Diambil',
  *      id_admin NULL sampai admin ditugaskan).
  *   7. COMMIT — jika ada satu saja kegagalan, ROLLBACK semuanya.
  *
@@ -38,33 +38,16 @@ if (empty($keranjang)) {
 
 $saldoDompet = dompet_saldo($pdo, (int)$_SESSION["id_akun"]);
 
-// Alamat tersimpan di profil (default lebih dulu) untuk prefilled form checkout
-$stmt = $pdo->prepare("
-    SELECT id_alamat, label, alamat, is_default
-    FROM alamat_mahasiswa
-    WHERE id_akun = :id_akun
-    ORDER BY is_default DESC, id_alamat
-");
-$stmt->execute([":id_akun" => $_SESSION["id_akun"]]);
-$daftarAlamat  = $stmt->fetchAll();
-$alamatDefault = ($daftarAlamat && $daftarAlamat[0]["is_default"]) ? $daftarAlamat[0]["alamat"] : "";
-
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (!csrf_validate()) {
         $error = "Sesi tidak valid. Silakan coba lagi.";
     } else {
-        $alamat = trim($_POST["alamat"] ?? "");
-
         // Pilihan metode: 'full' (bayar penuh) atau 'dp' (DP 50%, sisanya pelunasan)
         $jenisPembayaran = ($_POST["jenis_pembayaran"] ?? "full") === "dp" ? "dp" : "full";
         $persenDp        = $jenisPembayaran === "dp" ? 50 : 0;
 
-        if ($alamat === "") {
-            $error = "Alamat pengiriman wajib diisi.";
-        } elseif (strlen($alamat) > 500) {
-            $error = "Alamat maksimal 500 karakter.";
-        } else {
+        {
             try {
                 $pdo->beginTransaction();
 
@@ -167,30 +150,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $stmtStok->execute([":jumlah" => $jumlah, ":id" => (int)$kid]);
                 }
 
-                // 6. INSERT pengiriman (admin diisi kemudian)
+                // 6. INSERT catatan pengambilan (self pickup; lokasi disimpan sebagai snapshot)
                 $stmt = $pdo->prepare("
                     INSERT INTO pengiriman (id_pesanan, alamat, status_pengiriman)
-                    VALUES (:id_pesanan, :alamat, 'Belum Dikirim')
+                    VALUES (:id_pesanan, :alamat, 'Belum Diambil')
                 ");
-                $stmt->execute([":id_pesanan" => $idPesanan, ":alamat" => $alamat]);
+                $stmt->execute([":id_pesanan" => $idPesanan, ":alamat" => PICKUP_LOKASI]);
 
                 $pdo->commit();
 
                 // Pesanan selesai → keranjang dikosongkan
                 unset($_SESSION["keranjang"]);
-
-                // Belum punya alamat tersimpan → simpan alamat ini sebagai default
-                if (!$daftarAlamat) {
-                    try {
-                        $stmt = $pdo->prepare("
-                            INSERT INTO alamat_mahasiswa (id_akun, label, alamat, is_default)
-                            VALUES (:id_akun, 'Alamat utama', :alamat, TRUE)
-                        ");
-                        $stmt->execute([":alamat" => $alamat, ":id_akun" => $_SESSION["id_akun"]]);
-                    } catch (PDOException $e) {
-                        error_log("Gagal menyimpan alamat default: " . $e->getMessage());
-                    }
-                }
 
                 // Fase 4: buat pembayaran lalu arahkan ke sana
                 // (DP → gross sebesar persentase; Full → gross sebesar total)
@@ -260,8 +230,6 @@ foreach ($keranjang as $id => $item) {
     $total += $subtotal;
 }
 
-// Nilai awal textarea: input terakhir (jika gagal) > alamat default profil
-$alamatForm = array_key_exists("alamat", $_POST) ? $_POST["alamat"] : ($alamatDefault ?: "");
 
 /** URL foto produk (absolut dari root web); string kosong jika file tidak ada. */
 if (!function_exists("foto_url")) {
@@ -429,41 +397,13 @@ require __DIR__ . "/../includes/navbar.php";
                 </div>
             </section>
 
-            <!-- ===== CARD 3: ALAMAT PENGIRIMAN ===== -->
+            <!-- ===== CARD 3: SELF PICKUP (semua pesanan diambil di tempat) ===== -->
             <section class="co-card co-card--alamat" aria-labelledby="co-t-alamat">
-                <h2 class="co-card__title" id="co-t-alamat"><img class="co-ic--home" src="/assets/img/checkout-ic-home.png" alt="">Alamat Pengiriman</h2>
-
+                <h2 class="co-card__title" id="co-t-alamat"><img class="co-ic--home" src="/assets/img/checkout-ic-home.png" alt="">Pengambilan (Self Pickup)</h2>
                 <div class="co-addr">
-                    <!-- PHP: DROPDOWN ALAMAT TERSIMPAN — hanya tampil jika $daftarAlamat ada (if & foreach asli, onchange asli) -->
-                    <?php if ($daftarAlamat): ?>
-                        <div class="co-field">
-                            <label class="co-label" for="pilih-alamat">Pilih Alamat Pengiriman</label>
-                            <div class="co-pick">
-                                <div class="co-select">
-                                    <select id="pilih-alamat" onchange="if (this.value !== '') document.getElementById('alamat').value = this.options[this.selectedIndex].dataset.alamat;">
-                                        <option value="">— ketik alamat lain —</option>
-                                        <!-- PHP: LOOPING ALAMAT MULAI DARI SINI -->
-                                        <?php foreach ($daftarAlamat as $a): ?>
-                                            <option value="<?= (int)$a["id_alamat"] ?>" data-alamat="<?= e($a["alamat"]) ?>"<?= ($a["is_default"] && $alamatForm === $alamatDefault) ? " selected" : "" ?>>
-                                                <?= e($a["label"]) ?><?= $a["is_default"] ? " (default)" : "" ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                        <!-- PHP: LOOPING ALAMAT SELESAI DI SINI -->
-                                    </select>
-                                </div>
-                                <a class="co-manage" href="/mahasiswa/profil.php">+ Kelola Alamat</a>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- PHP: TEXTAREA ALAMAT (id="alamat" name="alamat"; isi dari $alamatForm) -->
-                    <div class="co-field">
-                        <label class="co-label" for="alamat">Alamat Lengkap</label>
-                        <textarea class="co-textarea" id="alamat" name="alamat" rows="4" cols="50" maxlength="500"
-                                  placeholder="Contoh: Jl. Kenanga No. 10, RT 02/RW 03, Surabaya"
-                                  required><?= e($alamatForm) ?></textarea>
-                        <small class="co-hint">Alamat default terisi otomatis (tetap bisa diubah per pesanan).</small>
-                    </div>
+                    <p><?= e(PICKUP_LOKASI) ?></p>
+                    <p><?= e(PICKUP_JAM) ?></p>
+                    <small class="co-hint">Tanpa ongkos kirim. Kamu akan diberi tahu saat pesanan berstatus Siap Diambil.</small>
                 </div>
             </section>
 

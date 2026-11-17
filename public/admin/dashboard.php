@@ -20,7 +20,7 @@ $batasTerlaris = 5;   // Produk Terlaris: Top 5
 
 // Status pesanan yang "sah" untuk pendapatan. Sama dengan keterangan rekap penjualan
 // di bawah tabel Produk Terlaris (dan dengan definisi mv_rekap_penjualan_produk).
-$statusSah = ["DP Lunas", "Lunas", "Diproses", "Dikirim", "Selesai"];
+$statusSah = ["DP Lunas", "Lunas", "Diproses", "Siap Diambil", "Selesai"];
 
 // ---------- Fungsi tampilan kecil (dipakai kedua tabel) ----------
 
@@ -353,7 +353,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
 
             <?php endif; ?>
 
-            <p class="dash-note">Rekap penjualan hanya dihitung dari pesanan yang sah (DP Lunas, Lunas, Diproses, Dikirim, Selesai).</p>
+            <p class="dash-note">Rekap penjualan hanya dihitung dari pesanan yang sah (DP Lunas, Lunas, Diproses, Siap Diambil, Selesai).</p>
         </section>
 
     </div>

@@ -59,7 +59,7 @@ function foto_kartu_url(string $foto): string
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Merchandise Kampus - JTI</title>
-    <meta name="description" content="Toko merchandise resmi Jurusan Teknologi Informasi Polinema: kaos, hoodie, tote bag, dan lainnya. Pesan online, bayar DP atau lunas, dan kirim ke alamatmu.">
+    <meta name="description" content="Toko merchandise resmi Jurusan Teknologi Informasi Polinema: kaos, hoodie, tote bag, dan lainnya. Pesan online, bayar DP atau lunas, lalu ambil sendiri (self pickup).">
     <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Font judul banner (Poppins Bold, di-host sendiri) + gambar produk banner (LCP) -->
     <link rel="preload" href="/assets/fonts/poppins-bold-latin.woff" as="font" type="font/woff" crossorigin>
