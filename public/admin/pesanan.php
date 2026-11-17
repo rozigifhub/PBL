@@ -4,8 +4,10 @@
  * Admin — daftar semua pesanan (dengan filter status).
  * Klik nomor pesanan untuk detail: ubah status & kelola pengiriman.
  *
- * Tampilan mengikuti desain UI/UX (navbar admin, tab filter, kartu tabel);
- * auth, query, dan filter status tetap dari tim backend.
+ * Tampilan mengikuti desain UI/UX (navbar admin, kolom pencarian, tombol filter "Semua" + dropdown status,
+ * checkbox "Pilih Semua", kartu tabel); auth, query, dan filter status tetap dari tim backend.
+ * Filter status tetap dijalankan query di atas (opsi dropdown = tautan ?status=...); pencarian nama pembeli
+ * menyaring baris di browser (assets/js/pesanan-tools.js).
  */
 
 require_once __DIR__ . "/../../config/functions.php";
@@ -92,16 +94,19 @@ function format_rupiah(float $angka): string
     return "Rp. " . number_format($angka, 0, ",", ".");
 }
 
-/** Alamat tab filter. Status dikodekan agar spasi ("Menunggu Pembayaran") aman di URL. */
+/** Alamat opsi filter. Status dikodekan agar spasi ("Menunggu Pembayaran") aman di URL. */
 function url_filter(string $status = ""): string
 {
     return "/admin/pesanan.php" . ($status !== "" ? "?" . http_build_query(["status" => $status]) : "");
 }
 
-$tabFilter = ["" => "Semua"];
+$opsiFilter = ["" => "Semua"];
 foreach ($daftarStatus as $s) {
-    $tabFilter[$s] = $s;
+    $opsiFilter[$s] = $s;
 }
+
+// Label tombol filter = status yang sedang aktif ("Semua" bila tanpa filter).
+$labelFilter = $statusFilter !== "" ? $statusFilter : "Semua";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -113,7 +118,11 @@ foreach ($daftarStatus as $s) {
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
     <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= @filemtime(__DIR__ . "/../assets/css/dashboard.css") ?>">
     <link rel="stylesheet" href="/assets/css/admin-dashboard.css?v=<?= @filemtime(__DIR__ . "/../assets/css/admin-dashboard.css") ?>">
+    <link rel="stylesheet" href="/assets/css/pesanan-tools.css?v=<?= @filemtime(__DIR__ . "/../assets/css/pesanan-tools.css") ?>">
     <link rel="stylesheet" href="/assets/css/admin-pesanan.css?v=<?= @filemtime(__DIR__ . "/../assets/css/admin-pesanan.css") ?>">
+    <!-- Tanpa JS dropdown tidak bisa dibuka; tampilkan menunya terus supaya filter tetap terjangkau -->
+    <noscript><style>.pt-menu { position: static; opacity: 1; visibility: visible; transform: none; margin-top: .8rem; }</style></noscript>
+    <script src="/assets/js/pesanan-tools.js?v=<?= @filemtime(__DIR__ . "/../assets/js/pesanan-tools.js") ?>" defer></script>
     <script src="/assets/js/admin-pesanan.js?v=<?= @filemtime(__DIR__ . "/../assets/js/admin-pesanan.js") ?>" defer></script>
 </head>
 <body class="page-dashboard">
@@ -175,67 +184,111 @@ require __DIR__ . "/../includes/navbar-admin.php";
                 </div>
             <?php endif; ?>
 
-            <!-- Filter status: tiap tab = tautan ?status=..., jadi data tetap difilter oleh query backend di atas -->
-            <nav class="po-tabs" aria-label="Filter status pesanan">
-                <?php foreach ($tabFilter as $nilai => $label): ?>
-                    <?php $aktif = ((string)$nilai === $statusFilter); ?>
-                    <a class="po-tab<?= $aktif ? " is-active" : "" ?>" href="<?= e(url_filter((string)$nilai)) ?>"<?= $aktif ? ' aria-current="page"' : "" ?>><?= e($label) ?></a>
-                <?php endforeach; ?>
-            </nav>
+            <div class="pt" data-pt data-pt-mode="server" data-pt-label="<?= e($statusFilter) ?>">
 
-            <?php if (!$pesanan): ?>
+                <!-- Toolbar: pencarian nama pembeli (kiri) + tombol filter "Semua" dengan dropdown status (kanan).
+                     Tiap opsi = tautan ?status=..., jadi data tetap difilter oleh query backend di atas. -->
+                <div class="pt-toolbar">
+                    <div class="pt-search">
+                        <label class="pt-search__label" for="pt-cari">Nama Pembeli</label>
+                        <input class="pt-search__input" type="search" id="pt-cari" name="cari" placeholder="Masukkan nama pembeli.." autocomplete="off" data-pt-search>
+                    </div>
 
-                <div class="dash-empty">
-                    <p>Tidak ada pesanan<?= $statusFilter !== "" ? " dengan status tersebut." : "." ?></p>
-                    <?php if ($statusFilter !== ""): ?>
-                        <p><a href="<?= e(url_filter()) ?>">Tampilkan semua pesanan</a></p>
-                    <?php endif; ?>
-                </div>
-
-            <?php else: ?>
-
-                <div class="po-table-wrap">
-                    <table class="po-table">
-                        <caption class="po-sr">
-                            Daftar pesanan<?= $statusFilter !== "" ? " dengan status " . e($statusFilter) : "" ?>
-                        </caption>
-                        <colgroup><col><col><col><col><col><col><col></colgroup>
-                        <thead>
-                            <tr>
-                                <th scope="col">No</th>
-                                <th scope="col" class="is-left">Tanggal</th>
-                                <th scope="col" class="is-left">Pembeli</th>
-                                <th scope="col">Item</th>
-                                <th scope="col">Status Pesanan</th>
-                                <th scope="col">Pembayaran</th>
-                                <th scope="col" class="is-right">Total Harga</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($pesanan as $i => $p): ?>
-                                <?php $urlDetail = "/admin/pesanan-detail.php?id=" . (int)$p["id_pesanan"]; ?>
-                                <tr style="--i:<?= (int)$i ?>" data-href="<?= e($urlDetail) ?>">
-                                    <td data-label="No Pesanan">
-                                        <a class="po-no" href="<?= e($urlDetail) ?>" aria-label="Detail pesanan nomor <?= (int)$p["id_pesanan"] ?>">#<?= (int)$p["id_pesanan"] ?></a>
-                                    </td>
-                                    <td data-label="Tanggal" class="is-left is-num"><?= e(substr($p["tanggal_pesanan"], 0, 16)) ?></td>
-                                    <td data-label="Pembeli" class="is-left">
-                                        <div class="po-who">
-                                            <span class="po-buyer"><?= e($p["nama_mhs"] ?? $p["username"]) ?></span>
-                                            <small class="po-nim"><?= e($p["nim"] ?? "-") ?></small>
-                                        </div>
-                                    </td>
-                                    <td data-label="Item" class="is-num"><?= (int)$p["total_item"] ?></td>
-                                    <td data-label="Status Pesanan"><?= html_badge($badgePesanan, $p["status_pesanan"]) ?></td>
-                                    <td data-label="Pembayaran"><?= html_badge($badgeBayar, $p["status_bayar"]) ?></td>
-                                    <td data-label="Total Harga" class="is-right"><span class="po-total"><?= e(format_rupiah((float)$p["total_harga"])) ?></span></td>
-                                </tr>
+                    <div class="pt-filter" data-pt-dropdown>
+                        <button type="button" class="pt-filter__btn" id="pt-filter-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="pt-filter-menu" data-pt-trigger>
+                            <img src="/assets/img/icon-filter.png" alt="" width="48" height="48">
+                            <span data-pt-filter-label><?= e($labelFilter) ?></span>
+                            <svg class="pt-filter__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 5 5 5-5"/></svg>
+                        </button>
+                        <div class="pt-menu" id="pt-filter-menu" role="menu" aria-labelledby="pt-filter-btn" data-pt-menu>
+                            <?php foreach ($opsiFilter as $nilai => $label): ?>
+                                <?php $aktif = ((string)$nilai === $statusFilter); ?>
+                                <a class="pt-menu__item" role="menuitemradio" aria-checked="<?= $aktif ? "true" : "false" ?>" href="<?= e(url_filter((string)$nilai)) ?>"><?= e($label) ?></a>
                             <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
 
-            <?php endif; ?>
+                <?php if (!$pesanan): ?>
+
+                    <div class="dash-empty">
+                        <p>Tidak ada pesanan<?= $statusFilter !== "" ? " dengan status tersebut." : "." ?></p>
+                        <?php if ($statusFilter !== ""): ?>
+                            <p><a href="<?= e(url_filter()) ?>">Tampilkan semua pesanan</a></p>
+                        <?php endif; ?>
+                    </div>
+
+                <?php else: ?>
+
+                    <!-- Pilih Semua (jumlah baris yang tampil) + Hapus Yang Dipilih -->
+                    <div class="pt-bar">
+                        <label class="pt-select">
+                            <input class="pt-check" type="checkbox" data-pt-all>
+                            <span>Pilih Semua (<span data-pt-count><?= count($pesanan) ?></span>)</span>
+                        </label>
+                        <button type="button" class="pt-bulk" data-pt-bulk disabled>
+                            <img src="/assets/img/icon-trash.png" alt="" width="40" height="40">
+                            <span>Hapus Yang Dipilih</span>
+                        </button>
+                    </div>
+                    <p class="pt-note" data-pt-note role="status" hidden></p>
+
+                    <p class="po-sr" data-pt-info role="status"></p>
+
+                    <div class="po-table-wrap" data-pt-wrap>
+                        <table class="po-table pt-table" data-pt-table>
+                            <caption class="po-sr">
+                                Daftar pesanan<?= $statusFilter !== "" ? " dengan status " . e($statusFilter) : "" ?>
+                            </caption>
+                            <colgroup><col><col><col><col><col><col><col><col></colgroup>
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="pt-th-check"><span class="pt-sr">Pilih</span></th>
+                                    <th scope="col">No</th>
+                                    <th scope="col" class="is-left">Tanggal</th>
+                                    <th scope="col" class="is-left">Pembeli</th>
+                                    <th scope="col">Item</th>
+                                    <th scope="col">Status Pesanan</th>
+                                    <th scope="col">Pembayaran</th>
+                                    <th scope="col" class="is-right">Harga</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($pesanan as $i => $p): ?>
+                                    <?php $urlDetail = "/admin/pesanan-detail.php?id=" . (int)$p["id_pesanan"]; ?>
+                                    <tr style="--i:<?= (int)$i ?>" data-href="<?= e($urlDetail) ?>" data-id="<?= (int)$p["id_pesanan"] ?>" data-search="<?= e(($p["nama_mhs"] ?? $p["username"]) . " " . ($p["nim"] ?? "")) ?>">
+                                        <td class="pt-td-check">
+                                            <input class="pt-check" type="checkbox" value="<?= (int)$p["id_pesanan"] ?>" data-pt-row-check aria-label="Pilih pesanan nomor <?= (int)$p["id_pesanan"] ?>">
+                                        </td>
+                                        <td data-label="No Pesanan">
+                                            <a class="po-no" href="<?= e($urlDetail) ?>" aria-label="Detail pesanan nomor <?= (int)$p["id_pesanan"] ?>">#<?= (int)$p["id_pesanan"] ?></a>
+                                        </td>
+                                        <td data-label="Tanggal" class="is-left is-num"><?= e(substr($p["tanggal_pesanan"], 0, 16)) ?></td>
+                                        <td data-label="Pembeli" class="is-left">
+                                            <div class="po-who">
+                                                <span class="po-buyer"><?= e($p["nama_mhs"] ?? $p["username"]) ?></span>
+                                                <small class="po-nim"><?= e($p["nim"] ?? "-") ?></small>
+                                            </div>
+                                        </td>
+                                        <td data-label="Item" class="is-num"><?= (int)$p["total_item"] ?></td>
+                                        <td data-label="Status Pesanan"><?= html_badge($badgePesanan, $p["status_pesanan"]) ?></td>
+                                        <td data-label="Pembayaran"><?= html_badge($badgeBayar, $p["status_bayar"]) ?></td>
+                                        <td data-label="Harga" class="is-right"><span class="po-total"><?= e(format_rupiah((float)$p["total_harga"])) ?></span></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Muncul (diatur JS) bila pencarian nama pembeli tidak menemukan pesanan -->
+                    <div class="dash-empty" data-pt-empty hidden>
+                        <p data-pt-empty-text>Tidak ada pesanan.</p>
+                        <p><button type="button" class="po-link" data-pt-reset>Hapus pencarian</button></p>
+                    </div>
+
+                <?php endif; ?>
+
+            </div>
 
         </section>
     </div>

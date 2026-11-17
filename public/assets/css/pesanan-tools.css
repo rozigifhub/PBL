@@ -1,0 +1,125 @@
+/* =========================================================
+   PESANAN TOOLS  (dipakai mahasiswa/riwayat.php dan admin/pesanan.php)
+   Komponen bersama untuk toolbar daftar pesanan: kolom pencarian, tombol filter
+   "Semua" + dropdown status, baris "Pilih Semua / Hapus Yang Dipilih", checkbox.
+   Dimuat SETELAH dashboard.css (token --d-*) dan SEBELUM riwayat.css / admin-pesanan.css.
+   Semua class berawalan "pt-" supaya tidak bentrok dengan halaman lain.
+   Satuan rem (1rem = 16px di layar 1920), seperti file CSS lain.
+   ========================================================= */
+
+.pt {
+  --pt-gutter:   4.7rem;      /* lebar kolom checkbox; toolbar ikut menjorok sebesar ini supaya sejajar dengan header tabel */
+  --pt-btn-text: #fff;        /* teks tombol filter, sama seperti desain; isi var(--d-navy) bila ingin kontras lebih tinggi di atas oranye */
+  --pt-danger:   #963834;
+  --pt-ease:     cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Teks untuk pembaca layar saja */
+.pt-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 1. TOOLBAR: pencarian (kiri) + tombol filter (kanan) ---------- */
+.pt-toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 2.4rem; padding-left: var(--pt-gutter); }
+
+.pt-search { flex: 0 1 39.1rem; min-width: 0; }
+.pt-search__label { display: block; margin: 0 0 .6rem; color: var(--d-title); font-size: 1.5rem; font-weight: 700; line-height: 1.2; text-transform: uppercase; }
+.pt-search__input { display: block; width: 100%; height: 4.4rem; padding: 0 1.2rem; border: .1rem solid #C9C5BB; border-radius: .6rem; background: #fff; color: var(--d-title);
+                    font: 500 1.5rem var(--font); -webkit-appearance: none; appearance: none; transition: border-color .2s, box-shadow .2s; }
+.pt-search__input::placeholder { color: #757575; opacity: 1; font-weight: 400; }
+.pt-search__input:hover { border-color: #A9A397; }
+.pt-search__input:focus { outline: 0; border-color: var(--d-orange); box-shadow: 0 0 0 .3rem rgba(255, 159, 28, .3); }
+
+/* ---------- 2. TOMBOL FILTER + DROPDOWN KUSTOM ---------- */
+.pt-filter { position: relative; flex: none; }
+
+.pt-filter__btn { display: inline-flex; align-items: center; justify-content: center; gap: 1.2rem; min-width: 17.2rem; max-width: 100%; height: 5.6rem; padding: 0 1.8rem 0 1.6rem;
+                  border: 0; border-radius: 1.4rem; background: var(--d-orange); color: var(--pt-btn-text); font: 500 2rem/1 var(--font); white-space: nowrap; cursor: pointer;
+                  box-shadow: 0 .3rem .9rem rgba(255, 159, 28, .32); transition: filter .2s, transform .2s var(--pt-ease), box-shadow .2s; }
+.pt-filter__btn img { flex: none; width: 3rem; height: 3rem; }
+.pt-filter__caret { flex: none; width: 1.5rem; height: 1.5rem; transition: transform .25s var(--pt-ease); }
+.pt-filter__btn:hover { filter: saturate(1.25) brightness(1.04); box-shadow: 0 .4rem 1.2rem rgba(255, 159, 28, .45); }
+.pt-filter__btn:active { transform: scale(.98); }
+.pt-filter__btn:focus-visible { outline: .25rem solid var(--d-navy); outline-offset: .3rem; }
+.pt-filter.is-open .pt-filter__caret { transform: rotate(180deg); }
+
+/* Menu: putih, sudut membulat, bayangan halus. Tertutup = visibility:hidden (tidak bisa difokus & tidak dibaca pembaca layar) */
+.pt-menu { position: absolute; z-index: 30; top: calc(100% + .8rem); right: 0; min-width: 100%; width: max-content; max-width: min(32rem, 90vw); padding: .6rem;
+           border: .1rem solid rgba(42, 69, 128, .12); border-radius: 1.4rem; background: #fff; box-shadow: 0 1rem 2.4rem rgba(20, 38, 77, .18), 0 .1rem .4rem rgba(20, 38, 77, .1);
+           opacity: 0; visibility: hidden; transform: translateY(-.6rem) scale(.98); transform-origin: top right;
+           transition: opacity .18s ease, transform .18s var(--pt-ease), visibility 0s linear .18s; }
+.pt-filter.is-open .pt-menu { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+
+.pt-menu__item { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; width: 100%; min-height: 4.2rem; padding: .8rem 1.4rem; border: 0; border-radius: .9rem;
+                 background: transparent; color: var(--d-title); font: 500 1.6rem/1.25 var(--font); text-align: left; text-decoration: none; white-space: nowrap; cursor: pointer;
+                 transition: background .15s, color .15s; }
+.pt-menu__item::after { content: ""; flex: none; width: 1.5rem; height: .8rem; border-left: .24rem solid var(--d-orange); border-bottom: .24rem solid var(--d-orange);
+                        transform: translateY(-.15rem) rotate(-45deg) scale(0); transition: transform .15s var(--pt-ease); }   /* centang, tampil pada opsi terpilih */
+.pt-menu__item:hover,
+.pt-menu__item:focus-visible { background: #FFF1D1; color: var(--d-navy); outline: 0; }
+.pt-menu__item[aria-checked="true"] { background: #FFF6E0; font-weight: 700; }
+.pt-menu__item[aria-checked="true"]::after { transform: translateY(-.15rem) rotate(-45deg) scale(1); }
+.pt-menu__item[aria-checked="true"]:hover,
+.pt-menu__item[aria-checked="true"]:focus-visible { background: #FFEBBC; }
+
+/* ---------- 3. BARIS "PILIH SEMUA" + "HAPUS YANG DIPILIH" ---------- */
+.pt-bar { display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; min-height: 4rem; margin-top: 1.8rem; }
+.pt-select { display: inline-flex; align-items: center; gap: 1.1rem; color: var(--d-title); font-size: 1.5rem; font-weight: 500; line-height: 1.3; white-space: nowrap; cursor: pointer; user-select: none; }
+
+.pt-bulk { display: inline-flex; align-items: center; gap: .6rem; padding: .6rem 1.2rem; border: 0; border-radius: .8rem; background: transparent; color: #5D5D5D;
+           font: 500 1.5rem/1.3 var(--font); cursor: pointer; transition: color .2s, background .2s, transform .15s; }
+.pt-bulk img { flex: none; width: 2.5rem; height: 2.5rem; transition: transform .2s; }
+.pt-bulk:not(:disabled):hover { color: var(--pt-danger); background: rgba(150, 56, 52, .09); }
+.pt-bulk:not(:disabled):hover img { transform: rotate(-10deg) scale(1.08); }
+.pt-bulk:not(:disabled):active { transform: scale(.96); }
+.pt-bulk:disabled { cursor: not-allowed; }
+.pt-bulk:focus-visible { outline: .25rem solid rgba(255, 159, 28, .75); outline-offset: .2rem; }
+
+.pt-note { margin: 1rem 0 0; padding: 1rem 1.4rem; border-radius: .9rem; background: #FFEBBC; color: var(--d-title); font-size: 1.35rem; font-weight: 500; line-height: 1.4; }
+.pt-note[hidden] { display: none; }
+
+/* ---------- 4. CHECKBOX KUSTOM (kotak abu pada desain; terpilih = biru tua) ---------- */
+.pt-check { position: relative; -webkit-appearance: none; appearance: none; flex: none; display: grid; place-content: center; width: 1.65rem; height: 1.65rem; margin: 0;
+            border: .13rem solid #9C9C9C; border-radius: .4rem; background: #E3E1DB; cursor: pointer; transition: background .15s, border-color .15s; }
+.pt-check::before { content: ""; position: absolute; inset: -.7rem; }   /* area sentuh lebih besar dari kotaknya */
+.pt-check::after { content: ""; width: .9rem; height: .5rem; border-left: .2rem solid #fff; border-bottom: .2rem solid #fff; transform: translateY(-.1rem) rotate(-45deg) scale(0); transition: transform .12s; }
+.pt-check:hover { border-color: var(--d-title); }
+.pt-check:checked,
+.pt-check:indeterminate { background: var(--d-title); border-color: var(--d-title); }
+.pt-check:checked::after { transform: translateY(-.1rem) rotate(-45deg) scale(1); }
+.pt-check:indeterminate::after { width: .8rem; height: 0; border-left: 0; transform: none; }
+.pt-check:disabled { opacity: .5; cursor: not-allowed; }
+.pt-check:focus-visible { outline: .25rem solid rgba(255, 159, 28, .75); outline-offset: .2rem; }
+
+/* ---------- 5. TABEL: kolom checkbox di paling kiri ----------
+   Sel header kolom ini tanpa latar (pita krem dimulai dari kolom ke-2), dan barisnya tanpa garis bawah,
+   seperti desain: garis pemisah baru mulai dari kolom ke-2. */
+.pt-table col:first-child { width: var(--pt-gutter); }
+.pt-table th.pt-th-check { background: transparent; border-radius: 0; padding: 0; }
+.pt-table td.pt-td-check { padding-left: 0; padding-right: 0; border-bottom: 0; text-align: left; }
+.pt-table tbody tr.is-selected { background: rgba(255, 183, 85, .16); }
+.pt-table tbody tr.is-selected:hover { background: rgba(255, 183, 85, .26); }
+
+/* Animasi masuk bawaan baris hanya perlu sekali saat halaman dibuka; setelah itu dimatikan supaya baris yang muncul lagi
+   saat pencarian/filter tidak berkedip. Animasi .is-enter (riwayat.css) tetap berjalan saat filter status diganti. */
+.pt-table.pt-settled tbody tr:not(.is-enter) { animation: none; }
+
+/* ---------- 6. RESPONSIF ---------- */
+@media (max-width: 1100px) {
+  .pt { --pt-gutter: 4rem; }
+}
+
+@media (max-width: 900px) {
+  .pt-toolbar { flex-direction: column; align-items: stretch; gap: 1.6rem; padding-left: 0; }
+  .pt-search { flex: none; width: 100%; }
+  .pt-search__label { font-size: 1.4rem; }
+  .pt-search__input { height: 4.6rem; font-size: 1.5rem; }
+  .pt-filter { width: 100%; }
+  .pt-filter__btn { width: 100%; height: 5rem; font-size: 1.8rem; }
+  .pt-menu { left: 0; right: 0; width: auto; max-width: none; }
+  .pt-bar { margin-top: 1.6rem; }
+  .pt-select, .pt-bulk { font-size: 1.4rem; }
+
+  /* Tabel menjadi kartu per pesanan: checkbox di baris pertama kartu, tanpa judul kolom */
+  .pt-table td.pt-td-check { justify-content: flex-start; }
+  .pt-table td.pt-td-check::before { display: none; }
+  .pt-table col:first-child { width: auto; }
+}

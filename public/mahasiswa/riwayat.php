@@ -4,9 +4,9 @@
  * Riwayat pesanan mahasiswa (terbaru dulu).
  * Tiap baris menuju detail: pesanan.php?id=...
  *
- * Tampilan mengikuti desain UI/UX (kartu krem, tab filter status, tabel bergaya kartu);
- * auth, query, dan variabel looping tetap dari tim backend. Tab status memfilter baris
- * di browser (assets/js/riwayat.js), jadi tidak ada query tambahan per tab.
+ * Tampilan mengikuti desain UI/UX (kartu krem, kolom pencarian, tombol filter "Semua" + dropdown status,
+ * checkbox "Pilih Semua", tabel bergaya kartu); auth, query, dan variabel looping tetap dari tim backend.
+ * Pencarian & filter status menyaring baris di browser (assets/js/pesanan-tools.js), jadi tidak ada query tambahan.
  */
 
 require_once __DIR__ . "/../../config/functions.php";
@@ -47,9 +47,9 @@ $pesanan = $stmt->fetchAll();
 
 // ---------- Tampilan saja (tidak memengaruhi data) ----------
 
-// Tab filter: kunci => [label, daftar status_pesanan yang ditampilkan di tab itu].
-// Daftar kosong = semua pesanan. Pesanan "Dibatalkan" hanya muncul di tab "Semua" (desain tidak punya tab-nya).
-$tabRiwayat = [
+// Opsi dropdown filter: kunci => [label, daftar status_pesanan yang ditampilkan untuk opsi itu].
+// Daftar kosong = semua pesanan. Pesanan "Dibatalkan" hanya muncul di opsi "Semua" (desain tidak punya opsinya).
+$opsiFilter = [
     "semua"               => ["Semua",               []],
     "menunggu-pembayaran" => ["Menunggu Pembayaran", ["Menunggu Pembayaran", "Menunggu Pelunasan"]],
     "menunggu-dp"         => ["Menunggu DP",         ["Menunggu DP"]],
@@ -82,7 +82,11 @@ $kelasBadge = [
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
     <link rel="stylesheet" href="/assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/../assets/css/navbar-mahasiswa.css") ?>">
     <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= @filemtime(__DIR__ . "/../assets/css/dashboard.css") ?>">
+    <link rel="stylesheet" href="/assets/css/pesanan-tools.css?v=<?= @filemtime(__DIR__ . "/../assets/css/pesanan-tools.css") ?>">
     <link rel="stylesheet" href="/assets/css/riwayat.css?v=<?= @filemtime(__DIR__ . "/../assets/css/riwayat.css") ?>">
+    <!-- Tanpa JS dropdown tidak bisa dibuka; tampilkan menunya terus supaya filter tetap terjangkau -->
+    <noscript><style>.pt-menu { position: static; opacity: 1; visibility: visible; transform: none; margin-top: .8rem; }</style></noscript>
+    <script src="/assets/js/pesanan-tools.js?v=<?= @filemtime(__DIR__ . "/../assets/js/pesanan-tools.js") ?>" defer></script>
     <script src="/assets/js/riwayat.js?v=<?= @filemtime(__DIR__ . "/../assets/js/riwayat.js") ?>" defer></script>
 </head>
 <body class="page-dashboard">
@@ -135,26 +139,54 @@ require __DIR__ . "/../includes/navbar.php";
 
             <?php else: ?>
 
-                <!-- Tab filter status. Tiap tab membawa daftar status (data-filter) yang dicocokkan JS dengan data-status pada baris tabel. -->
-                <div class="rw-tabs" data-rw-tabs role="tablist" aria-label="Filter status pesanan">
-                    <span class="rw-tabs__slider" aria-hidden="true"></span>
-                    <?php foreach ($tabRiwayat as $kunci => [$label, $daftarStatus]): ?>
-                        <?php $pertama = ($kunci === "semua"); ?>
-                        <button type="button" class="rw-tab<?= $pertama ? " is-active" : "" ?>" role="tab" id="tab-<?= e($kunci) ?>"
-                                data-key="<?= e($kunci) ?>" data-filter="<?= e(implode("|", $daftarStatus)) ?>"
-                                aria-selected="<?= $pertama ? "true" : "false" ?>" aria-controls="rw-panel" tabindex="<?= $pertama ? "0" : "-1" ?>"><?= e($label) ?></button>
-                    <?php endforeach; ?>
-                </div>
+                <div class="pt" data-pt data-pt-mode="client">
 
-                <div id="rw-panel" role="tabpanel">
-                    <p class="rw-sr" data-rw-info role="status"></p>
+                    <!-- Toolbar: pencarian nama pesanan (kiri) + tombol filter "Semua" dengan dropdown status (kanan).
+                         Tiap opsi membawa daftar status (data-filter) yang dicocokkan JS dengan data-status pada baris tabel. -->
+                    <div class="pt-toolbar">
+                        <div class="pt-search">
+                            <label class="pt-search__label" for="pt-cari">Nama Pesanan</label>
+                            <input class="pt-search__input" type="search" id="pt-cari" name="cari" placeholder="Masukkan nama pesanan.." autocomplete="off" data-pt-search>
+                        </div>
 
-                    <div class="rw-table-wrap" data-rw-wrap>
-                        <table class="rw-table" data-rw-table>
+                        <div class="pt-filter" data-pt-dropdown>
+                            <button type="button" class="pt-filter__btn" id="pt-filter-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="pt-filter-menu" data-pt-trigger>
+                                <img src="/assets/img/icon-filter.png" alt="" width="48" height="48">
+                                <span data-pt-filter-label>Semua</span>
+                                <svg class="pt-filter__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 5 5 5-5"/></svg>
+                            </button>
+                            <div class="pt-menu" id="pt-filter-menu" role="menu" aria-labelledby="pt-filter-btn" data-pt-menu>
+                                <?php foreach ($opsiFilter as $kunci => [$label, $daftarStatus]): ?>
+                                    <?php $pertama = ($kunci === "semua"); ?>
+                                    <button type="button" class="pt-menu__item" role="menuitemradio" aria-checked="<?= $pertama ? "true" : "false" ?>"
+                                            data-key="<?= e($kunci) ?>" data-filter="<?= e(implode("|", $daftarStatus)) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pilih Semua (jumlah baris yang tampil) + Hapus Yang Dipilih -->
+                    <div class="pt-bar">
+                        <label class="pt-select">
+                            <input class="pt-check" type="checkbox" data-pt-all>
+                            <span>Pilih Semua (<span data-pt-count><?= count($pesanan) ?></span>)</span>
+                        </label>
+                        <button type="button" class="pt-bulk" data-pt-bulk disabled>
+                            <img src="/assets/img/icon-trash.png" alt="" width="40" height="40">
+                            <span>Hapus Yang Dipilih</span>
+                        </button>
+                    </div>
+                    <p class="pt-note" data-pt-note role="status" hidden></p>
+
+                    <p class="rw-sr" data-pt-info role="status"></p>
+
+                    <div class="rw-table-wrap" data-pt-wrap>
+                        <table class="rw-table pt-table" data-pt-table>
                             <caption class="rw-sr">Daftar pesanan Anda</caption>
-                            <colgroup><col><col><col><col><col><col></colgroup>
+                            <colgroup><col><col><col><col><col><col><col></colgroup>
                             <thead>
                                 <tr>
+                                    <th scope="col" class="pt-th-check"><span class="pt-sr">Pilih</span></th>
                                     <th scope="col">No. Pesanan</th>
                                     <th scope="col">Tanggal</th>
                                     <th scope="col">Nama Produk</th>
@@ -170,7 +202,8 @@ require __DIR__ . "/../includes/navbar.php";
                                      Satu iterasi = satu <tr>. Kalau looping-mu diganti (while / nama variabel lain),
                                      ganti baris foreach dan endforeach saja; isi <tr> di bawah memakai $p["..."] yang sama
                                      seperti kode lama (id_pesanan, tanggal_pesanan, total_harga, status_pesanan, status_bayar).
-                                     data-status WAJIB tetap ada di <tr>: dipakai tab filter. -->
+                                     data-status WAJIB tetap ada di <tr>: dipakai filter status. data-search = teks yang dicari kolom pencarian,
+                                     data-id + checkbox = pilihan "Pilih Semua" / "Hapus Yang Dipilih". -->
                                 <?php foreach ($pesanan as $p): ?>
                                     <?php
                                     // Variabel bantu tampilan untuk baris ini
@@ -180,7 +213,12 @@ require __DIR__ . "/../includes/navbar.php";
                                     $totalItem = (int)$p["total_item"];
                                     $lainnya   = max(0, (int)$p["jenis_produk"] - 1);
                                     ?>
-                                    <tr data-href="<?= e($urlDetail) ?>" data-status="<?= e($p["status_pesanan"]) ?>">
+                                    <tr data-href="<?= e($urlDetail) ?>" data-status="<?= e($p["status_pesanan"]) ?>" data-id="<?= $idPesanan ?>" data-search="<?= e(($p["nama_produk"] ?? "") . " #" . $idPesanan) ?>">
+
+                                        <!-- Checkbox pilih baris (kolom paling kiri) -->
+                                        <td class="pt-td-check">
+                                            <input class="pt-check" type="checkbox" value="<?= $idPesanan ?>" data-pt-row-check aria-label="Pilih pesanan #<?= $idPesanan ?>">
+                                        </td>
 
                                         <!-- No. Pesanan: ID pesanan, tautan ke detail -->
                                         <td data-label="No. Pesanan">
@@ -227,10 +265,10 @@ require __DIR__ . "/../includes/navbar.php";
                         </table>
                     </div>
 
-                    <!-- Muncul (diatur JS) bila tab yang dipilih tidak punya pesanan -->
-                    <div class="dash-empty rw-empty" data-rw-empty hidden>
-                        <p data-rw-empty-text>Tidak ada pesanan dengan status ini.</p>
-                        <p><button type="button" class="rw-link" data-rw-reset>Tampilkan semua pesanan</button></p>
+                    <!-- Muncul (diatur JS) bila pencarian/filter tidak menemukan pesanan -->
+                    <div class="dash-empty rw-empty" data-pt-empty hidden>
+                        <p data-pt-empty-text>Tidak ada pesanan.</p>
+                        <p><button type="button" class="rw-link" data-pt-reset>Tampilkan semua pesanan</button></p>
                     </div>
                 </div>
 
