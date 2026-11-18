@@ -137,3 +137,64 @@ img { display: block; }
   .navbar__link { display: none; }
   .navbar__menu { margin-right: 1.5rem; gap: 1rem; }
 }
+
+/* ---------- LOGIN: ringkas agar muat satu layar (100% zoom) ---------- */
+body.page-login .auth {
+  min-height: calc(100vh - var(--nav-h)); /* tinggi navbar = var(--nav-h), bukan 80px */
+  padding: 16px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.page-login .card {
+  width: 100%;
+  max-width: 380px;
+  padding: 24px 32px;
+}
+
+body.page-login .card__logo {
+  width: auto;
+  height: 90px;          /* rasio logo hampir 1:1 (379x399) */
+  max-width: 100%;
+  margin: 0 auto 16px;
+}
+
+body.page-login .form {
+  width: 100%;
+  margin: 0;
+}
+
+body.page-login .field { margin-bottom: 12px; }
+body.page-login .field:last-of-type { margin-bottom: 0; }
+
+body.page-login .field__label {
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  letter-spacing: .14em;
+}
+
+body.page-login .input-box { height: 40px; padding: 0 12px; }
+body.page-login .input-box svg { width: 18px; height: 18px; margin: 0 8px 0 4px; }
+body.page-login .input-box input { font-size: 14px; }
+
+body.page-login .btn {
+  height: 42px;
+  margin-top: 16px;
+  gap: 10px;
+  font-size: 16px;
+}
+body.page-login .btn svg { width: 32px; height: 16px; }
+
+body.page-login .alert { margin-bottom: 12px; padding: 8px 12px; font-size: 12px; }
+
+body.page-login .switch {
+  width: 100%;
+  margin: 10px auto 0;
+  gap: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+body.page-login .switch::before,
+body.page-login .switch::after { flex: 1 1 0; width: auto; min-width: 12px; }
+body.page-login .switch + .switch { margin-top: 6px; }
