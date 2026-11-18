@@ -12,32 +12,8 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
-require_once __DIR__ . "/../../config/pesanan_hapus.php";
 // Tamu (belum login) dilempar ke login.php?error=menu (ini target menu PESANAN di navbar).
 require_mahasiswa("../login.php", "menu");
-
-// ---------- Hapus pesanan terpilih dari riwayat (POST dari tombol "Hapus Yang Dipilih") ----------
-// Hanya pesanan milik akun ini yang berstatus Selesai/Dibatalkan, dan hanya disembunyikan dari riwayat
-// mahasiswa (hapus lunak): admin tetap melihat pesanannya, data pembayaran & laporan tidak berubah.
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    if (!csrf_validate()) {
-        set_flash("gagal", "Sesi tidak valid. Muat ulang halaman lalu coba lagi.");
-    } elseif (($_POST["action"] ?? "") === "hapus") {
-        $ids = is_array($_POST["ids"] ?? null) ? $_POST["ids"] : [];
-        try {
-            $idAkun = (int)$_SESSION["id_akun"];
-            $hasil  = hapus_pesanan_dari_daftar($pdo, $ids, PESANAN_SISI_MAHASISWA, $idAkun, $idAkun);
-            [$tipe, $pesan] = pesan_hapus_pesanan($hasil);
-            set_flash($tipe, $pesan);
-        } catch (PDOException $e) {
-            error_log("Mahasiswa hapus pesanan gagal: " . $e->getMessage());
-            set_flash("gagal", "Pesanan belum bisa dihapus. Coba lagi nanti.");
-        }
-    }
-    redirect("/mahasiswa/riwayat.php");
-}
-
-$flash = take_flash();
 
 // [TAMBAHAN UI] Dua kolom baru di query ini (nama_produk, jenis_produk) hanya untuk kolom
 // "Nama Produk" di desain. Kolom, WHERE, dan ORDER BY lainnya TIDAK diubah.
@@ -64,7 +40,6 @@ $stmt = $pdo->prepare("
             LIMIT 1) AS status_bayar
     FROM pesanan p
     WHERE p.id_akun = :id_akun
-      AND " . sql_pesanan_tampil(PESANAN_SISI_MAHASISWA) . "
     ORDER BY p.id_pesanan DESC
 ");
 $stmt->execute([":id_akun" => $_SESSION["id_akun"]]);
@@ -154,12 +129,6 @@ require __DIR__ . "/../includes/navbar.php";
 
         <section class="rw-card" aria-label="Daftar pesanan">
 
-            <?php if ($flash): ?>
-                <div class="alert <?= ($flash["type"] ?? "") === "sukses" ? "alert--success" : "alert--error" ?>" role="<?= ($flash["type"] ?? "") === "sukses" ? "status" : "alert" ?>">
-                    <?= e($flash["msg"]) ?>
-                </div>
-            <?php endif; ?>
-
             <?php if (!$pesanan): ?>
 
                 <!-- Belum ada pesanan sama sekali (logika asli dipertahankan) -->
@@ -171,12 +140,6 @@ require __DIR__ . "/../includes/navbar.php";
             <?php else: ?>
 
                 <div class="pt" data-pt data-pt-mode="client">
-
-                    <!-- Form hapus: diisi & dikirim oleh pesanan-tools.js setelah konfirmasi (ids[] = pesanan terpilih) -->
-                    <form method="post" action="/mahasiswa/riwayat.php" data-pt-form data-pt-konfirmasi="Pesanan hanya dihapus dari riwayat Anda. Data pembayaran dan transaksi tetap tersimpan." hidden>
-                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                        <input type="hidden" name="action" value="hapus">
-                    </form>
 
                     <!-- Toolbar: pencarian nama pesanan (kiri) + tombol filter "Semua" dengan dropdown status (kanan).
                          Tiap opsi membawa daftar status (data-filter) yang dicocokkan JS dengan data-status pada baris tabel. -->
@@ -250,7 +213,7 @@ require __DIR__ . "/../includes/navbar.php";
                                     $totalItem = (int)$p["total_item"];
                                     $lainnya   = max(0, (int)$p["jenis_produk"] - 1);
                                     ?>
-                                    <tr data-href="<?= e($urlDetail) ?>" data-status="<?= e($p["status_pesanan"]) ?>" data-id="<?= $idPesanan ?>" data-bisa-hapus="<?= pesanan_bisa_dihapus($p["status_pesanan"]) ? "1" : "0" ?>" data-search="<?= e(($p["nama_produk"] ?? "") . " #" . $idPesanan) ?>">
+                                    <tr data-href="<?= e($urlDetail) ?>" data-status="<?= e($p["status_pesanan"]) ?>" data-id="<?= $idPesanan ?>" data-search="<?= e(($p["nama_produk"] ?? "") . " #" . $idPesanan) ?>">
 
                                         <!-- Checkbox pilih baris (kolom paling kiri) -->
                                         <td class="pt-td-check">

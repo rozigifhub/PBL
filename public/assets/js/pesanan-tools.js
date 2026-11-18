@@ -9,11 +9,9 @@
  *    Keyboard: Enter/Spasi/Panah bawah membuka, Panah atas/bawah/Home/End berpindah opsi, Esc menutup.
  * 2. Pencarian ([data-pt-search]): menyaring baris lewat atribut data-search (semua kata harus cocok, tanpa peduli huruf besar/kecil).
  * 3. Pilih Semua ([data-pt-all]) hanya memilih baris yang sedang tampil; baris yang tersaring otomatis tidak lagi terpilih.
- * 4. "Hapus Yang Dipilih" ([data-pt-bulk]): memancarkan event "pesanan:hapus-terpilih" (detail.ids = daftar id pesanan;
- *    preventDefault = ditangani pihak lain). Bila ada form [data-pt-form] di halaman, tombol ini meminta konfirmasi
- *    lewat dialog, mengisi ids[] ke form tersebut, lalu mengirimnya ke server (POST biasa + redirect).
- *    Hanya pesanan dengan data-bisa-hapus="1" (Selesai/Dibatalkan) yang dikirim; server tetap memeriksa ulang.
- *    Tanpa form, muncul catatan bahwa data belum diubah.
+ * 4. "Hapus Yang Dipilih" ([data-pt-bulk]): belum ada endpoint hapus pesanan di backend, jadi tombol ini hanya memancarkan
+ *    event "pesanan:hapus-terpilih" (detail.ids = daftar id pesanan). Bila tidak ada yang menangani (preventDefault),
+ *    muncul catatan bahwa data belum diubah.
  */
 (() => {
     "use strict";
@@ -92,7 +90,6 @@
     const semua    = $("[data-pt-all]");
     const hapus    = $("[data-pt-bulk]");
     const catatan  = $("[data-pt-note]");
-    const formHapus = $("[data-pt-form]");
 
     // Samakan huruf besar/kecil & aksen supaya "kaos" cocok dengan "Kaos"
     const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -198,99 +195,16 @@
     baris.forEach((tr) => { if (tr._cek) tr._cek.addEventListener("change", perbaruiPilihan); });
 
     // ---------- Hapus Yang Dipilih ----------
-    const tampilkanCatatan = (teks) => {
-        if (!catatan) return;
-        catatan.textContent = teks;
-        catatan.hidden = false;
-    };
-
-    // Dialog konfirmasi (<dialog> bawaan browser: fokus terkunci di dalam dialog, Esc = batal).
-    const konfirmasiHapus = (jumlah, dilewati, keterangan) => new Promise((selesai) => {
-        const judul = "Hapus " + jumlah + " pesanan?";
-        let pesan = keterangan || "";
-        if (dilewati > 0) {
-            pesan += (pesan ? " " : "") + dilewati + " pesanan lain masih berjalan dan tidak ikut dihapus (hanya status Selesai atau Dibatalkan yang bisa dihapus).";
-        }
-
-        if (typeof HTMLDialogElement === "undefined") {          // browser lama: pakai confirm() bawaan
-            selesai(window.confirm(judul + (pesan ? "\n\n" + pesan : "")));
-            return;
-        }
-
-        const dlg = document.createElement("dialog");
-        dlg.className = "pt-dialog";
-        dlg.setAttribute("aria-labelledby", "pt-dialog-judul");
-        dlg.setAttribute("aria-describedby", "pt-dialog-pesan");
-
-        const h = document.createElement("h2");
-        h.id = "pt-dialog-judul";
-        h.className = "pt-dialog__title";
-        h.textContent = judul;
-
-        const p = document.createElement("p");
-        p.id = "pt-dialog-pesan";
-        p.className = "pt-dialog__text";
-        p.textContent = pesan;
-
-        const aksi = document.createElement("div");
-        aksi.className = "pt-dialog__actions";
-        const batal = document.createElement("button");
-        batal.type = "button";
-        batal.className = "pt-dialog__btn";
-        batal.textContent = "Batal";
-        const ya = document.createElement("button");
-        ya.type = "button";
-        ya.className = "pt-dialog__btn pt-dialog__btn--danger";
-        ya.textContent = "Hapus";
-        aksi.append(batal, ya);
-
-        dlg.append(h, p, aksi);
-        document.body.appendChild(dlg);
-
-        let hasil = false;
-        batal.addEventListener("click", () => dlg.close());
-        ya.addEventListener("click", () => { hasil = true; dlg.close(); });
-        dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });      // klik latar = batal
-        dlg.addEventListener("close", () => { dlg.remove(); selesai(hasil); if (hapus) hapus.focus(); });
-
-        dlg.showModal();
-        batal.focus();                                                                     // fokus awal di aksi yang aman
-    });
-
     if (hapus) {
         hapus.addEventListener("click", () => {
-            const dipilih = terpilih();
-            const ids = dipilih.map((tr) => tr._cek.value);
+            const ids = terpilih().map((tr) => tr._cek.value);
             if (ids.length === 0) return;
 
             const belumDitangani = root.dispatchEvent(new CustomEvent("pesanan:hapus-terpilih", { bubbles: true, cancelable: true, detail: { ids } }));
-            if (!belumDitangani) return;
-
-            if (!formHapus) {
-                tampilkanCatatan(ids.length + " pesanan dipilih. Fitur hapus pesanan belum tersambung ke server, jadi data tidak diubah.");
-                return;
+            if (belumDitangani && catatan) {
+                catatan.textContent = ids.length + " pesanan dipilih. Fitur hapus pesanan belum tersambung ke server, jadi data tidak diubah.";
+                catatan.hidden = false;
             }
-
-            const layak = dipilih.filter((tr) => tr.dataset.bisaHapus === "1");
-            const dilewati = dipilih.length - layak.length;
-            if (layak.length === 0) {
-                tampilkanCatatan("Pesanan yang dipilih masih berjalan. Hanya pesanan berstatus Selesai atau Dibatalkan yang bisa dihapus.");
-                return;
-            }
-
-            konfirmasiHapus(layak.length, dilewati, formHapus.dataset.ptKonfirmasi).then((setuju) => {
-                if (!setuju) return;
-                $$("input[name='ids[]']", formHapus).forEach((el) => el.remove());
-                layak.forEach((tr) => {
-                    const input = document.createElement("input");
-                    input.type = "hidden";
-                    input.name = "ids[]";
-                    input.value = tr._cek.value;
-                    formHapus.appendChild(input);
-                });
-                hapus.disabled = true;                 // cegah klik ganda selama halaman dimuat ulang
-                formHapus.submit();
-            });
         });
     }
 
