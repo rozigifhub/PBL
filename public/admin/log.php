@@ -3,10 +3,6 @@
 /**
  * Admin — log aktivitas admin (siapa menambah / mengubah / menghapus apa, dan kapan).
  * Data ditulis oleh catat_log_admin() (config/functions.php); halaman ini hanya membaca.
- *
- * Tampilan disamakan dengan Withdraw Dompet (breadcrumb + ikon, tombol filter "Semua" + dropdown, tabel dalam kartu krem).
- * Query dan filter tetap dari backend; opsi dropdown = tautan ?entitas=..., JS dropdown dipakai bersama
- * dengan Kelola Pesanan (assets/js/pesanan-tools.js).
  */
 
 require_once __DIR__ . "/../../config/functions.php";
@@ -50,11 +46,9 @@ try {
 
 $jumlahHalaman = max(1, (int)ceil($total / LOG_PER_HALAMAN));
 
-/** Alamat halaman + filter. Entitas kosong ("Semua") = tanpa parameter (tampilan awal). */
 function url_log(string $entitas, int $hal): string
 {
-    $query = http_build_query(array_filter(["entitas" => $entitas, "hal" => $hal > 1 ? $hal : null]));
-    return "/admin/log.php" . ($query !== "" ? "?" . $query : "");
+    return "/admin/log.php?" . http_build_query(array_filter(["entitas" => $entitas, "hal" => $hal > 1 ? $hal : null]));
 }
 
 function tautan_entitas(string $entitas, ?int $id): string
@@ -70,10 +64,6 @@ function tautan_entitas(string $entitas, ?int $id): string
         default    => "",
     };
 }
-
-// Opsi dropdown filter: nilai ?entitas= => label ("" = Semua).
-$opsiFilter = ["" => "Semua", "Produk" => "Produk", "Kategori" => "Kategori", "Pesanan" => "Pesanan", "Withdraw" => "Withdraw"];
-$labelFilter = $opsiFilter[$filterEntitas];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -85,12 +75,7 @@ $labelFilter = $opsiFilter[$filterEntitas];
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
     <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= @filemtime(__DIR__ . "/../assets/css/dashboard.css") ?>">
     <link rel="stylesheet" href="/assets/css/admin-dashboard.css?v=<?= @filemtime(__DIR__ . "/../assets/css/admin-dashboard.css") ?>">
-    <link rel="stylesheet" href="/assets/css/pesanan-tools.css?v=<?= @filemtime(__DIR__ . "/../assets/css/pesanan-tools.css") ?>">
-    <link rel="stylesheet" href="/assets/css/admin-log.css?v=<?= @filemtime(__DIR__ . "/../assets/css/admin-log.css") ?>">
-    <!-- Tanpa JS dropdown tidak bisa dibuka; tampilkan menunya terus supaya filter tetap terjangkau -->
-    <noscript><style>.pt-menu { position: static; opacity: 1; visibility: visible; transform: none; margin-top: .8rem; }</style></noscript>
-    <script src="/assets/js/pesanan-tools.js?v=<?= @filemtime(__DIR__ . "/../assets/js/pesanan-tools.js") ?>" defer></script>
-    <script src="/assets/js/admin-log.js?v=<?= @filemtime(__DIR__ . "/../assets/js/admin-log.js") ?>" defer></script>
+    <link rel="stylesheet" href="/assets/css/admin-kategori.css?v=<?= @filemtime(__DIR__ . "/../assets/css/admin-kategori.css") ?>">
 </head>
 <body class="page-dashboard">
 <?php
@@ -99,22 +84,14 @@ $adminNavRingkas = true;
 require __DIR__ . "/../includes/navbar-admin.php";
 ?>
 
-<main class="dash dash-log">
-    <div class="lg">
+<main class="dash dash-kategori">
+    <div class="kt">
 
-        <!-- Kepala halaman: breadcrumb + ikon + judul -->
-        <header class="lg-head">
-            <nav class="lg-crumb" aria-label="Breadcrumb">
-                <img src="/assets/img/withdraw-ic-home.png" alt="" width="172" height="172">
+        <header class="kt-head">
+            <nav class="kt-crumb" aria-label="Breadcrumb">
                 <span><a href="/admin/dashboard.php">Dashboard</a> / <a href="/admin/log.php" aria-current="page">Log Aktivitas</a></span>
             </nav>
-            <div class="lg-title">
-                <span class="lg-title__icon" aria-hidden="true">
-                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" focusable="false">
-                        <path d="M13 6h22a3 3 0 0 1 3 3v30a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3z"/>
-                        <path d="M17 16h14M17 24h14M17 32h8"/>
-                    </svg>
-                </span>
+            <div class="kt-title">
                 <div>
                     <h1>Log Aktivitas Admin</h1>
                     <p>Riwayat siapa yang menambah, mengubah, dan menghapus data</p>
@@ -122,98 +99,82 @@ require __DIR__ . "/../includes/navbar-admin.php";
             </div>
         </header>
 
-        <section class="lg-card" aria-label="Log aktivitas">
+        <section class="kt-card" aria-label="Log aktivitas">
 
             <?php if ($error !== ""): ?>
                 <div class="alert alert--error" role="alert"><?= e($error) ?></div>
             <?php endif; ?>
 
-            <div class="pt" data-pt data-pt-mode="server" data-pt-label="<?= e($filterEntitas) ?>">
+            <p>
+                Tampilkan:
+                <?php foreach (["" => "Semua", "Produk" => "Produk", "Kategori" => "Kategori", "Pesanan" => "Pesanan", "Withdraw" => "Withdraw"] as $nilai => $teks): ?>
+                    <?php if ($nilai === $filterEntitas): ?>
+                        <b><?= e($teks) ?></b>
+                    <?php else: ?>
+                        <a href="<?= e(url_log($nilai, 1)) ?>"><?= e($teks) ?></a>
+                    <?php endif; ?>
+                    &nbsp;
+                <?php endforeach; ?>
+                <small>(<?= $total ?> catatan)</small>
+            </p>
 
-                <!-- Tombol filter (label = objek yang sedang aktif) + dropdown.
-                     Tiap opsi = tautan ?entitas=..., jadi data tetap difilter oleh query backend di atas.
-                     Cara kerjanya sama dengan filter "Semua" di Kelola Pesanan dan Withdraw Dompet. -->
-                <div class="lg-toolbar">
-                    <div class="pt-filter" data-pt-dropdown>
-                        <button type="button" class="pt-filter__btn" id="pt-filter-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="pt-filter-menu" data-pt-trigger>
-                            <img src="/assets/img/icon-filter.png" alt="" width="48" height="48">
-                            <span data-pt-filter-label><?= e($labelFilter) ?></span>
-                            <svg class="pt-filter__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 5 5 5-5"/></svg>
-                        </button>
-                        <div class="pt-menu" id="pt-filter-menu" role="menu" aria-labelledby="pt-filter-btn" data-pt-menu>
-                            <?php foreach ($opsiFilter as $nilai => $teks): ?>
-                                <a class="pt-menu__item" role="menuitemradio" aria-checked="<?= (string)$nilai === $filterEntitas ? "true" : "false" ?>" href="<?= e(url_log((string)$nilai, 1)) ?>"><?= e($teks) ?></a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    <span class="lg-count" role="status"><?= (int)$total ?> catatan</span>
+            <?php if (!$baris): ?>
+
+                <div class="dash-empty">
+                    <p>Belum ada aktivitas tercatat.</p>
                 </div>
 
-                <?php if (!$baris): ?>
+            <?php else: ?>
 
-                    <div class="dash-empty">
-                        <p>Belum ada aktivitas tercatat<?= $filterEntitas !== "" ? " untuk " . e($filterEntitas) : "" ?>.</p>
-                        <?php if ($filterEntitas !== ""): ?>
-                            <p><a href="<?= e(url_log("", 1)) ?>">Tampilkan semua aktivitas</a></p>
-                        <?php endif; ?>
-                    </div>
-
-                <?php else: ?>
-
-                    <div class="lg-table-wrap">
-                        <table class="lg-table">
-                            <caption class="lg-sr">Log aktivitas admin</caption>
-                            <colgroup><col><col><col><col><col><col></colgroup>
-                            <thead>
+                <div class="kt-table-wrap">
+                    <table class="kt-table">
+                        <caption class="kt-sr">Log aktivitas admin</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Waktu</th>
+                                <th scope="col">Admin</th>
+                                <th scope="col">Aksi</th>
+                                <th scope="col">Objek</th>
+                                <th scope="col">Detail</th>
+                                <th scope="col">IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($baris as $b): ?>
+                                <?php $tautan = tautan_entitas((string)$b["entitas"], $b["id_entitas"] !== null ? (int)$b["id_entitas"] : null); ?>
                                 <tr>
-                                    <th scope="col">Waktu</th>
-                                    <th scope="col">Admin</th>
-                                    <th scope="col">Aksi</th>
-                                    <th scope="col">Objek</th>
-                                    <th scope="col" class="is-left">Detail</th>
-                                    <th scope="col">IP</th>
+                                    <td data-label="Waktu"><?= e(substr((string)$b["created_at"], 0, 19)) ?></td>
+                                    <td data-label="Admin"><?= e($b["username"]) ?></td>
+                                    <td data-label="Aksi"><b><?= e($b["aksi"]) ?></b></td>
+                                    <td data-label="Objek">
+                                        <?= e($b["entitas"]) ?>
+                                        <?php if ($tautan !== "" && $b["aksi"] !== "Hapus"): ?>
+                                            <a href="<?= e($tautan) ?>">#<?= (int)$b["id_entitas"] ?></a>
+                                        <?php elseif ($b["id_entitas"] !== null): ?>
+                                            #<?= (int)$b["id_entitas"] ?>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td data-label="Detail"><?= e($b["detail"]) ?></td>
+                                    <td data-label="IP"><?= e($b["ip"] ?? "") ?></td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($baris as $i => $b): ?>
-                                    <?php $tautan = tautan_entitas((string)$b["entitas"], $b["id_entitas"] !== null ? (int)$b["id_entitas"] : null); ?>
-                                    <tr style="--i:<?= (int)$i ?>">
-                                        <td data-label="Waktu" class="is-num"><?= e(substr((string)$b["created_at"], 0, 19)) ?></td>
-                                        <td data-label="Admin"><?= e($b["username"]) ?></td>
-                                        <td data-label="Aksi"><b><?= e($b["aksi"]) ?></b></td>
-                                        <td data-label="Objek">
-                                            <span class="lg-obj">
-                                                <?= e($b["entitas"]) ?>
-                                                <?php if ($tautan !== "" && $b["aksi"] !== "Hapus"): ?>
-                                                    <a class="lg-link" href="<?= e($tautan) ?>">#<?= (int)$b["id_entitas"] ?></a>
-                                                <?php elseif ($b["id_entitas"] !== null): ?>
-                                                    #<?= (int)$b["id_entitas"] ?>
-                                                <?php endif; ?>
-                                            </span>
-                                        </td>
-                                        <td data-label="Detail" class="is-left"><?= e($b["detail"]) ?></td>
-                                        <td data-label="IP" class="is-num"><?= e($b["ip"] ?? "") ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
 
-                    <?php if ($jumlahHalaman > 1): ?>
-                        <nav class="lg-pager" aria-label="Halaman">
-                            <?php if ($halaman > 1): ?>
-                                <a href="<?= e(url_log($filterEntitas, $halaman - 1)) ?>">&larr; Lebih baru</a>
-                            <?php endif; ?>
-                            <span>Halaman <?= $halaman ?> / <?= $jumlahHalaman ?></span>
-                            <?php if ($halaman < $jumlahHalaman): ?>
-                                <a href="<?= e(url_log($filterEntitas, $halaman + 1)) ?>">Lebih lama &rarr;</a>
-                            <?php endif; ?>
-                        </nav>
-                    <?php endif; ?>
-
+                <?php if ($jumlahHalaman > 1): ?>
+                    <p>
+                        <?php if ($halaman > 1): ?>
+                            <a href="<?= e(url_log($filterEntitas, $halaman - 1)) ?>">&larr; Lebih baru</a>
+                        <?php endif; ?>
+                        Halaman <?= $halaman ?> / <?= $jumlahHalaman ?>
+                        <?php if ($halaman < $jumlahHalaman): ?>
+                            <a href="<?= e(url_log($filterEntitas, $halaman + 1)) ?>">Lebih lama &rarr;</a>
+                        <?php endif; ?>
+                    </p>
                 <?php endif; ?>
 
-            </div>
+            <?php endif; ?>
 
         </section>
     </div>
