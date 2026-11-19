@@ -21,8 +21,8 @@ app_session_start();
 require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../config/midtrans.php";
 require_once __DIR__ . "/../../config/gambar.php";   // thumb_nama(): thumbnail foto produk di kartu Item Pesanan
-// Tamu (belum login) dilempar ke login.php?error=menu.
-require_mahasiswa("../login.php", "menu");
+// Tamu (belum login) dilempar ke login.php.
+require_mahasiswa();
 
 $id   = (int)($_GET["id"] ?? 0);
 $baru = isset($_GET["baru"]);

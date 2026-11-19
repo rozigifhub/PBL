@@ -12,8 +12,8 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
-// Tamu (belum login) dilempar ke login.php?error=menu (ini target menu PESANAN di navbar).
-require_mahasiswa("../login.php", "menu");
+// Tamu (belum login) dilempar ke login.php (ini target menu PESANAN di navbar).
+require_mahasiswa();
 
 // [TAMBAHAN UI] Dua kolom baru di query ini (nama_produk, jenis_produk) hanya untuk kolom
 // "Nama Produk" di desain. Kolom, WHERE, dan ORDER BY lainnya TIDAK diubah.

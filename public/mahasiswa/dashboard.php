@@ -5,8 +5,8 @@
 require_once __DIR__ . "/../../config/functions.php";
 app_session_start();
 require_once __DIR__ . "/../../config/database.php";
-// Tamu (belum login) dilempar ke login.php?error=menu.
-require_mahasiswa("../login.php", "menu");
+// Tamu (belum login) dilempar ke login.php.
+require_mahasiswa();
 
 // Profil mahasiswa (join akun_login untuk email)
 $stmt = $pdo->prepare("

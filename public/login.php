@@ -13,10 +13,9 @@ if (empty($_SESSION["csrf_token"])) {
 $error = "";
 $success = "";
 
-// Pesan untuk tamu yang dilempar ke sini oleh halaman/aksi yang butuh login (?error=menu|cart|buy).
+// Pesan untuk tamu yang dilempar ke sini oleh halaman/aksi yang butuh login (?error=cart|buy).
 // Kode yang tidak dikenal diabaikan (tidak menampilkan kotak kosong).
 $pesanGuard = [
-    "menu" => "Kamu harus login dulu sebelum melihat menu dashboard/pesanan!",
     "cart" => "Kamu harus login dulu sebelum menambah produk ke keranjang!",
     "buy"  => "Kamu harus login dulu sebelum membeli barang!",
 ];

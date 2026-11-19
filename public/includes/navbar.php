@@ -8,10 +8,11 @@
 //
 // Butuh CSS di <head> halaman pemanggil: assets/css/style.css, LALU assets/css/navbar-mahasiswa.css.
 //
-// Menu & ikon SELALU tampil lengkap, baik sudah login maupun belum (tamu). Yang berbeda hanya
-// pojok kanan atas: tamu melihat tautan LOGIN, yang sudah login melihat menu akun (+ saldo untuk mahasiswa).
-// Tamu yang membuka DASHBOARD / PESANAN / keranjang / checkout ditolak oleh halaman tujuannya
-// (require_mahasiswa() di config/functions.php), lalu dilempar ke login.php?error=menu|cart|buy.
+// Menu DASHBOARD & PESANAN HANYA tampil setelah login. Tamu (belum login) hanya melihat
+// BERANDA, PRODUK, TENTANG KAMI + ikon. Halaman dashboard/pesanan-nya tetap ada dan tetap
+// dilindungi require_mahasiswa() (config/functions.php), jadi tamu yang membuka URL-nya langsung
+// tetap dilempar ke login.php. Keranjang / checkout / tombol beli tetap memakai login.php?error=cart|buy.
+// Pojok kanan atas: tamu melihat tautan LOGIN, yang sudah login melihat menu akun (+ saldo untuk mahasiswa).
 //
 // Path memakai awalan "/" (absolut dari root web) agar benar saat di-include dari subfolder mana pun.
 // Semua variabel di file ini berawalan "nav" supaya tidak bertabrakan dengan variabel halaman.
@@ -31,6 +32,11 @@ $navLinks = [
     "pesanan"   => ["PESANAN",      $navAdmin ? "/admin/pesanan.php" : "/mahasiswa/riwayat.php"],
     "tentang"   => ["TENTANG KAMI", "#"],   // belum ada halamannya; ganti "#" dengan URL halaman Tentang Kami nanti
 ];
+
+// Tamu belum login: sembunyikan pilihan menu DASHBOARD & PESANAN (halamannya tidak dihapus).
+if (!$navLogin) {
+    unset($navLinks["dashboard"], $navLinks["pesanan"]);
+}
 
 // Tautan LOGIN. Parameter next (kembali ke halaman asal setelah login) hanya dipakai untuk
 // halaman /mahasiswa/..., karena login.php memang hanya menerima path itu.
