@@ -81,9 +81,9 @@
 .dp-hint { margin: 0; color: var(--dp-muted); font-size: 1.15rem; font-weight: 500; line-height: 1.45; }
 
 /* ---------- 4. KARTU SALDO ANDA (form Withdraw) ---------- */
-.dp-card--saldo .dp-card__head { --pt: 2.8rem; --pb: 1.3rem; --pl: 3.6rem; --dv-l: .95rem; --dv-r: 2.5rem; gap: 1.45rem; }
+.dp-card--saldo .dp-card__head { --pt: 2.8rem; --pb: 1.3rem; --pl: 3.6rem; --dv-l: 1.7rem; --dv-r: 1.7rem; gap: 1.45rem; }
 .dp-card--saldo .dp-card__head img { width: 2.9rem; height: 2.8rem; }
-.dp-card__note { margin: 0 3rem 0 auto; color: var(--dp-muted); font-size: 1.05rem; font-weight: 500; line-height: 1.35; text-align: right; white-space: nowrap; }
+.dp-card__note { margin: 0 1.7rem 0 auto; color: var(--dp-muted); font-size: 1.05rem; font-weight: 500; line-height: 1.35; text-align: right; white-space: nowrap; }
 
 /* Nominal saldo: kotak abu-abu terang, angka biru tua besar & tebal */
 .dp-saldo { display: flex; align-items: center; width: fit-content; max-width: calc(100% - 1.7rem); min-height: 7.1rem; margin: 2.1rem 0 0 1.7rem; padding: 0 2.45rem 0 1.1rem; border-radius: 1.25rem;
@@ -91,9 +91,9 @@
 .dp-saldo__val { margin: 0; font-size: 6.1rem; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; }
 .dp-saldo__val--sm { font-size: 4.6rem; }   /* dipakai PHP bila nominal sangat panjang agar tidak meluap */
 
-.dp-wd { margin: 2.54rem 0 0 1rem; }
+.dp-wd { margin: 1.57rem 0 0 1.7rem; }
 .dp-wd .dp-field { width: 38.3rem; max-width: 100%; }
-.dp-wd .dp-field + .dp-field { margin-top: .37rem; }
+.dp-wd .dp-field + .dp-field { margin-top: .44rem; }
 .dp-field { position: relative; }
 .dp-field .dp-label { margin-bottom: .21rem; }
 .dp-field__all { position: absolute; right: .55rem; bottom: .3rem; height: 2.7rem; padding: 0 1.1rem; border: 0; border-radius: .5rem; background: rgba(255, 159, 28, .16); color: var(--dp-blue);
@@ -103,7 +103,9 @@
 
 .dp-actions { display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
 .dp-actions .dp-hint { flex: 1; min-width: 0; font-size: 1rem; line-height: 1.3; }   /* teks bantuan di kiri tombol; tingginya tidak boleh melebihi tombol */
-.dp-card--saldo .dp-actions { margin: 1.4rem 1.7rem 0 1rem; padding-bottom: 1.5rem; }
+.dp-card--saldo .dp-actions { margin: 1.72rem 1.7rem 0 1.7rem; padding-bottom: 2.08rem; }
+/* Teks "Saldo langsung ditahan..." (tidak ada di desain): rata kiri dgn input, sejajar vertikal di tengah tombol, baris dibuat seimbang (tidak ada kata yatim) */
+.dp-card--saldo .dp-hint { max-width: 28rem; text-align: left; text-wrap: balance; }
 .dp-empty { margin: 2.4rem 1.7rem 0 1.7rem; padding: 1.6rem 2rem; border-radius: 1.25rem; background: rgba(255, 255, 255, .6); font-size: 1.4rem; font-weight: 500; line-height: 1.5; }
 .dp-card--saldo .dp-empty { margin-bottom: 2.2rem; }
 
@@ -243,6 +245,7 @@
   .dp-field--nominal { margin: 2rem 0 0; padding: 0 1.4rem; }
   .dp-card--saldo .dp-actions, .dp-card--topup .dp-actions { flex-direction: column-reverse; align-items: stretch; margin-inline: 1.4rem; }
   .dp-btn--wd, .dp-btn--tu { width: 100%; justify-content: center; padding: 0; }
+  .dp-card--saldo .dp-hint { max-width: none; }
   .dp-pills { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; margin-inline: 1.4rem; }
   .dp-pill { height: 3.8rem; font-size: 1.4rem; }
   .dp-empty { margin-inline: 1.4rem; }
