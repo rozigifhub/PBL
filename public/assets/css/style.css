@@ -138,8 +138,11 @@ img { display: block; }
   .navbar__menu { margin-right: 1.5rem; gap: 1rem; }
 }
 
-/* ---------- LOGIN: desain asli, diskalakan proporsional agar muat 1 layar ---------- */
-body.page-login .auth {
+/* ---------- LOGIN & REGISTER: desain asli, diskalakan proporsional ----------
+   Register memakai skala (--u) dan lebar kartu yang SAMA dengan login, jadi tampilan 100% setara zoom 50%.
+   Bedanya hanya register lebih panjang (lebih banyak kolom), sehingga halaman boleh di-scroll. */
+body.page-login .auth,
+body.page-register .auth {
   /* 1 --u = 1rem di desain asli; mengecil otomatis bila tinggi layar kurang (78 = total tinggi kartu dalam unit) */
   --u: min(1rem, calc((100vh - var(--nav-h) - 24px) / 78));
   min-height: calc(100vh - var(--nav-h));
@@ -147,26 +150,44 @@ body.page-login .auth {
   align-items: center;
 }
 
-body.page-login .card {
+body.page-login .card,
+body.page-register .card {
   width: min(calc(51 * var(--u)), 100%);
   padding: calc(1.2 * var(--u)) 0 calc(5.5 * var(--u));
   border-radius: var(--u);
 }
-body.page-login .card__logo { width: calc(23.7 * var(--u)); }
+body.page-login .card__logo,
+body.page-register .card__logo { width: calc(23.7 * var(--u)); }
 
-body.page-login .form { width: min(calc(33.3 * var(--u)), 88%); margin: calc(2.2 * var(--u)) auto 0; }
-body.page-login .field { margin-bottom: calc(4.2 * var(--u)); }
-body.page-login .field__label { margin-bottom: calc(.9 * var(--u)); font-size: calc(2.1 * var(--u)); }
+body.page-login .form,
+body.page-register .form { width: min(calc(33.3 * var(--u)), 88%); margin: calc(2.2 * var(--u)) auto 0; }
+body.page-login .field,
+body.page-register .field { margin-bottom: calc(4.2 * var(--u)); }
+body.page-login .field__label,
+body.page-register .field__label { margin-bottom: calc(.9 * var(--u)); font-size: calc(2.1 * var(--u)); }
 
-body.page-login .input-box { height: calc(7.2 * var(--u)); padding: 0 calc(1.4 * var(--u)); border-radius: calc(.7 * var(--u)); }
-body.page-login .input-box svg { width: calc(2.3 * var(--u)); height: calc(2.3 * var(--u)); margin: 0 calc(1.1 * var(--u)) 0 calc(.9 * var(--u)); }
-body.page-login .input-box input { font-size: max(12px, calc(1.45 * var(--u))); }
+body.page-login .input-box,
+body.page-register .input-box { height: calc(7.2 * var(--u)); padding: 0 calc(1.4 * var(--u)); border-radius: calc(.7 * var(--u)); }
+body.page-login .input-box svg,
+body.page-register .input-box svg { width: calc(2.3 * var(--u)); height: calc(2.3 * var(--u)); margin: 0 calc(1.1 * var(--u)) 0 calc(.9 * var(--u)); }
+body.page-login .input-box input,
+body.page-register .input-box input { font-size: max(12px, calc(1.45 * var(--u))); }
 
-body.page-login .btn { height: calc(6.3 * var(--u)); gap: calc(1.4 * var(--u)); font-size: calc(2.3 * var(--u)); border-radius: calc(.6 * var(--u)); }
-body.page-login .btn svg { width: calc(4.6 * var(--u)); height: calc(2.3 * var(--u)); }
+body.page-login .btn,
+body.page-register .btn { height: calc(6.3 * var(--u)); gap: calc(1.4 * var(--u)); font-size: calc(2.3 * var(--u)); border-radius: calc(.6 * var(--u)); }
+body.page-login .btn svg,
+body.page-register .btn svg { width: calc(4.6 * var(--u)); height: calc(2.3 * var(--u)); }
 
-body.page-login .alert { margin-bottom: calc(2.5 * var(--u)); padding: calc(1.2 * var(--u)) calc(1.6 * var(--u)); font-size: max(11px, calc(1.3 * var(--u))); }
+body.page-login .alert,
+body.page-register .alert { margin-bottom: calc(2.5 * var(--u)); padding: calc(1.2 * var(--u)) calc(1.6 * var(--u)); font-size: max(11px, calc(1.3 * var(--u))); }
 
-body.page-login .switch { width: calc(42 * var(--u)); margin: calc(2.4 * var(--u)) auto 0; gap: calc(1.2 * var(--u)); font-size: max(11px, calc(1.15 * var(--u))); }
+body.page-login .switch,
+body.page-register .switch { width: calc(42 * var(--u)); margin: calc(2.4 * var(--u)) auto 0; gap: calc(1.2 * var(--u)); font-size: max(11px, calc(1.15 * var(--u))); }
 body.page-login .switch::before,
-body.page-login .switch::after { width: calc(6.7 * var(--u)); }
+body.page-login .switch::after,
+body.page-register .switch::before,
+body.page-register .switch::after { width: calc(6.7 * var(--u)); }
+
+/* Judul bagian pada register ("Registrasi", "Data Mahasiswa") ikut diskalakan */
+body.page-register .form__title { margin: 0 0 calc(4 * var(--u)); font-size: calc(2.1 * var(--u)); }
+body.page-register .field + .form__title { margin-top: calc(3 * var(--u)); }
