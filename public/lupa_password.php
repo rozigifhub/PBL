@@ -89,45 +89,75 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 ?>
+<?php
+require_once __DIR__ . "/includes/components.php";
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lupa Password - Merchandise Kampus</title>
+    <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . "/assets/css/style.css") ?>">
+    <link rel="stylesheet" href="assets/css/navbar-mahasiswa.css?v=<?= @filemtime(__DIR__ . "/assets/css/navbar-mahasiswa.css") ?>">
+    <link rel="stylesheet" href="assets/css/lupa-password.css?v=<?= @filemtime(__DIR__ . "/assets/css/lupa-password.css") ?>">
+    <script src="assets/js/auth.js" defer></script>
 </head>
-<body>
+<body class="page-lupa">
 
-    <h1>Lupa Password</h1>
+<?php require __DIR__ . "/includes/navbar.php"; ?>
 
-    <?php if ($suksesTampil): ?>
+<main class="auth">
+    <section class="card">
+        <img class="card__logo" src="assets/img/logo-jti.webp" alt="Logo JTI">
 
-        <p>
-            Jika email terdaftar, tautan reset telah dikirim.
-            Silakan cek inbox atau folder spam (berlaku 60 menit).
-        </p>
-        <a href="login.php">Kembali ke Login</a>
+        <?php if ($suksesTampil): ?>
 
-    <?php else: ?>
+            <!-- TAMPILAN SETELAH PERMINTAAN BERHASIL (logika $suksesTampil tidak diubah) -->
+            <div class="form lupa lupa--sukses">
+                <div class="lupa__icon" aria-hidden="true">
+                    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="26" height="19" rx="3"/><path d="M4.5 10 16 18.5 27.5 10"/></svg>
+                </div>
 
-        <?php if ($error !== ""): ?>
-            <p><?= htmlspecialchars($error) ?></p>
+                <h2 class="form__title">Cek Email Anda</h2>
+                <p class="lupa__desc">
+                    Jika email terdaftar, tautan reset telah dikirim.
+                    Silakan cek inbox atau folder spam (berlaku <strong>60 menit</strong>).
+                </p>
+
+                <a class="btn" href="login.php"><span>Kembali ke Login</span><?= icon("arrow") ?></a>
+            </div>
+
+        <?php else: ?>
+
+            <form class="form" method="POST" data-auth>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
+
+                <?php if ($error !== ""): ?>
+                    <div class="alert alert--error" role="alert"><?= htmlspecialchars($error) ?></div>
+                <?php endif; ?>
+
+                <h2 class="form__title">Lupa Password</h2>
+                <p class="lupa__desc">
+                    Masukkan email yang terdaftar. Kami akan mengirimkan tautan untuk mengatur ulang password Anda.
+                </p>
+
+                <?php
+                // Nama field (parameter ke-2) harus sama dengan $_POST["email"] di bagian atas file ini
+                field("Email terdaftar", "email", "ENTER EMAIL", ["type" => "email", "icon" => "mail", "value" => $email ?? "", "attrs" => 'autocomplete="email"']);
+                ?>
+
+                <button class="btn" type="submit">
+                    <span>Kirim Tautan Reset</span><?= icon("arrow") ?><span class="spinner"></span>
+                </button>
+            </form>
+
+            <p class="switch"><a href="login.php">Kembali ke Login</a></p>
+
         <?php endif; ?>
-
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["csrf_token"]) ?>">
-
-            <label>Email terdaftar</label><br>
-            <input type="email" name="email" required>
-
-            <br><br>
-            <button type="submit">Kirim Tautan Reset</button>
-        </form>
-
-        <p>
-            <a href="login.php">Kembali ke Login</a>
-        </p>
-
-    <?php endif; ?>
+    </section>
+</main>
 
 </body>
 </html>

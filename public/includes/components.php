@@ -10,6 +10,7 @@ function icon(string $name): string
     static $icons = [
         'user'  => '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="9" r="5.5"/><path d="M5.5 28c0-6 3.5-9 7-9h7c3.5 0 7 3 7 9z"/></svg>',
         'lock'  => '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M10 14v-4a6 6 0 0 1 12 0v4" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="5" y="13" width="22" height="16" rx="2.5" fill="currentColor"/><circle cx="16" cy="19.5" r="2.4" fill="#fff"/><path d="M16 21.5v4" stroke="#fff" stroke-width="1.8"/></svg>',
+        'mail'  => '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="7" width="25" height="18" rx="2.5"/><path d="M4.5 9.5 16 18l11.5-8.5"/></svg>',
         'arrow' => '<svg viewBox="0 0 48 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h43M35 3l10 9-10 9"/></svg>',
     ];
     return $icons[$name] ?? '';
@@ -18,7 +19,7 @@ function icon(string $name): string
 /**
  * Cetak satu kolom form (label + input).
  * $name harus sama dengan nama field yang dibaca back-end ($_POST[...]).
- * $opts: type | icon (user, lock) | value | attrs (atribut HTML tambahan, ditulis developer).
+ * $opts: type | icon (user, lock, mail) | value | attrs (atribut HTML tambahan, ditulis developer).
  */
 function field(string $label, string $name, string $placeholder, array $opts = []): void
 {
