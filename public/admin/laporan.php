@@ -162,7 +162,8 @@ foreach (($data["penjualan"] ?? []) as $r) {
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= @filemtime(__DIR__ . "/../assets/css/style.css") ?>">
     <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= @filemtime(__DIR__ . "/../assets/css/dashboard.css") ?>">
     <link rel="stylesheet" href="/assets/css/admin-dashboard.css?v=<?= @filemtime(__DIR__ . "/../assets/css/admin-dashboard.css") ?>">
-    <link rel="stylesheet" href="/assets/css/admin-kategori.css?v=<?= @filemtime(__DIR__ . "/../assets/css/admin-kategori.css") ?>">
+    <link rel="stylesheet" href="/assets/css/admin-laporan.css?v=<?= @filemtime(__DIR__ . "/../assets/css/admin-laporan.css") ?>">
+    <script src="/assets/js/admin-laporan.js?v=<?= @filemtime(__DIR__ . "/../assets/js/admin-laporan.js") ?>" defer></script>
 </head>
 <body class="page-dashboard">
 <?php
@@ -171,14 +172,17 @@ $adminNavRingkas = true;
 require __DIR__ . "/../includes/navbar-admin.php";
 ?>
 
-<main class="dash dash-kategori">
-    <div class="kt">
+<main class="dash dash-laporan">
+    <div class="lp">
 
-        <header class="kt-head">
-            <nav class="kt-crumb" aria-label="Breadcrumb">
+        <!-- Kepala halaman: breadcrumb + ikon buku + judul -->
+        <header class="lp-head">
+            <nav class="lp-crumb" aria-label="Breadcrumb">
+                <img src="/assets/img/withdraw-ic-home.png" alt="" width="172" height="172">
                 <span><a href="/admin/dashboard.php">Dashboard</a> / <a href="/admin/laporan.php" aria-current="page">Laporan</a></span>
             </nav>
-            <div class="kt-title">
+            <div class="lp-title">
+                <span class="lp-title__icon" aria-hidden="true"><img src="/assets/img/laporan-ic-book.png" alt="" width="360" height="360"></span>
                 <div>
                     <h1>Laporan</h1>
                     <p>Penjualan, rekap produk, pesanan pre order, dan mutasi dompet dalam satu file Excel</p>
@@ -186,36 +190,48 @@ require __DIR__ . "/../includes/navbar-admin.php";
             </div>
         </header>
 
-        <section class="kt-card" aria-label="Laporan">
+        <section class="lp-card" aria-label="Laporan">
 
             <?php if ($error !== ""): ?>
                 <div class="alert alert--error" role="alert"><?= e($error) ?></div>
             <?php endif; ?>
 
-            <form method="GET">
-                <label for="dari">Dari</label>
-                <input type="date" id="dari" name="dari" value="<?= e($dari) ?>" required>
-                <label for="sampai">Sampai</label>
-                <input type="date" id="sampai" name="sampai" value="<?= e($sampai) ?>" required>
-                <button type="submit">Tampilkan</button>
-                <button type="submit" name="unduh" value="1">Unduh Excel</button>
+            <!-- FORM PERIODE (method GET, id & name input, name="unduh" = backend, jangan diubah).
+                 Teks .lp-date__text hanya tampilan format "01 Nov 2026", diisi JS dari nilai input date. -->
+            <form method="GET" class="lp-form">
+                <label class="lp-label" for="dari">Dari</label>
+                <span class="lp-date" data-lp-date>
+                    <input type="date" id="dari" name="dari" value="<?= e($dari) ?>" required>
+                    <span class="lp-date__text" data-lp-date-text aria-hidden="true"></span>
+                </span>
+                <label class="lp-label" for="sampai">Sampai</label>
+                <span class="lp-date" data-lp-date>
+                    <input type="date" id="sampai" name="sampai" value="<?= e($sampai) ?>" required>
+                    <span class="lp-date__text" data-lp-date-text aria-hidden="true"></span>
+                </span>
+                <button type="submit" class="lp-btn">Tampilkan</button>
+                <button type="submit" class="lp-btn" name="unduh" value="1">Unduh Excel</button>
             </form>
 
             <?php if (!$gagalDb): ?>
-                <p>
+                <!-- RINGKASAN PERIODE (variabel PHP dari query backend di atas) -->
+                <p class="lp-sum">
                     Periode <b><?= e($dari) ?></b> s/d <b><?= e($sampai) ?></b>:
                     <b><?= $totalPesananTampil ?></b> pesanan sah, omzet <b><?= e(format_rupiah($totalOmzetTampil)) ?></b>,
                     <b><?= count($data["mutasi"]) ?></b> mutasi dompet,
                     <b><?= count($data["po"]) ?></b> produk Pre Order.
                 </p>
 
-                <h2>Rekap Produk</h2>
+                <h2 class="lp-sr">Rekap Produk</h2>
                 <?php if (!$data["produk"]): ?>
-                    <p>Belum ada produk.</p>
+                    <div class="dash-empty">
+                        <p>Belum ada produk.</p>
+                    </div>
                 <?php else: ?>
-                    <div class="kt-table-wrap">
-                        <table class="kt-table">
-                            <caption class="kt-sr">Rekap produk</caption>
+                    <div class="lp-table-wrap">
+                        <table class="lp-table">
+                            <caption class="lp-sr">Rekap produk</caption>
+                            <colgroup><col><col><col><col><col></colgroup>
                             <thead>
                                 <tr>
                                     <th scope="col">Produk</th>
@@ -226,8 +242,9 @@ require __DIR__ . "/../includes/navbar-admin.php";
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($data["produk"] as $r): ?>
-                                    <tr>
+                                <!-- LOOPING REKAP PRODUK MULAI DARI SINI ($data["produk"] dari query backend) -->
+                                <?php foreach ($data["produk"] as $i => $r): ?>
+                                    <tr style="--i:<?= (int)$i ?>">
                                         <td data-label="Produk"><?= e($r["nama_merchandise"]) ?> (<?= e($r["ukuran"]) ?>)</td>
                                         <td data-label="Jenis"><?= e($r["tipe_produk"]) ?></td>
                                         <td data-label="Terjual"><?= (int)$r["terjual"] ?></td>
@@ -235,6 +252,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
                                         <td data-label="Sisa Stok"><?= (int)$r["stok"] ?></td>
                                     </tr>
                                 <?php endforeach; ?>
+                                <!-- LOOPING REKAP PRODUK SELESAI DI SINI -->
                             </tbody>
                         </table>
                     </div>
