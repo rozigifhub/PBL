@@ -168,6 +168,7 @@ try {
 <body class="page-dashboard">
 <?php
 $adminActive = "dashboard";
+$adminNavRingkas = true;   // 4 menu + ikon profil saja (tanpa ikon Cari & Pesanan), sama seperti halaman admin lain
 require __DIR__ . "/../includes/navbar-admin.php";
 ?>
 
