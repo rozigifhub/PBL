@@ -19,6 +19,7 @@ $adminLinks = [
     "withdraw"  => ["WITHDRAW",        "/admin/withdraw.php"],
     "laporan"   => ["LAPORAN",         "/admin/laporan.php"],
     "log"       => ["LOG",             "/admin/log.php"],
+    "akun"      => ["KELOLA ADMIN",    "/admin/akun-admin.php"],
 ];
 ?>
 <header class="navbar navbar--admin">

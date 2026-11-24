@@ -17,7 +17,7 @@ require_admin();
 const LOG_PER_HALAMAN = 50;
 
 $filterEntitas = $_GET["entitas"] ?? "";
-if (!in_array($filterEntitas, ["Produk", "Kategori", "Pesanan", "Withdraw"], true)) {
+if (!in_array($filterEntitas, ["Produk", "Kategori", "Pesanan", "Withdraw", "Akun Admin"], true)) {
     $filterEntitas = "";
 }
 $halaman = max(1, (int)($_GET["hal"] ?? 1));
@@ -66,13 +66,14 @@ function tautan_entitas(string $entitas, ?int $id): string
         "Pesanan"  => "/admin/pesanan-detail.php?id=" . $id,
         "Produk"   => "/admin/merchandise.php?edit=" . $id,
         "Kategori" => "/admin/kategori.php?edit=" . $id,
-        "Withdraw" => "/admin/withdraw.php",
-        default    => "",
+        "Withdraw"   => "/admin/withdraw.php",
+        "Akun Admin" => "/admin/akun-admin.php",
+        default      => "",
     };
 }
 
 // Opsi dropdown filter: nilai ?entitas= => label ("" = Semua).
-$opsiFilter = ["" => "Semua", "Produk" => "Produk", "Kategori" => "Kategori", "Pesanan" => "Pesanan", "Withdraw" => "Withdraw"];
+$opsiFilter = ["" => "Semua", "Produk" => "Produk", "Kategori" => "Kategori", "Pesanan" => "Pesanan", "Withdraw" => "Withdraw", "Akun Admin" => "Akun Admin"];
 $labelFilter = $opsiFilter[$filterEntitas];
 ?>
 <!DOCTYPE html>
