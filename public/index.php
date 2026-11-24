@@ -24,7 +24,7 @@ $flashSale = $pdo->query("
            k.nama_kategori
     FROM merchandise m
     JOIN kategori_merchandise k ON k.id_kategori = m.id_kategori
-    WHERE m.stok > 0
+    WHERE m.stok > 0 AND m.tipe_produk = 'Ready Stock'
     ORDER BY RANDOM()
     LIMIT 3
 ")->fetchAll();

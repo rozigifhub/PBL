@@ -143,7 +143,7 @@ $flash = take_flash();
 $stmt = $pdo->prepare("
     SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga,
            p.status_pesanan, p.tipe_pesanan, p.persentase_dp,
-           p.tanggal_ambil, g.alamat, g.status_pengiriman, g.tanggal_pengiriman
+           p.tanggal_ambil, g.alamat, g.status_pengiriman, g.tanggal_pengiriman, g.bukti_pengiriman
     FROM pesanan p
     LEFT JOIN pengiriman g ON g.id_pesanan = p.id_pesanan
     WHERE p.id_pesanan = :id AND p.id_akun = :id_akun
@@ -515,6 +515,12 @@ require __DIR__ . "/../includes/navbar.php";
                         <dt>Status Pengambilan</dt>
                         <dd><?= e($pesanan["status_pengiriman"] ?? "Belum Diambil") ?></dd>
                     </div>
+                    <?php if (!empty($pesanan["bukti_pengiriman"])): ?>
+                    <div class="mp-list__row">
+                        <dt>Diambil oleh</dt>
+                        <dd><?= e((string)$pesanan["bukti_pengiriman"]) ?></dd>
+                    </div>
+                    <?php endif; ?>
                 </dl>
             </section>
 

@@ -63,6 +63,9 @@
 .badge { position: absolute; top: .9rem; padding: .3rem .8rem; border-radius: 99px; background: rgba(255, 255, 255, .92);
          font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; box-shadow: 0 .1rem .4rem rgba(0, 0, 0, .12); }
 .badge--kat { left: .9rem; color: var(--c-navy); }
+.badge--po  { right: .9rem; left: auto; background: rgba(109, 40, 217, .92); color: #fff; }
+
+.pcard__po { margin: .25rem 0 0; color: #6D28D9; font-size: .78rem; font-weight: 700; letter-spacing: .02em; }
 
 .pcard__name  { margin: .9rem 0 0; overflow: hidden; color: var(--c-name); font-size: 1.5rem; line-height: 1.2; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .pcard__meta  { margin: .2rem 0 0; color: #BFBFBF; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }

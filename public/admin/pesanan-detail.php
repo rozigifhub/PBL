@@ -105,8 +105,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         ");
                         $stmt->execute([":status" => $statusBaru, ":id" => $id]);
 
-                        // Sinkronisasi pengiriman saat 'Dikirim' ditangani
+                        // Sinkronisasi pengiriman saat 'Siap Diambil'/'Selesai' ditangani
                         // trigger trg_pesanan_status di level database
+
+                        // Penanda siapa yang mengambil (diisi admin, hanya berlaku saat jadi Selesai).
+                        // Disimpan di kolom bukti_pengiriman (tidak dipakai lagi untuk resi sejak self pickup).
+                        if ($statusBaru === "Selesai") {
+                            $diambilOleh = trim((string)($_POST["diambil_oleh"] ?? ""));
+                            if (mb_strlen($diambilOleh) > 255) {
+                                $diambilOleh = mb_substr($diambilOleh, 0, 255);
+                            }
+                            if ($diambilOleh !== "") {
+                                $stmt = $pdo->prepare("
+                                    UPDATE pengiriman SET bukti_pengiriman = :catatan
+                                    WHERE id_pesanan = :id
+                                ");
+                                $stmt->execute([":catatan" => $diambilOleh, ":id" => $id]);
+                            }
+                        }
 
                         set_flash("sukses", "Status pesanan #{$id} → {$statusBaru}.");
                     }
@@ -116,7 +132,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $pdo->commit();
 
                     if ($action === "status") {
-                        catat_log_admin($pdo, "Status", "Pesanan", $id, "{$statusKini} → {$statusBaru}");
+                        $detailLog = "{$statusKini} → {$statusBaru}";
+                        if (!empty($diambilOleh)) {
+                            $detailLog .= "; diambil oleh: {$diambilOleh}";
+                        }
+                        catat_log_admin($pdo, "Status", "Pesanan", $id, $detailLog);
                     }
 
                     if ($action === "status" && $statusBaru === "Dibatalkan") {
@@ -540,6 +560,13 @@ require __DIR__ . "/../includes/navbar-admin.php";
                                 Terapkan
                             </button>
                         </div>
+
+                        <?php if ($pesanan["status_pesanan"] === "Siap Diambil"): ?>
+                            <!-- Hanya relevan saat transisi ke Selesai: penanda siapa yang mengambil barang. -->
+                            <label class="pd-label" for="pd-diambil-oleh">Diambil oleh (opsional)</label>
+                            <input class="pd-field" type="text" id="pd-diambil-oleh" name="diambil_oleh" maxlength="255"
+                                   placeholder="Kosongkan jika diambil sendiri, atau isi nama bila dititipkan ke orang lain">
+                        <?php endif; ?>
                     </form>
                     <p class="pd-note">Transisi sah dari <b><?= e($pesanan["status_pesanan"]) ?></b>: <?= e(implode(", ", $transisi) ?: "tidak ada") ?>.</p>
                 <?php else: ?>
@@ -557,6 +584,9 @@ require __DIR__ . "/../includes/navbar-admin.php";
                     <div class="pd-list__row"><dt>Lokasi</dt><dd><?= nl2br(e($pengiriman["alamat"] ?? PICKUP_LOKASI)) ?></dd></div>
                     <div class="pd-list__row"><dt>Hari ambil</dt><dd><?= !empty($pesanan["tanggal_ambil"]) ? e(date("d-m-Y", strtotime($pesanan["tanggal_ambil"]))) : "-" ?></dd></div>
                     <div class="pd-list__row"><dt>Status</dt><dd><?= e($pengiriman["status_pengiriman"] ?? "Belum Diambil") ?></dd></div>
+                    <?php if (!empty($pengiriman["bukti_pengiriman"])): ?>
+                        <div class="pd-list__row"><dt>Diambil oleh</dt><dd><?= e((string)$pengiriman["bukti_pengiriman"]) ?></dd></div>
+                    <?php endif; ?>
                 </dl>
                 <p class="pd-note">Ubah status pesanan ke <b>Siap Diambil</b> saat barang siap, lalu <b>Selesai</b> setelah pembeli mengambilnya.</p>
             </section>

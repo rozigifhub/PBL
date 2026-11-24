@@ -26,6 +26,7 @@ $kategori = $pdo->query("
 
 $sql = "
     SELECT m.id_merchandise, m.nama_merchandise, m.ukuran, m.harga, m.stok, m.foto,
+           m.tipe_produk, m.po_tutup, m.tanggal_ambil,
            k.id_kategori, k.nama_kategori
     FROM merchandise m
     JOIN kategori_merchandise k ON k.id_kategori = m.id_kategori
@@ -138,10 +139,12 @@ require __DIR__ . "/../includes/navbar.php";
             <div class="grid">
                 <?php foreach ($produk as $p): ?>
                     <?php
-                    $foto   = foto_thumb_url($p["foto"]);
-                    $ada    = (int)$p["stok"] > 0;
-                    $ukuran = trim((string)$p["ukuran"]);
-                    $detail = "/mahasiswa/produk.php?id=" . (int)$p["id_merchandise"];
+                    $foto     = foto_thumb_url($p["foto"]);
+                    $isPo     = $p["tipe_produk"] === "Pre Order";
+                    $poTutup  = $isPo && (string)$p["po_tutup"] < date("Y-m-d");
+                    $ada      = (int)$p["stok"] > 0 && !$poTutup;
+                    $ukuran   = trim((string)$p["ukuran"]);
+                    $detail   = "/mahasiswa/produk.php?id=" . (int)$p["id_merchandise"];
                     ?>
                     <article class="pcard<?= $ada ? "" : " pcard--habis" ?>" data-cari="<?= e($p["nama_merchandise"] . " " . $p["nama_kategori"] . " " . $ukuran) ?>">
 
@@ -152,6 +155,9 @@ require __DIR__ . "/../includes/navbar.php";
                                 <span class="pcard__nofoto">(tanpa foto)</span>
                             <?php endif; ?>
                             <span class="badge badge--kat"><?= e($p["nama_kategori"]) ?></span>
+                            <?php if ($isPo): ?>
+                                <span class="badge badge--po">Pre Order</span>
+                            <?php endif; ?>
                         </a>
 
                         <h2 class="pcard__name" title="<?= e($p["nama_merchandise"]) ?>"><?= e($p["nama_merchandise"]) ?></h2>
@@ -159,10 +165,16 @@ require __DIR__ . "/../includes/navbar.php";
                             <div class="pcard__text">
                                 <p class="pcard__meta"><?= $ukuran !== "" ? "Ukuran " . e($ukuran) : "&nbsp;" ?></p>
                                 <p class="pcard__price">Rp. <?= number_format((float)$p["harga"], 0, ",", ".") ?></p>
+                                <?php if ($isPo): ?>
+                                    <p class="pcard__po">
+                                        <?= $poTutup ? "PO ditutup" : "PO s/d " . e(date("d-m-Y", strtotime($p["po_tutup"]))) ?>
+                                        &middot; Ambil <?= e(date("d-m-Y", strtotime($p["tanggal_ambil"]))) ?>
+                                    </p>
+                                <?php endif; ?>
                             </div>
                             <?php if ($ada): ?>
-                                <!-- Label stok: di sebelah kanan ukuran & harga (hanya untuk produk yang stoknya ada) -->
-                                <span class="pcard__stok">Tersedia (<?= (int)$p["stok"] ?>)</span>
+                                <!-- Label stok/kuota: di sebelah kanan ukuran & harga (hanya untuk produk yang masih bisa dibeli) -->
+                                <span class="pcard__stok"><?= $isPo ? "Kuota " : "Tersedia " ?>(<?= (int)$p["stok"] ?>)</span>
                             <?php endif; ?>
                         </div>
 
@@ -186,7 +198,7 @@ require __DIR__ . "/../includes/navbar.php";
                                     </button>
                                 </form>
                             <?php else: ?>
-                                <span class="pbtn pbtn--off">Habis</span>
+                                <span class="pbtn pbtn--off"><?= $poTutup ? "PO Ditutup" : "Habis" ?></span>
                             <?php endif; ?>
                         </div>
                     </article>
