@@ -109,8 +109,7 @@
 /* Baris tambahan dari backend (Sudah Dibayar, Sisa Tagihan, Status Pengiriman): lebih kecil & dipisah garis tipis,
    kolom titik dua tetap lurus dengan baris di atasnya */
 .mp-list--extra { margin-top: 1.2rem; padding-top: 1.1rem; border-top: .0625rem dashed var(--mp-line); }
-.mp-list--extra .mp-list__row { min-height: 4.2rem; font-size: 1.9rem; }
-.mp-list--extra dd { font-weight: 500; }
+/* Ukuran font, berat font, dan tinggi baris dibuat sama dengan baris di atas garis (mewarisi .mp-list__row) */
 
 /* ---------- BADGE STATUS (pil berwarna, ikon + teks) ----------
    Warna dipilih lewat class modifier yang dibuat PHP (html_badge): --wait, --process, --ship, --done, --fail, --off.
@@ -268,7 +267,6 @@
 
   .mp-list__row { grid-template-columns: 15.4rem 1.8rem minmax(0, 1fr); min-height: 4.6rem; font-size: 1.7rem; }
   .mp-list dt::after { width: 1.8rem; }
-  .mp-list--extra .mp-list__row { min-height: 3.8rem; font-size: 1.5rem; }
   .mp-dp { font-size: 1.3rem; }
   .mp-badge { font-size: 1.6rem; }
   .mp-badge--sm { font-size: 1.4rem; white-space: normal; }

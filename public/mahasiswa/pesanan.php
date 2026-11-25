@@ -493,10 +493,6 @@ require __DIR__ . "/../includes/navbar.php";
                         <dt>Total</dt>
                         <dd><?= e(format_rupiah((float)$pesanan["total_harga"])) ?></dd>
                     </div>
-                    <div class="mp-list__row">
-                        <dt>Pengambilan (Self Pickup)</dt>
-                        <dd><?= nl2br(e(($pesanan["alamat"] ?? PICKUP_LOKASI) . (!empty($pesanan["tanggal_ambil"]) ? "\nHari ambil: " . date("d-m-Y", strtotime($pesanan["tanggal_ambil"])) : "\nHari ambil akan diinformasikan"))) ?></dd>
-                    </div>
                 </dl>
 
                 <!-- Baris tambahan dari backend (tidak ada di Figma, tetap ditampilkan agar data tidak hilang): -->
