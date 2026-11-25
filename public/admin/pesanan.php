@@ -24,6 +24,56 @@ $statusFilter = in_array($_GET["status"] ?? "", $daftarStatus, true)
     ? $_GET["status"]
     : "";
 
+// "Hapus" di sini = arsipkan: pesanan hilang dari daftar aktif, tapi datanya
+// (pembayaran, mutasi dompet, laporan) tidak disentuh. Tersedia tautan "Arsip" untuk memulihkan.
+$tampilArsip = isset($_GET["arsip"]);
+$error       = "";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!csrf_validate()) {
+        $error = "Sesi tidak valid. Silakan coba lagi.";
+    } else {
+        $action = $_POST["action"] ?? "";
+        if ($action === "arsipkan_terpilih" || $action === "pulihkan_terpilih") {
+            $arsipkan = $action === "arsipkan_terpilih";
+            $ids = array_values(array_unique(array_filter(
+                array_map("intval", (array)($_POST["ids"] ?? [])),
+                static fn($v) => $v > 0
+            )));
+
+            if (!$ids) {
+                set_flash("gagal", "Belum ada pesanan yang dipilih.");
+            } else {
+                try {
+                    // TRUE/FALSE ditulis literal (bukan parameter) agar aman untuk kolom boolean lewat PDO pgsql;
+                    // $arsipkan berasal dari nilai action di server, bukan input pengguna.
+                    $placeholder = implode(",", array_fill(0, count($ids), "?"));
+                    $valBaru = $arsipkan ? "TRUE" : "FALSE";
+                    $valLama = $arsipkan ? "FALSE" : "TRUE";
+                    $stmt = $pdo->prepare("
+                        UPDATE pesanan
+                        SET diarsipkan = {$valBaru}, diarsipkan_pada = " . ($arsipkan ? "now()" : "NULL") . "
+                        WHERE id_pesanan IN ($placeholder) AND diarsipkan = {$valLama}
+                        RETURNING id_pesanan
+                    ");
+                    $stmt->execute($ids);
+                    $terkena = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                    foreach ($terkena as $pid) {
+                        catat_log_admin($pdo, $arsipkan ? "Arsipkan" : "Pulihkan", "Pesanan", (int)$pid);
+                    }
+
+                    set_flash("sukses", count($terkena) . " pesanan " . ($arsipkan ? "diarsipkan." : "dipulihkan."));
+                } catch (PDOException $e) {
+                    error_log("Arsip pesanan gagal: " . $e->getMessage());
+                    set_flash("gagal", "Terjadi kesalahan database. Coba lagi.");
+                }
+            }
+            redirect("pesanan.php" . ($arsipkan ? "" : "?arsip=1"));
+        }
+    }
+}
+
 $sql = "
     SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga, p.status_pesanan,
            a.username, m.nama AS nama_mhs, m.nim,
@@ -38,10 +88,11 @@ $sql = "
     FROM pesanan p
     JOIN akun_login a ON a.id_akun = p.id_akun
     LEFT JOIN mahasiswa m ON m.id_akun = p.id_akun
+    WHERE p.diarsipkan = " . ($tampilArsip ? "TRUE" : "FALSE") . "
 ";
 $params = [];
 if ($statusFilter !== "") {
-    $sql .= " WHERE p.status_pesanan = :status";
+    $sql .= " AND p.status_pesanan = :status";
     $params[":status"] = $statusFilter;
 }
 $sql .= " ORDER BY p.id_pesanan DESC";
@@ -49,6 +100,8 @@ $sql .= " ORDER BY p.id_pesanan DESC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $pesanan = $stmt->fetchAll();
+
+$jumlahArsip = (int)$pdo->query("SELECT COUNT(*) FROM pesanan WHERE diarsipkan = TRUE")->fetchColumn();
 
 $flash = take_flash();
 
@@ -94,10 +147,17 @@ function format_rupiah(float $angka): string
     return "Rp. " . number_format($angka, 0, ",", ".");
 }
 
-/** Alamat opsi filter. Status dikodekan agar spasi ("Menunggu Pembayaran") aman di URL. */
-function url_filter(string $status = ""): string
+/** Alamat opsi filter. Status dikodekan agar spasi ("Menunggu Pembayaran") aman di URL; $arsip mempertahankan mode arsip. */
+function url_filter(string $status = "", bool $arsip = false): string
 {
-    return "/admin/pesanan.php" . ($status !== "" ? "?" . http_build_query(["status" => $status]) : "");
+    $q = [];
+    if ($status !== "") {
+        $q["status"] = $status;
+    }
+    if ($arsip) {
+        $q["arsip"] = 1;
+    }
+    return "/admin/pesanan.php" . ($q ? "?" . http_build_query($q) : "");
 }
 
 $opsiFilter = ["" => "Semua"];
@@ -170,8 +230,8 @@ require __DIR__ . "/../includes/navbar-admin.php";
             <div class="po-title">
                 <span class="po-title__icon" aria-hidden="true"><img src="/assets/img/icon-package.png" alt="" width="128" height="128"></span>
                 <div>
-                    <h1>Kelola Pesanan Merchandise</h1>
-                    <p>Kelola pesanan merchandise JTI</p>
+                    <h1><?= $tampilArsip ? "Arsip Pesanan" : "Kelola Pesanan Merchandise" ?></h1>
+                    <p><?= $tampilArsip ? "Pesanan yang sudah dihapus dari daftar aktif; bisa dipulihkan kapan saja." : "Kelola pesanan merchandise JTI" ?></p>
                 </div>
             </div>
         </header>
@@ -183,6 +243,18 @@ require __DIR__ . "/../includes/navbar-admin.php";
                     <?= e($flash["msg"]) ?>
                 </div>
             <?php endif; ?>
+
+            <?php if ($error !== ""): ?>
+                <div class="alert alert--error" role="alert"><?= e($error) ?></div>
+            <?php endif; ?>
+
+            <p>
+                <?php if ($tampilArsip): ?>
+                    <a href="<?= e(url_filter($statusFilter)) ?>">&larr; Kembali ke daftar aktif</a>
+                <?php else: ?>
+                    <a href="<?= e(url_filter($statusFilter, true)) ?>">Lihat Arsip (<?= $jumlahArsip ?>)</a>
+                <?php endif; ?>
+            </p>
 
             <div class="pt" data-pt data-pt-mode="server" data-pt-label="<?= e($statusFilter) ?>">
 
@@ -203,7 +275,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
                         <div class="pt-menu" id="pt-filter-menu" role="menu" aria-labelledby="pt-filter-btn" data-pt-menu>
                             <?php foreach ($opsiFilter as $nilai => $label): ?>
                                 <?php $aktif = ((string)$nilai === $statusFilter); ?>
-                                <a class="pt-menu__item" role="menuitemradio" aria-checked="<?= $aktif ? "true" : "false" ?>" href="<?= e(url_filter((string)$nilai)) ?>"><?= e($label) ?></a>
+                                <a class="pt-menu__item" role="menuitemradio" aria-checked="<?= $aktif ? "true" : "false" ?>" href="<?= e(url_filter((string)$nilai, $tampilArsip)) ?>"><?= e($label) ?></a>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -212,23 +284,29 @@ require __DIR__ . "/../includes/navbar-admin.php";
                 <?php if (!$pesanan): ?>
 
                     <div class="dash-empty">
-                        <p>Tidak ada pesanan<?= $statusFilter !== "" ? " dengan status tersebut." : "." ?></p>
+                        <p>
+                            <?php if ($tampilArsip): ?>
+                                Belum ada pesanan yang diarsipkan<?= $statusFilter !== "" ? " dengan status tersebut." : "." ?>
+                            <?php else: ?>
+                                Tidak ada pesanan<?= $statusFilter !== "" ? " dengan status tersebut." : "." ?>
+                            <?php endif; ?>
+                        </p>
                         <?php if ($statusFilter !== ""): ?>
-                            <p><a href="<?= e(url_filter()) ?>">Tampilkan semua pesanan</a></p>
+                            <p><a href="<?= e(url_filter("", $tampilArsip)) ?>">Tampilkan semua pesanan</a></p>
                         <?php endif; ?>
                     </div>
 
                 <?php else: ?>
 
-                    <!-- Pilih Semua (jumlah baris yang tampil) + Hapus Yang Dipilih -->
+                    <!-- Pilih Semua (jumlah baris yang tampil) + Hapus/Pulihkan Yang Dipilih (kirim via #form-pt-bulk, lihat bawah) -->
                     <div class="pt-bar">
                         <label class="pt-select">
                             <input class="pt-check" type="checkbox" data-pt-all>
                             <span>Pilih Semua (<span data-pt-count><?= count($pesanan) ?></span>)</span>
                         </label>
-                        <button type="button" class="pt-bulk" data-pt-bulk disabled>
+                        <button type="submit" form="form-pt-bulk" class="pt-bulk" data-pt-bulk disabled>
                             <img src="/assets/img/icon-trash.png" alt="" width="40" height="40">
-                            <span>Hapus Yang Dipilih</span>
+                            <span><?= $tampilArsip ? "Pulihkan Yang Dipilih" : "Hapus Yang Dipilih" ?></span>
                         </button>
                     </div>
                     <p class="pt-note" data-pt-note role="status" hidden></p>
@@ -258,7 +336,7 @@ require __DIR__ . "/../includes/navbar-admin.php";
                                     <?php $urlDetail = "/admin/pesanan-detail.php?id=" . (int)$p["id_pesanan"]; ?>
                                     <tr style="--i:<?= (int)$i ?>" data-href="<?= e($urlDetail) ?>" data-id="<?= (int)$p["id_pesanan"] ?>" data-search="<?= e(($p["nama_mhs"] ?? $p["username"]) . " " . ($p["nim"] ?? "")) ?>">
                                         <td class="pt-td-check">
-                                            <input class="pt-check" type="checkbox" value="<?= (int)$p["id_pesanan"] ?>" data-pt-row-check aria-label="Pilih pesanan nomor <?= (int)$p["id_pesanan"] ?>">
+                                            <input class="pt-check" type="checkbox" name="ids[]" form="form-pt-bulk" value="<?= (int)$p["id_pesanan"] ?>" data-pt-row-check aria-label="Pilih pesanan nomor <?= (int)$p["id_pesanan"] ?>">
                                         </td>
                                         <td data-label="No Pesanan">
                                             <a class="po-no" href="<?= e($urlDetail) ?>" aria-label="Detail pesanan nomor <?= (int)$p["id_pesanan"] ?>">#<?= (int)$p["id_pesanan"] ?></a>
@@ -287,6 +365,18 @@ require __DIR__ . "/../includes/navbar-admin.php";
                     </div>
 
                 <?php endif; ?>
+
+                <!-- Checkbox baris memakai atribut form="form-pt-bulk"; "Hapus"/"Pulihkan Yang Dipilih" mengirim form ini. -->
+                <?php
+                $konfirmBulk = json_encode(
+                    $tampilArsip ? "Pulihkan pesanan yang dipilih?" : "Hapus (arsipkan) pesanan yang dipilih? Data tetap tersimpan dan bisa dipulihkan lewat Arsip.",
+                    JSON_UNESCAPED_UNICODE
+                );
+                ?>
+                <form id="form-pt-bulk" method="POST" hidden onsubmit="return confirm(<?= e($konfirmBulk) ?>)">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <input type="hidden" name="action" value="<?= $tampilArsip ? "pulihkan_terpilih" : "arsipkan_terpilih" ?>">
+                </form>
 
             </div>
 

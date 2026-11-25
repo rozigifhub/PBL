@@ -15,6 +15,54 @@ require_once __DIR__ . "/../../config/database.php";
 // Tamu (belum login) dilempar ke login.php (ini target menu PESANAN di navbar).
 require_mahasiswa();
 
+$idAkun = (int)$_SESSION["id_akun"];
+$error  = "";
+
+// "Hapus" di sini = sembunyikan dari riwayat milik mahasiswa sendiri; data pesanan TIDAK disentuh
+// dan tetap utuh di sisi admin. Hanya pesanan Selesai/Dibatalkan yang boleh disembunyikan.
+$tampilTersembunyi = isset($_GET["tersembunyi"]);
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!csrf_validate()) {
+        $error = "Sesi tidak valid. Silakan coba lagi.";
+    } else {
+        $action = $_POST["action"] ?? "";
+        if ($action === "sembunyikan_terpilih" || $action === "pulihkan_terpilih") {
+            $sembunyikan = $action === "sembunyikan_terpilih";
+            $ids = array_values(array_unique(array_filter(
+                array_map("intval", (array)($_POST["ids"] ?? [])),
+                static fn($v) => $v > 0
+            )));
+
+            if (!$ids) {
+                set_flash("gagal", "Belum ada pesanan yang dipilih.");
+            } else {
+                try {
+                    // TRUE/FALSE ditulis literal (bukan parameter) agar aman untuk kolom boolean lewat PDO pgsql.
+                    $placeholder  = implode(",", array_fill(0, count($ids), "?"));
+                    $valBaru      = $sembunyikan ? "TRUE" : "FALSE";
+                    $valLama      = $sembunyikan ? "FALSE" : "TRUE";
+                    $syaratStatus = $sembunyikan ? " AND status_pesanan IN ('Selesai', 'Dibatalkan')" : "";
+                    $stmt = $pdo->prepare("
+                        UPDATE pesanan
+                        SET disembunyikan_mahasiswa = {$valBaru}
+                        WHERE id_pesanan IN ($placeholder) AND id_akun = ? AND disembunyikan_mahasiswa = {$valLama}{$syaratStatus}
+                        RETURNING id_pesanan
+                    ");
+                    $stmt->execute([...$ids, $idAkun]);
+                    $terkena = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                    set_flash("sukses", count($terkena) . " pesanan " . ($sembunyikan ? "disembunyikan dari riwayat." : "dipulihkan."));
+                } catch (PDOException $e) {
+                    error_log("Sembunyikan pesanan gagal: " . $e->getMessage());
+                    set_flash("gagal", "Terjadi kesalahan database. Coba lagi.");
+                }
+            }
+            redirect("riwayat.php" . ($sembunyikan ? "" : "?tersembunyi=1"));
+        }
+    }
+}
+
 // [TAMBAHAN UI] Dua kolom baru di query ini (nama_produk, jenis_produk) hanya untuk kolom
 // "Nama Produk" di desain. Kolom, WHERE, dan ORDER BY lainnya TIDAK diubah.
 //   nama_produk  = nama produk pertama di pesanan (urut abjad)
@@ -39,11 +87,17 @@ $stmt = $pdo->prepare("
             ORDER BY pb.id_pembayaran DESC
             LIMIT 1) AS status_bayar
     FROM pesanan p
-    WHERE p.id_akun = :id_akun
+    WHERE p.id_akun = :id_akun AND p.disembunyikan_mahasiswa = " . ($tampilTersembunyi ? "TRUE" : "FALSE") . "
     ORDER BY p.id_pesanan DESC
 ");
-$stmt->execute([":id_akun" => $_SESSION["id_akun"]]);
+$stmt->execute([":id_akun" => $idAkun]);
 $pesanan = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM pesanan WHERE id_akun = :id_akun AND disembunyikan_mahasiswa = TRUE");
+$stmt->execute([":id_akun" => $idAkun]);
+$jumlahTersembunyi = (int)$stmt->fetchColumn();
+
+$flash = take_flash();
 
 // ---------- Tampilan saja (tidak memengaruhi data) ----------
 
@@ -121,20 +175,42 @@ require __DIR__ . "/../includes/navbar.php";
                     </svg>
                 </span>
                 <div>
-                    <h1>Riwayat Pesanan</h1>
-                    <p>List pesanan Anda</p>
+                    <h1><?= $tampilTersembunyi ? "Pesanan Disembunyikan" : "Riwayat Pesanan" ?></h1>
+                    <p><?= $tampilTersembunyi ? "Pesanan yang Anda sembunyikan dari riwayat; bisa dipulihkan kapan saja." : "List pesanan Anda" ?></p>
                 </div>
             </div>
         </header>
 
         <section class="rw-card" aria-label="Daftar pesanan">
 
+            <?php if ($flash): ?>
+                <div class="alert <?= ($flash["type"] ?? "") === "sukses" ? "alert--success" : "alert--error" ?>" role="<?= ($flash["type"] ?? "") === "sukses" ? "status" : "alert" ?>">
+                    <?= e($flash["msg"]) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($error !== ""): ?>
+                <div class="alert alert--error" role="alert"><?= e($error) ?></div>
+            <?php endif; ?>
+
+            <p>
+                <?php if ($tampilTersembunyi): ?>
+                    <a href="/mahasiswa/riwayat.php">&larr; Kembali ke riwayat</a>
+                <?php elseif ($jumlahTersembunyi > 0): ?>
+                    <a href="/mahasiswa/riwayat.php?tersembunyi=1">Lihat yang Disembunyikan (<?= $jumlahTersembunyi ?>)</a>
+                <?php endif; ?>
+            </p>
+
             <?php if (!$pesanan): ?>
 
                 <!-- Belum ada pesanan sama sekali (logika asli dipertahankan) -->
                 <div class="dash-empty rw-empty rw-empty--first">
-                    <p>Belum ada pesanan.</p>
-                    <p><a href="/mahasiswa/katalog.php"><b>Mulai Belanja &rarr;</b></a></p>
+                    <?php if ($tampilTersembunyi): ?>
+                        <p>Belum ada pesanan yang disembunyikan.</p>
+                    <?php else: ?>
+                        <p>Belum ada pesanan.</p>
+                        <p><a href="/mahasiswa/katalog.php"><b>Mulai Belanja &rarr;</b></a></p>
+                    <?php endif; ?>
                 </div>
 
             <?php else: ?>
@@ -171,9 +247,9 @@ require __DIR__ . "/../includes/navbar.php";
                             <input class="pt-check" type="checkbox" data-pt-all>
                             <span>Pilih Semua (<span data-pt-count><?= count($pesanan) ?></span>)</span>
                         </label>
-                        <button type="button" class="pt-bulk" data-pt-bulk disabled>
+                        <button type="submit" form="form-pt-bulk" class="pt-bulk" data-pt-bulk disabled>
                             <img src="/assets/img/icon-trash.png" alt="" width="40" height="40">
-                            <span>Hapus Yang Dipilih</span>
+                            <span><?= $tampilTersembunyi ? "Pulihkan Yang Dipilih" : "Hapus Yang Dipilih" ?></span>
                         </button>
                     </div>
                     <p class="pt-note" data-pt-note role="status" hidden></p>
@@ -212,12 +288,16 @@ require __DIR__ . "/../includes/navbar.php";
                                     $kelas     = $kelasBadge[$p["status_pesanan"]] ?? "off";
                                     $totalItem = (int)$p["total_item"];
                                     $lainnya   = max(0, (int)$p["jenis_produk"] - 1);
+                                    // Hanya pesanan Selesai/Dibatalkan yang boleh disembunyikan (lihat sembunyikan_pesanan_mahasiswa.sql).
+                                    $bisaSembunyi = $tampilTersembunyi || in_array($p["status_pesanan"], ["Selesai", "Dibatalkan"], true);
                                     ?>
                                     <tr data-href="<?= e($urlDetail) ?>" data-status="<?= e($p["status_pesanan"]) ?>" data-id="<?= $idPesanan ?>" data-search="<?= e(($p["nama_produk"] ?? "") . " #" . $idPesanan) ?>">
 
-                                        <!-- Checkbox pilih baris (kolom paling kiri) -->
+                                        <!-- Checkbox pilih baris (kolom paling kiri). Nonaktif bila belum Selesai/Dibatalkan:
+                                             pesanan yang masih berjalan tidak boleh disembunyikan dari riwayat. -->
                                         <td class="pt-td-check">
-                                            <input class="pt-check" type="checkbox" value="<?= $idPesanan ?>" data-pt-row-check aria-label="Pilih pesanan #<?= $idPesanan ?>">
+                                            <input class="pt-check" type="checkbox" name="ids[]" form="form-pt-bulk" value="<?= $idPesanan ?>" data-pt-row-check
+                                                   aria-label="Pilih pesanan #<?= $idPesanan ?>"<?= $bisaSembunyi ? "" : " disabled title=\"Hanya pesanan Selesai/Dibatalkan yang bisa disembunyikan\"" ?>>
                                         </td>
 
                                         <!-- No. Pesanan: ID pesanan, tautan ke detail -->
@@ -270,6 +350,20 @@ require __DIR__ . "/../includes/navbar.php";
                         <p data-pt-empty-text>Tidak ada pesanan.</p>
                         <p><button type="button" class="rw-link" data-pt-reset>Tampilkan semua pesanan</button></p>
                     </div>
+
+                    <!-- Checkbox baris memakai atribut form="form-pt-bulk"; "Hapus"/"Pulihkan Yang Dipilih" mengirim form ini. -->
+                    <?php
+                    $konfirmBulkRw = json_encode(
+                        $tampilTersembunyi
+                            ? "Pulihkan pesanan yang dipilih ke riwayat?"
+                            : "Sembunyikan pesanan yang dipilih dari riwayat? Bisa dipulihkan lagi kapan saja.",
+                        JSON_UNESCAPED_UNICODE
+                    );
+                    ?>
+                    <form id="form-pt-bulk" method="POST" hidden onsubmit="return confirm(<?= e($konfirmBulkRw) ?>)">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                        <input type="hidden" name="action" value="<?= $tampilTersembunyi ? "pulihkan_terpilih" : "sembunyikan_terpilih" ?>">
+                    </form>
                 </div>
 
             <?php endif; ?>
