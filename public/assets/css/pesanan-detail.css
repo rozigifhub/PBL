@@ -157,6 +157,18 @@
 .mp-step--off  .mp-step__title { color: var(--mp-red-dk); }
 .mp-step--off  .mp-step__meta  { color: var(--mp-red-dk); }
 
+/* ---------- INFO PENGAMBILAN (SELF PICKUP) di dasar kartu Status Pesanan ----------
+   Kolom ikon selebar kolom penanda timeline (6.4rem) sehingga pin sejajar di bawah lingkaran centang,
+   dan teksnya lurus dengan judul langkah di atasnya. */
+.mp-steps--pickup { padding-bottom: 1.6rem; }
+.mp-pickup { display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); column-gap: .9rem; align-items: start; padding-top: 1.6rem; border-top: .0625rem dashed var(--mp-line); color: var(--mp-title); }
+.mp-pickup__mark { justify-self: center; display: grid; place-items: center; width: 4.45rem; height: 4.45rem; border-radius: 50%; background: var(--mp-head); color: var(--mp-title); }
+.mp-pickup__mark svg { display: block; width: 2.4rem; height: 2.4rem; }
+.mp-pickup__body { min-width: 0; padding-right: 1rem; }
+.mp-pickup__title { margin: 0; font-size: 1.6rem; font-weight: 700; line-height: 1.8rem; }
+.mp-pickup__lokasi { margin: .8rem 0 0; font-size: 1.5rem; font-weight: 500; line-height: 1.8rem; overflow-wrap: anywhere; }
+.mp-pickup__hari { margin: .3rem 0 0; color: var(--mp-muted); font-size: 1.25rem; font-weight: 500; line-height: 1.5rem; }
+
 /* ---------- 6. KARTU ITEM PESANAN ----------
    <table> diganti grid: tiap baris = satu grid dengan kolom yang sama persis dengan baris judul.
    Tanpa garis vertikal; judul = pil krem kekuningan bersudut membulat.

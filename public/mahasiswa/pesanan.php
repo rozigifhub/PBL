@@ -405,6 +405,11 @@ require __DIR__ . "/../includes/navbar.php";
         <rect x="2.5" y="5" width="19" height="14" rx="2.5"/>
         <path d="M2.5 10h19M6.5 15h4"/>
     </symbol>
+    <!-- Ikon lokasi (pin) untuk info Pengambilan (Self Pickup) -->
+    <symbol id="mp-ic-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 10c0 6.5-8 12-8 12s-8-5.5-8-12a8 8 0 0 1 16 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+    </symbol>
 </svg>
 
 <main class="mp">
@@ -531,7 +536,8 @@ require __DIR__ . "/../includes/navbar.php";
 
                 <!-- Timeline dibangun dari status_pesanan backend lewat $langkahTimeline (lihat blok PHP di atas file).
                      Kelas mp-step--done (hijau) / --now (oranye) / --todo (krem) / --off (merah) ditentukan di sana. -->
-                <ol class="mp-steps<?= count($langkahTimeline) < 5 ? " mp-steps--ringkas" : "" ?>">
+                <?php $tampilPickup = ($pesanan["status_pesanan"] ?? "") !== "Dibatalkan"; // info pengambilan tidak relevan untuk pesanan batal ?>
+                <ol class="mp-steps<?= count($langkahTimeline) < 5 ? " mp-steps--ringkas" : "" ?><?= $tampilPickup ? " mp-steps--pickup" : "" ?>">
                     <!-- LOOPING TIMELINE MULAI DARI SINI (foreach $langkahTimeline as $l) -->
                     <?php foreach ($langkahTimeline as $l): ?>
                         <li class="mp-step mp-step--<?= e($l["status"]) ?><?= $l["garis"] ? " mp-step--garis" : "" ?>">
@@ -544,6 +550,18 @@ require __DIR__ . "/../includes/navbar.php";
                     <?php endforeach; ?>
                     <!-- LOOPING TIMELINE SELESAI DI SINI (endforeach) -->
                 </ol>
+
+                <!-- INFO PENGAMBILAN (SELF PICKUP): lokasi & hari ambil, diletakkan di bawah timeline karena langkah terakhir pesanan adalah pengambilan -->
+                <?php if ($tampilPickup): ?>
+                <div class="mp-pickup">
+                    <span class="mp-pickup__mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#mp-ic-pin"/></svg></span>
+                    <div class="mp-pickup__body">
+                        <h3 class="mp-pickup__title">Pengambilan (Self Pickup)</h3>
+                        <p class="mp-pickup__lokasi"><?= e($pesanan["alamat"] ?? PICKUP_LOKASI) ?></p>
+                        <p class="mp-pickup__hari"><?= !empty($pesanan["tanggal_ambil"]) ? "Hari ambil: " . e(date("d-m-Y", strtotime($pesanan["tanggal_ambil"]))) : "Hari ambil akan diinformasikan" ?></p>
+                    </div>
+                </div>
+                <?php endif; ?>
             </section>
         </div>
 
