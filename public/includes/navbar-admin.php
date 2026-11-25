@@ -13,13 +13,13 @@ $adminNavRingkas = $adminNavRingkas ?? false;   // desain Kelola Pesanan hanya m
 
 $adminLinks = [
     "dashboard" => ["DASHBOARD",       "/admin/dashboard.php"],
-    "pesanan"   => ["KELOLA PESANAN",  "/admin/pesanan.php"],
-    "kategori"  => ["KELOLA KATEGORI", "/admin/kategori.php"],
-    "produk"    => ["KELOLA PRODUK",   "/admin/merchandise.php"],
-    "withdraw"  => ["WITHDRAW",        "/admin/withdraw.php"],
-    "laporan"   => ["LAPORAN",         "/admin/laporan.php"],
-    "log"       => ["LOG",             "/admin/log.php"],
-    "akun"      => ["KELOLA ADMIN",    "/admin/akun-admin.php"],
+    "pesanan"   => ["PESANAN",  "/admin/pesanan.php"],
+    "kategori"  => ["KATEGORI", "/admin/kategori.php"],
+    "produk"    => ["PRODUK",   "/admin/merchandise.php"],
+    "withdraw"  => ["WITHDRAW", "/admin/withdraw.php"],
+    "laporan"   => ["LAPORAN",  "/admin/laporan.php"],
+    "log"       => ["LOG",      "/admin/log.php"],
+    "akun"      => ["ADMIN",    "/admin/akun-admin.php"],
 ];
 ?>
 <header class="navbar navbar--admin">
